@@ -28,5 +28,6 @@ export interface Env {
 declare module 'hono' {
   interface ContextVariableMap {
     env: Env
+    csrfToken: string  // CSRF Token，由 CSRF 中间件自动注入
   }
 }
