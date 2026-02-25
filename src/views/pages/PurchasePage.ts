@@ -1,4 +1,11 @@
-export default function PurchasePage() {
+/**
+ * Purchase 页面视图
+ * 购买服务页面
+ * 
+ * Why: 根据 .clinerules 规范，视图层应放在 src/views/pages/ 目录
+ */
+
+export default function PurchasePage(): string {
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>

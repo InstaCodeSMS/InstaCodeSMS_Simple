@@ -1,9 +1,11 @@
 /**
- * Success 页面
+ * Success 页面视图
  * 支付成功提示页面
+ * 
+ * Why: 根据 .clinerules 规范，视图层应放在 src/views/pages/ 目录
  */
 
-export default function SuccessPage() {
+export default function SuccessPage(): string {
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>

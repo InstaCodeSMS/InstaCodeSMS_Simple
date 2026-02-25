@@ -4,11 +4,11 @@ import { cors } from 'hono/cors'
 // 导入 CSRF 中间件
 import { csrfProtection } from './middleware/csrf'
 
-// 导入页面路由
-import ReceivePage from './routes/page/receive'
-import PurchasePage from './routes/page/purchase'
-import CheckoutPage from './routes/page/checkout'
-import SuccessPage from './routes/page/success'
+// 导入页面视图
+import ReceivePage from './views/pages/ReceivePage'
+import PurchasePage from './views/pages/PurchasePage'
+import CheckoutPage from './views/pages/CheckoutPage'
+import SuccessPage from './views/pages/SuccessPage'
 
 // 导入 API 路由
 import servicesApi from './routes/api/services'

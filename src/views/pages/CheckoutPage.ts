@@ -1,10 +1,12 @@
 /**
- * Checkout 页面
+ * Checkout 页面视图
  * 订单确认 + 支付页面
  * 对接 BEpusdt USDT 支付
+ * 
+ * Why: 根据 .clinerules 规范，视图层应放在 src/views/pages/ 目录
  */
 
-export default function CheckoutPage() {
+export default function CheckoutPage(): string {
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -314,7 +316,7 @@ export default function CheckoutPage() {
         error: null,
         isChecking: false,
         isProcessing: false,
-        isCreating: false,  // 防止重复创建
+        isCreating: false,
         timer: null,
         pollTimer: null,
         
@@ -416,7 +418,6 @@ export default function CheckoutPage() {
         generateQRCode() {
           const canvas = document.getElementById('qrcode');
           if (canvas && this.walletAddress) {
-            // 生成二维码（包含地址和金额）
             const qrContent = this.walletAddress;
             QRCode.toCanvas(canvas, qrContent, {
               width: 180,
@@ -444,12 +445,10 @@ export default function CheckoutPage() {
         },
         
         startPolling() {
-          // 每 5 秒轮询一次支付状态
           this.pollTimer = setInterval(() => {
             this.checkPaymentStatus();
           }, 5000);
           
-          // 立即检查一次
           this.checkPaymentStatus();
         },
         
@@ -463,14 +462,12 @@ export default function CheckoutPage() {
             const data = await response.json();
             
             if (data.success && data.data.status === 2) {
-              // 支付成功
               this.isProcessing = true;
               clearInterval(this.timer);
               clearInterval(this.pollTimer);
               
               this.showToast('支付成功，正在创建订单...');
               
-              // 调用上游 API 创建订单
               await this.createUpstreamOrder();
             }
           } catch (err) {
@@ -490,7 +487,6 @@ export default function CheckoutPage() {
         
         async createUpstreamOrder() {
           try {
-            // 获取支付订单详情
             const orderResponse = await fetch('/api/payment/order/' + this.tradeId);
             const orderData = await orderResponse.json();
             
@@ -500,7 +496,6 @@ export default function CheckoutPage() {
             
             const productInfo = orderData.data.product_info;
             
-            // 调用上游 API 创建订单
             const response = await fetch('/api/orders/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -514,7 +509,6 @@ export default function CheckoutPage() {
             const data = await response.json();
             
             if (data.success) {
-              // 跳转到成功页面
               const tel = data.data.items?.[0]?.tel || '';
               const token = data.data.items?.[0]?.token || '';
               const ordernum = data.data.ordernum || this.orderId;
