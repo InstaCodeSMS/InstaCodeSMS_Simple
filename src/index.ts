@@ -1,13 +1,8 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { serve } from '@hono/node-server'
-import { config } from 'dotenv'
 
 // 导入 CSRF 中间件
 import { csrfProtection } from './middleware/csrf'
-
-// 加载 .dev.vars 文件（本地开发）
-config({ path: '.dev.vars' })
 
 // 导入页面路由
 import ReceivePage from './routes/page/receive'
@@ -44,21 +39,6 @@ function injectCsrfToken(html: string, csrfToken: string): string {
   )
 }
 
-// 本地开发环境变量（从 .dev.vars 加载）
-const devEnv: Env = {
-  UPSTREAM_API_URL: process.env.UPSTREAM_API_URL || 'https://api.cc',
-  UPSTREAM_API_TOKEN: process.env.UPSTREAM_API_TOKEN || '',
-  PRICE_MARKUP: process.env.PRICE_MARKUP || '1.5',
-  SUPABASE_URL: process.env.SUPABASE_URL || '',
-  SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY || '',
-  SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY || '',
-  BEPUSDT_API_URL: process.env.BEPUSDT_API_URL || '',
-  BEPUSDT_API_TOKEN: process.env.BEPUSDT_API_TOKEN || '',
-  ALIMPAY_API_URL: process.env.ALIMPAY_API_URL || '',
-  ALIMPAY_PID: process.env.ALIMPAY_PID || '',
-  ALIMPAY_KEY: process.env.ALIMPAY_KEY || '',
-}
-
 // 创建应用
 const app = new Hono<{ Bindings: Env }>()
 
@@ -66,17 +46,7 @@ const app = new Hono<{ Bindings: Env }>()
 app.use('*', requestLogger)  // 请求日志 + request-id
 app.use('*', cors())
 
-// ========== 开发环境中间件 ==========
-// 为本地开发注入环境变量（必须在 CSRF 之前，因为 CSRF 需要 c.env）
-app.use('*', async (c, next) => {
-  // 如果 c.env 为空（本地开发），注入 devEnv
-  if (!c.env?.UPSTREAM_API_TOKEN) {
-    c.env = devEnv
-  }
-  await next()
-})
-
-// CSRF 保护（必须在开发环境中间件之后）
+// CSRF 保护
 app.use('*', csrfProtection)
 
 // ========== 页面路由 ==========
@@ -233,15 +203,3 @@ app.onError(errorHandler)
 
 // 导出为 Cloudflare Workers 格式
 export default app
-
-// ========== 本地开发服务器启动 ==========
-// 只在 Node.js 环境中运行（不在 Cloudflare Workers 中）
-if (typeof process !== 'undefined' && process.versions?.node) {
-  const port = Number(process.env.PORT) || 3000
-  console.log(`🚀 Server is running on http://localhost:${port}`)
-  
-  serve({
-    fetch: app.fetch,
-    port,
-  })
-}

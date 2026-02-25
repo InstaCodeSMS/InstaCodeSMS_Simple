@@ -5,11 +5,10 @@
   "main": "dist/index.js",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
-    "dev:cf": "wrangler pages dev --port 3000",
-    "start": "tsx src/index.ts",
+    "dev": "wrangler dev --port 3000",
+    "start": "wrangler dev --port 3000",
     "build": "tsc",
-    "deploy": "wrangler pages deploy"
+    "deploy": "wrangler deploy"
   },
   "keywords": [],
   "author": "",
