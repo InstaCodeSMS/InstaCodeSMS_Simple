@@ -244,7 +244,7 @@ export default function CheckoutPage() {
               </div>
             </template>
             
-            <div class="flex gap-4 w-full">
+            <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
               <button @click="goBack()" 
                 class="flex-1 py-4 border rounded-2xl text-[10px] font-black uppercase transition-all"
                 :class="theme === 'dark' ? 'border-[rgba(200,210,240,0.08)]' : 'border-slate-200'"
@@ -253,7 +253,7 @@ export default function CheckoutPage() {
               </button>
               <button @click="checkPaymentNow()" 
                 :disabled="isProcessing"
-                class="flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all disabled:opacity-50">
+                class="flex-1 sm:flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all disabled:opacity-50">
                 <span x-text="isProcessing ? '处理中...' : '我已支付，查询结果'"></span>
               </button>
             </div>

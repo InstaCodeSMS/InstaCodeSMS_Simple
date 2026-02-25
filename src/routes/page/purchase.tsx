@@ -379,7 +379,8 @@ export default function PurchasePage() {
           
           <div class="pt-6 flex flex-row items-center gap-4 w-full border-t" style="border-color: var(--border-color);">
             <button @click="closeModal()" 
-                    class="px-4 py-5 text-[10px] font-black uppercase tracking-widest transition-colors hover:opacity-80"
+                    class="flex-1 py-5 border rounded-2xl text-[10px] font-black uppercase tracking-widest transition-colors hover:opacity-80"
+                    :class="theme === 'dark' ? 'border-[rgba(200,210,240,0.08)]' : 'border-slate-200'"
                     style="color: var(--text-muted);">取消</button>
             <button @click="submitOrder()"
                     :disabled="isProcessing"

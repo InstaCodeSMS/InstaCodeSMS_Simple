@@ -330,20 +330,20 @@ export default function ReceivePage() {
 
       <!-- 工具栏 -->
       <section class="mb-6">
-        <div class="flex flex-wrap items-center justify-between gap-4 px-2">
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-2">
           <div class="flex items-center gap-3">
             <span class="text-xs text-muted uppercase tracking-[0.3em] font-mono italic">
               <span x-text="t('receive.incoming_stream')"></span>
             </span>
-            <div class="h-px flex-1 border-t border-theme min-w-[80px]"></div>
+            <div class="h-px flex-1 border-t border-theme min-w-[80px] hidden sm:block"></div>
           </div>
           
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 flex-wrap">
             <!-- 通知开关 -->
             <button 
               type="button"
               @click="toggleNotification()"
-              class="px-4 py-2 rounded-xl border text-xs font-mono uppercase transition-all hover:scale-105"
+              class="px-3 py-2 rounded-xl border text-xs font-mono uppercase transition-all hover:scale-105"
               :class="notificationEnabled 
                 ? 'bg-blue-500/10 text-blue-500 border-blue-500/30' 
                 : 'bg-[var(--bg-tertiary)] text-muted border-[var(--border-color)]'"
@@ -357,7 +357,7 @@ export default function ReceivePage() {
             <button 
               type="button"
               @click="clearHistory()"
-              class="px-4 py-2 rounded-xl border text-xs font-mono uppercase transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed"
+              class="px-3 py-2 rounded-xl border text-xs font-mono uppercase transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed"
               :class="theme === 'dark' 
                 ? 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-muted hover:text-red-500 hover:border-red-500/30' 
                 : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-red-500 hover:border-red-500/30'"
@@ -371,7 +371,7 @@ export default function ReceivePage() {
             <button 
               type="button"
               @click="exportMessages()"
-              class="px-4 py-2 rounded-xl border text-xs font-mono uppercase transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed"
+              class="px-3 py-2 rounded-xl border text-xs font-mono uppercase transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed"
               :class="theme === 'dark' 
                 ? 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-muted hover:text-blue-500 hover:border-blue-500/30' 
                 : 'bg-slate-50 border-slate-200 text-slate-600 hover:text-blue-500 hover:border-blue-500/30'"
