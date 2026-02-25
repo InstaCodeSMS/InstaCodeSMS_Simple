@@ -1,5 +1,5 @@
 # Cloudflare Pages 配置
-name = "instacodesms_simple"
+name = "instacodesms-simple"
 compatibility_date = "2024-01-01"
 pages_build_output_dir = "dist"
 
