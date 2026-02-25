@@ -1,10 +1,5 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
-import { serve } from '@hono/node-server'
-import { config } from 'dotenv'
-
-// 加载 .dev.vars 文件（本地开发）
-config({ path: '.dev.vars' })
 
 // 导入页面路由
 import ReceivePage from './routes/page/receive'
@@ -203,14 +198,5 @@ app.notFound(notFoundHandler)
 // 全局错误处理
 app.onError(errorHandler)
 
-// 导出为 Cloudflare Pages Functions 格式
+// 导出为 Cloudflare Workers 格式
 export default app
-
-// 本地开发服务器启动
-const port = Number(process.env.PORT) || 3000
-console.log(`🚀 Server is running on http://localhost:${port}`)
-
-serve({
-  fetch: app.fetch,
-  port,
-})

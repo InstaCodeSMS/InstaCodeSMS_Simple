@@ -1,9 +1,7 @@
-# Cloudflare Pages 配置
 name = "instacodesms-simple"
+main = "src/index.ts"
 compatibility_date = "2024-01-01"
-pages_build_output_dir = "dist"
 
-# 开发环境配置
 [dev]
 port = 3000
 local_protocol = "http"
