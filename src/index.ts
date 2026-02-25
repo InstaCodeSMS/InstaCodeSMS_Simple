@@ -24,21 +24,6 @@ import { createUpstreamClient } from './lib/upstream'
 // 导入类型
 import type { Env } from './types/env'
 
-// 本地开发环境变量（从 .dev.vars 加载）
-const devEnv: Env = {
-  UPSTREAM_API_URL: process.env.UPSTREAM_API_URL || 'https://api.cc',
-  UPSTREAM_API_TOKEN: process.env.UPSTREAM_API_TOKEN || '',
-  PRICE_MARKUP: process.env.PRICE_MARKUP || '1.5',
-  SUPABASE_URL: process.env.SUPABASE_URL || '',
-  SUPABASE_PUBLISHABLE_KEY: process.env.SUPABASE_PUBLISHABLE_KEY || '',
-  SUPABASE_SERVICE_KEY: process.env.SUPABASE_SERVICE_KEY || '',
-  BEPUSDT_API_URL: process.env.BEPUSDT_API_URL || '',
-  BEPUSDT_API_TOKEN: process.env.BEPUSDT_API_TOKEN || '',
-  ALIMPAY_API_URL: process.env.ALIMPAY_API_URL || '',
-  ALIMPAY_PID: process.env.ALIMPAY_PID || '',
-  ALIMPAY_KEY: process.env.ALIMPAY_KEY || '',
-}
-
 // 创建应用
 const app = new Hono<{ Bindings: Env }>()
 
@@ -94,16 +79,6 @@ app.get('/checkout', (c) => {
 // 支付成功页面
 app.get('/success', (c) => {
   return c.html(SuccessPage())
-})
-
-// ========== 开发环境中间件 ==========
-// 为本地开发注入环境变量
-app.use('*', async (c, next) => {
-  // 如果 c.env 为空（本地开发），注入 devEnv
-  if (!c.env?.UPSTREAM_API_TOKEN) {
-    c.env = devEnv
-  }
-  await next()
 })
 
 // ========== API 路由 ==========
