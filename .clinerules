@@ -1,0 +1,227 @@
+## 项目身份
+SimpleJieMa 是一个基于 Cloudflare Workers 的自动化数字产品转卖平台。核心逻辑：通过 Hono 驱动边缘侧业务，使用 HTMX 实现局部刷新，Supabase 负责持久化，对接上游 API 完成自动化接码/发卡。
+
+AI Agent 工作协议 (核心循环)
+任务执行循环 (Plan → Act → Verify → Report)
+Plan: 在 <thinking> 块中推演。必须定位目标在 src/domains 的哪个领域，或是否需要新增 src/adapters。
+
+Act: 严格遵守最小化 Diff。在 Cloudflare 环境下，优先考虑性能与包体积。
+
+Verify: 运行 vitest 或使用 wrangler dev 模拟边缘环境验证。
+
+Report: 修改后必须说明：“是否增加了边缘侧延迟？” 或 “是否破坏了 HTMX 的局部响应？”
+
+错误恢复协议
+如果 wrangler 报错 Service Worker 限制 → 检查是否误用了 Node.js 原生库。
+
+如果 HTMX 请求返回了完整 HTML 而非 Partial → 立即检查 src/views/partials 逻辑。
+
+项目结构与架构感知 (100分架构地图)
+1. 强制目录守则
+Cline 必须将代码放入以下指定层级：
+
+src/core/: 环境变量校验 (Zod)、统一错误处理、全局常量。
+
+src/adapters/: 外部防腐层。所有调用 Supabase、上游 API、支付接口的代码必须在此。
+
+src/domains/: 业务核心。每个领域（order, user）包含 schema.ts (Zod), service.ts (逻辑), repo.ts (数据访问)。
+
+src/views/: 渲染层。
+
+layouts/: 整体骨架。
+
+partials/: HTMX 专用。仅返回局部 JSX 片段，严禁包含 <html>/<body>。
+
+src/routes/: 极薄层。仅负责将 web 或 api 请求转发给 service。
+
+2. 边缘计算限制 (Edge Awareness)
+禁止使用任何依赖 Node.js 原生 API（如 fs, crypto - 除非使用 node: 兼容前缀且 CF 支持）的库。
+
+异步任务（如发送通知、同步状态）优先使用 ctx.waitUntil 以免阻塞响应。
+
+数据库与类型校验规则 (Supabase & Zod)
+1. 唯一事实来源 (Single Source of Truth)
+数据库类型: 严禁手动修改 src/types/supabase.ts。必须假设其为脚本自动从 Supabase 生成。
+
+输入校验: 所有的 POST/PUT 请求必须先通过 src/domains/*/schema.ts 中的 Zod 校验。
+
+2. 金额与状态
+金额处理: 数据库中使用 numeric/decimal。TS 中使用 bigint 或特定精度处理，严禁在金额计算中使用 number (float)。
+
+RLS 感知: 编写 SQL 或 Supabase 调用时，必须考虑 Row Level Security，确保查询中包含 auth.uid() 过滤。
+
+全局禁令 (违反即重写)安全与架构红线禁止行为正确做法❌ 在 routes/ 里直接调用 supabase✅ 在 domains/*/repo.ts 中封装数据操作❌ 硬编码上游 API 秘钥✅ 通过 c.env.SECRET 读取并经过 core/env.ts 校验❌ 局部刷新请求返回完整页面✅ 返回 views/partials 中的组件❌ 擅自引入重量级 npm 包✅ 优先使用轻量级、Edge-ready 的库❌ 在循环中执行数据库查询 (N+1)✅ 使用 Supabase 的 .in() 或封装 RPC各层级编码策略1. 后端逻辑 (Hono / TypeScript)错误抛出必须通过 core/errors.ts。所有的 API 响应必须具备类型定义，利用 Hono 的 RPC 模式（通过 hc）导出给前端（如果需要）。关键逻辑必须包含中文 Why 注释。2. 前端交互 (HTMX / Alpine.js)DaisyUI 优先: 严禁手写复杂 CSS，优先组合 DaisyUI 类名。局部更新: 必须明确 hx-target 和 hx-swap 的范围。加载反馈: 交互按钮必须包含 htmx-indicator，显示加载状态。国际化: 文案必须通过 i18n 处理，禁止在 JSX 中硬编码中文字符串（除非是纯静态内容）。校验指令 (VERIFICATION)Cline 自检清单[ ] 是否符合 src/domains 模块化规范？[ ] 环境变量是否经过 src/core/env.ts 校验？[ ] 是否在 partials/ 中正确处理了 HTMX 局部刷新？[ ] 数据库字段是否与 src/types/supabase.ts 对齐？[ ] 是否使用了 ctx.waitUntil 处理非阻塞异步任务？变更影响声明模板(要求 Cline 在每次重大修改后输出)Markdown### 🚀 架构变更声明
+- **修改领域**: [e.g., Domains/Order]
+- **HTMX 影响**: [是否影响了局部刷新流程]
+- **Edge 适配**: [是否涉及新的 Cloudflare 资源绑定, 如 KV/D1]
+- **DB 迁移**: [是否修改了 Supabase Schema]
+
+1. 核心技术栈 (The Tech Stack)
+运行时: Cloudflare Workers (Edge Native)
+
+后端框架: Hono (TypeScript)
+
+前端交互: HTMX (Hypermedia) + Alpine.js (微交互)
+
+UI 引擎: Tailwind CSS +Ark UI + Lucide
+
+数据库/鉴权: Supabase
+
+校验: Zod (必须用于所有输入验证)
+
+2. 目录职责与分层规范 (Layering Rules)
+严格按照以下职责边界分配代码，严禁跨层调用逻辑：
+
+🟢 src/domains (业务领域层 - 核心)
+职责: 包含最核心的业务逻辑（下单、库存逻辑、验证码核销）。
+
+规范:
+
+*.service.ts: 负责编排业务流程。不直接调用 fetch 或 db。
+
+*.repo.ts: 专职与数据库交互。
+
+*.schema.ts: 定义 Zod 模型，作为该领域所有数据的“唯一事实来源”。
+
+🔵 src/adapters (适配器层 - 防腐带)
+职责: 封装第三方服务（支付网关、上游接码平台）。
+
+规范: 必须定义标准的 Interface。如果更换上游商，只需在此处增加实现，严禁修改 domains 层的代码。
+
+🟡 src/views (视图层 - HTMX)
+职责: 负责渲染 HTML。
+
+规范:
+
+layouts/: 整体骨架。
+
+pages/: 完整页面。
+
+partials/: 高度重要！ 仅返回局部 HTML 片段供 HTMX 替换（如 hx-swap）。
+
+🔴 src/routes (路由层 - 门卫)
+职责: 仅负责分发请求。
+
+规范: 严禁在路由中写业务逻辑（超过 5 行代码通常说明逻辑写错位置了）。路由应该只调用 service 并返回 view。
+
+3. 编程契约 (The Contracts)
+3.1 绝对类型安全 (Strict Typing)
+禁止使用 any。
+
+禁止手动修改 src/types/supabase.ts，该文件由脚本自动生成。
+
+环境变量必须通过 src/core/env.ts 进行 Zod 校验，使用 c.env.KEY 时需确保类型提示正确。
+
+3.2 错误处理 (Error Handling)
+统一使用 src/core/errors.ts 中的 AppError。
+
+API 错误: 返回标准 JSON 错误。
+
+Web 错误: 使用 HTMX 返回带错误的局部提示组件（例如 partials/ErrorMessage.tsx），不要直接抛出 500 页面。
+
+3.3 HTMX 交互准则
+触发: 优先使用 hx-post, hx-get, hx-target。
+
+加载状态: 必须使用 DaisyUI 的 loading spinner 配合 htmx-request 类显示加载中状态。
+
+局部刷新: 尽量减少全页刷新，利用 partials/ 实现无缝数据更新。
+
+4. AI 行为禁止项 (Do NOT Do)
+禁止在 routes/ 里直接写 supabase.from('...')。
+
+禁止在 domains/ 里直接引入 hono 的 Context 对象（应通过参数传递数据）。
+
+禁止在没有 Zod 校验的情况下处理任何 POST 请求数据。
+
+禁止直接使用内联 CSS 样式，必须使用 Tailwind/DaisyUI 类名。
+
+5. 开发工作流建议 (Workflow)
+Schema First: 先定义 Zod Schema。
+
+Repo Second: 编写数据库访问层。
+
+Logic Third: 编写 Service 业务逻辑并运行 vitest。
+
+UI Last: 编写 View 组件并挂载到 Route。
+
+📂 项目目录规范 (Project Structure)
+在创建、重构或移动文件时，必须严格遵守以下结构。严禁在非指定目录下创建业务逻辑。
+```
+SimpleJieMa/
+├── .cursor/                 # 🧠 100分核心：AI 专属知识库与规则引擎
+│   ├── rules/                       # 分领域的 AI 约束规范
+│   │   ├── htmx-rules.md            # 规定如何返回局部 HTML 片段
+│   │   ├── domain-logic.md          # 规定 Service 与 Repo 的交互规范
+│   │   └── tailwind-daisyui.md      # UI 风格统一指南
+│   └── docs/                        # 上游 API & 支付网关文档 (供 AI 检索)
+├── .github/                         # 🤖 自动化工作流
+│   └── workflows/
+│       └── deploy.yml               # 集成测试通过后自动部署至 Cloudflare
+├── scripts/                 # 🤖 自动化脚手架
+│   └── generate-types.sh    # 一键拉取 Supabase 远程表结构生成 TS 类型
+├── tests/                   # 🛡️ 自动化测试 (Vitest)
+│   ├── unit/                # 针对 domains 核心逻辑的测试 (Vitest)
+│   │   ├── domains/order.test.ts
+│   │   └── services/price.test.ts
+│   └── integration/         # 针对 Hono API 的路由测试 (Hono request simulation)
+│   └── mocks/               # 外部服务模拟 (Mock Upstream/Payment)
+├── src/
+│   ├── core/                # ⚙️ 【基建层】(项目的底层引擎)
+│   │   ├── env.ts           # Zod 校验 Cloudflare 环境变量
+│   │   ├── di.ts            # 轻量级依赖注入 (给 AI 明确依赖关系)
+│   │   ├── errors.ts        # 统一错误码与异常拦截
+│   │   └── logger.ts        # 结构化日志
+│   ├── types/               # 🏷️ 【全局类型约定】
+│   │   ├── supabase.ts      # ⚠️ 机器生成的 DB 类型 (绝对禁止手动修改)
+│   │   ├── api.ts           # 前后端共享的 RPC 类型
+│   │   └── app.d.ts         # Hono 的 Context 扩展类型声明
+│   ├── adapters/            # 🔌 【防腐层】(与所有外部第三方解耦)
+│   │   ├── database/        # Supabase 实例初始化
+│   │   ├── payment/         # 支付网关的具体实现 (Alipay, USDT)
+│   │   └── upstream/        # 发卡/接码上游平台的具体对接
+│   ├── domains/             # 🏢 【领域层】(高内聚业务，AI 的主要工作区)
+│   │   ├── order/           # 订单全生命周期
+│   │   │   ├── order.schema.ts      # 输入校验 (Zod)
+│   │   │   ├── order.repo.ts        # 数据库操作 (Repository)
+│   │   │   └── order.service.ts     # 核心下单/支付核销逻辑
+│   │   ├── product/         # 商品与库存模块
+│   │   └── sms/             # --- 接码逻辑领域 ---
+│   ├── triggers/            # ⏱️ 【边缘调度层】(Cloudflare 特有)
+│   │   ├── cron/            # 定时任务 (如：SyncPrices.ts)
+│   │   └── queues/          # 异步队列消费 (如：SendEmailWorker.ts)
+│   ├── routes/              # 🛣️ 【路由分发层】(极度薄，只接客不干活)
+│   │   ├── api.ts           # 供第三方或 Webhook 调用的 JSON 接口
+│   │   └── web.ts           # 响应 HTMX 请求的视图路由
+│   ├── views/               # 🎨 【视图层】(DaisyUI + HTMX)
+│   │   ├── layouts/         # BaseLayout.tsx (包含 head, tailwind 引入)
+│   │   ├── pages/           # 完整页面 (Home.tsx, Checkout.tsx)
+│   │   └── partials/        # 局部刷新块 (OrderList.tsx, Toast.tsx)
+│   ├── middleware/          # 🛡️ 中间件 (Auth, RateLimit, ErrorHandler)
+│   ├── app.ts               # Hono 实例装配 (注册路由与中间件)
+│   └── index.ts             # Worker 入口 (export default { fetch, scheduled, queue })
+├── public/                  # 🖼️ 静态资源 (Logo, Favicon)
+├── supabase/
+│   ├── migrations/          # SQL 变更记录
+│   └── seed.sql             # 初始化测试数据
+│   └── config.toml          # 数据库配置
+├── wrangler.toml            # ☁️ Cloudflare 核心资源绑定 (KV, D1, Cron 声明)
+├── package.json
+└── tsconfig.json
+```
+Read Before Write (先读后写)：在修改任何已有文件前，必须先 read_file 完整阅读内容，严禁基于假设覆盖逻辑。
+
+Safety First (安全第一)：
+
+严禁删除 src/ 目录下未在计划中说明的文件。
+
+在进行大规模重构（移动文件）前，必须输出一份 Moving Plan 列表并请求用户确认。
+
+Refactor Protocol (重构协议)：
+
+如果发现已有代码不符合 domains 或 adapters 规范，应将其迁移至正确位置。
+
+迁移后必须自动修复所有 import 路径，并确保 wrangler dev 能够正常启动。
+
+No Logic in Routes (路由禁令)：
+
+路由层代码严禁超过 10 行。复杂的判断、DB 查询、API 调用必须封装进 domains/[feature]/*.service.ts。
