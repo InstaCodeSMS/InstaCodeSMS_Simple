@@ -6,3 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [dev]
 port = 3000
 local_protocol = "http"
+
+# 配置 ESBuild 模块解析
+[build]
+command = ""
