@@ -291,39 +291,36 @@ export default function ReceivePage(): string {
       <section class="mb-10">
         <div class="card-bg border rounded-[2rem] p-6 sm:p-8 shadow-lg transition-all duration-300"
              :class="theme === 'dark' ? 'shadow-black/20' : 'shadow-slate-200/40'">
-          <div class="flex flex-col sm:flex-row items-end gap-4">
-            <div class="flex-1 w-full">
-              <label class="block text-xs font-mono text-muted uppercase tracking-widest mb-3">
-                <span x-text="t('receive.access_token')"></span>
-              </label>
-              <div class="relative group">
-                <input 
-                  :type="showToken ? 'text' : 'password'" 
-                  x-model="token"
-                  :placeholder="t('receive.token_placeholder')"
-                  class="w-full border rounded-2xl px-6 py-4 pr-14 font-mono focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all h-[60px] text-base tracking-wider input-bg"
-                  :disabled="isPolling"
-                  @input="sanitizeToken($event)"
-                />
-                <button 
-                  type="button"
-                  @click="showToken = !showToken"
-                  class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-xl hover:bg-blue-500/10 text-muted hover:text-blue-500 transition-all z-20"
-                  :title="showToken ? t('receive.hide_token') : t('receive.show_token')"
-                >
-                  <i :class="showToken ? 'fas fa-eye-slash' : 'fas fa-eye'" class="text-lg"></i>
-                </button>
-              </div>
-              <p class="text-xs text-muted mt-2">
-                <i class="fas fa-info-circle mr-1"></i>
-                <span x-text="t('receive.token_hint')"></span>
-              </p>
+          <!-- Label 放在外面，不影响对齐 -->
+          <label class="block text-xs font-mono text-muted uppercase tracking-widest mb-3">
+            <span x-text="t('receive.access_token')"></span>
+          </label>
+          
+          <!-- 核心对齐区域：只有 input 和 button -->
+          <div class="flex flex-col sm:flex-row gap-4">
+            <div class="flex-1 relative">
+              <input 
+                :type="showToken ? 'text' : 'password'" 
+                x-model="token"
+                :placeholder="t('receive.token_placeholder')"
+                class="w-full border rounded-2xl px-6 py-4 pr-14 font-mono focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all h-[60px] text-base tracking-wider input-bg"
+                :disabled="isPolling"
+                @input="sanitizeToken($event)"
+              />
+              <button 
+                type="button"
+                @click="showToken = !showToken"
+                class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-xl hover:bg-blue-500/10 text-muted hover:text-blue-500 transition-all z-20"
+                :title="showToken ? t('receive.hide_token') : t('receive.show_token')"
+              >
+                <i :class="showToken ? 'fas fa-eye-slash' : 'fas fa-eye'" class="text-lg"></i>
+              </button>
             </div>
             
             <button 
               type="button"
               @click="toggleRadar()"
-              class="w-full sm:w-44 px-8 py-4 h-[60px] rounded-2xl font-black tracking-widest uppercase transition-all duration-500 border text-base"
+              class="w-full sm:w-44 px-8 py-4 h-[60px] rounded-2xl font-black tracking-widest uppercase transition-all duration-500 border text-base shrink-0"
               :class="isPolling 
                 ? 'bg-red-500/10 text-red-500 border-red-500/30 hover:bg-red-500/20' 
                 : 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/25 hover:bg-blue-700'"
@@ -332,6 +329,12 @@ export default function ReceivePage(): string {
               <span x-text="isPolling ? t('receive.btn_stop') : t('receive.btn_start')"></span>
             </button>
           </div>
+          
+          <!-- Hint 放在外面，不影响对齐 -->
+          <p class="text-xs text-muted mt-2">
+            <i class="fas fa-info-circle mr-1"></i>
+            <span x-text="t('receive.token_hint')"></span>
+          </p>
         </div>
       </section>
 
