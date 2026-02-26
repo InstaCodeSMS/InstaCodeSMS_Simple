@@ -12,3 +12,7 @@ local_protocol = "http"
 type = "ESModule"
 globs = ["**/*.ts"]
 fallthrough = true
+
+# 配置 ESBuild 路径别名
+[build]
+command = ""

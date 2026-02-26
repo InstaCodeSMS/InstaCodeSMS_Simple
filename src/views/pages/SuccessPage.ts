@@ -6,7 +6,7 @@
  * 使用 Layout 组件避免重复的 HTML 结构
  */
 
-import Layout from '../components/index.ts'
+import Layout from '@/views/components/index.ts'
 import { raw } from 'hono/html'
 
 export default function SuccessPage(csrfToken: string = ''): string {
