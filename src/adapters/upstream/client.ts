@@ -1,4 +1,4 @@
-import type { UpstreamResponse, ProfileData, CategoryListData, AppListData, PrefixListData, OrderCreateData, OrderListData, OrderDetailData, AppListParams, PrefixParams, OrderCreateParams, OrderListParams, OrderDetailParams } from '../types/api'
+import type { UpstreamResponse, ProfileData, CategoryListData, AppListData, PrefixListData, OrderCreateData, OrderListData, OrderDetailData, AppListParams, PrefixParams, OrderCreateParams, OrderListParams, OrderDetailParams } from '../../types/api'
 
 /**
  * 上游 API 业务错误

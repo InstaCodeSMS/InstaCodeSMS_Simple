@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { createUpstreamClient, UpstreamError } from '../../lib/upstream'
+import { createUpstreamClient, UpstreamError } from '../../adapters/upstream'
 import { calculatePrice, calculateTotalPrice, parseMarkup } from '../../services/price'
 import type { Env } from '../../types/env'
 import type { ApiResponse, OrderCreateData } from '../../types/api'

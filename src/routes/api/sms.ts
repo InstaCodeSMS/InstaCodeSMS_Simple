@@ -1,5 +1,5 @@
 import { Hono } from 'hono'
-import { createUpstreamClient } from '../../lib/upstream'
+import { createUpstreamClient } from '../../adapters/upstream'
 import type { Env } from '../../types/env'
 import type { ApiResponse } from '../../types/api'
 

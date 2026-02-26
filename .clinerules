@@ -144,70 +144,175 @@ Logic Third: 编写 Service 业务逻辑并运行 vitest。
 
 UI Last: 编写 View 组件并挂载到 Route。
 
-📂 项目目录规范 (Project Structure)
+📂 项目目录规范 (Project Structure) - 现阶段 75分实用结构
 在创建、重构或移动文件时，必须严格遵守以下结构。严禁在非指定目录下创建业务逻辑。
+
+⚠️ 迁移计划：
+- 第一阶段（立即）：创建 core/, constants/, utils/ 目录
+- 第二阶段（本周）：将 src/lib/payment/ → src/adapters/payment/，src/lib/upstream.ts → src/adapters/upstream/
+- 第三阶段（本月）：完善 domains/payment/, domains/sms/, 添加 routes/web/
+
 ```
-SimpleJieMa/
-├── .cursor/                 # 🧠 100分核心：AI 专属知识库与规则引擎
-│   ├── rules/                       # 分领域的 AI 约束规范
-│   │   ├── htmx-rules.md            # 规定如何返回局部 HTML 片段
-│   │   ├── domain-logic.md          # 规定 Service 与 Repo 的交互规范
-│   │   └── tailwind-daisyui.md      # UI 风格统一指南
-│   └── docs/                        # 上游 API & 支付网关文档 (供 AI 检索)
-├── .github/                         # 🤖 自动化工作流
+SimpleFaka/
+├── .cursor/                 # 🧠 AI 专属知识库与规则引擎
+│   ├── rules/
+│   │   ├── htmx-rules.md
+│   │   ├── domain-logic.md
+│   │   └── tailwind-daisyui.md
+│   └── docs/                # 上游 API & 支付网关文档
+├── .github/                 # 🤖 自动化工作流
 │   └── workflows/
-│       └── deploy.yml               # 集成测试通过后自动部署至 Cloudflare
-├── scripts/                 # 🤖 自动化脚手架
-│   └── generate-types.sh    # 一键拉取 Supabase 远程表结构生成 TS 类型
+│       ├── deploy.yml
+│       └── test.yml         # ✨ 新增：自动化测试
+├── .env.example             # ✨ 新增：环境变量模板
+├── docs/                    # ✨ 新增：项目文档
+│   ├── API.md
+│   ├── SETUP.md
+│   └── DEPLOYMENT.md
+├── scripts/
+│   └── generate-types.sh
 ├── tests/                   # 🛡️ 自动化测试 (Vitest)
-│   ├── unit/                # 针对 domains 核心逻辑的测试 (Vitest)
-│   │   ├── domains/order.test.ts
-│   │   └── services/price.test.ts
-│   └── integration/         # 针对 Hono API 的路由测试 (Hono request simulation)
-│   └── mocks/               # 外部服务模拟 (Mock Upstream/Payment)
+│   ├── unit/
+│   │   ├── domains/
+│   │   └── services/
+│   ├── integration/
+│   ├── e2e/                 # ✨ 新增：端到端测试
+│   ├── mocks/
+│   └── fixtures/            # ✨ 新增：测试数据
 ├── src/
-│   ├── core/                # ⚙️ 【基建层】(项目的底层引擎)
-│   │   ├── env.ts           # Zod 校验 Cloudflare 环境变量
-│   │   ├── di.ts            # 轻量级依赖注入 (给 AI 明确依赖关系)
-│   │   ├── errors.ts        # 统一错误码与异常拦截
-│   │   └── logger.ts        # 结构化日志
+│   ├── core/                # ⚙️ 【基建层】
+│   │   ├── env.ts           # Zod 校验环境变量
+│   │   ├── errors.ts        # 统一错误定义
+│   │   └── logger.ts        # 日志配置
+│   ├── constants/           # ✨ 新增【常量层】
+│   │   ├── api.ts           # API 常量
+│   │   ├── errors.ts        # 错误码
+│   │   └── business.ts      # 业务常量
 │   ├── types/               # 🏷️ 【全局类型约定】
-│   │   ├── supabase.ts      # ⚠️ 机器生成的 DB 类型 (绝对禁止手动修改)
-│   │   ├── api.ts           # 前后端共享的 RPC 类型
-│   │   └── app.d.ts         # Hono 的 Context 扩展类型声明
-│   ├── adapters/            # 🔌 【防腐层】(与所有外部第三方解耦)
-│   │   ├── database/        # Supabase 实例初始化
-│   │   ├── payment/         # 支付网关的具体实现 (Alipay, USDT)
-│   │   └── upstream/        # 发卡/接码上游平台的具体对接
-│   ├── domains/             # 🏢 【领域层】(高内聚业务，AI 的主要工作区)
-│   │   ├── order/           # 订单全生命周期
-│   │   │   ├── order.schema.ts      # 输入校验 (Zod)
-│   │   │   ├── order.repo.ts        # 数据库操作 (Repository)
-│   │   │   └── order.service.ts     # 核心下单/支付核销逻辑
-│   │   ├── product/         # 商品与库存模块
-│   │   └── sms/             # --- 接码逻辑领域 ---
-│   ├── triggers/            # ⏱️ 【边缘调度层】(Cloudflare 特有)
-│   │   ├── cron/            # 定时任务 (如：SyncPrices.ts)
-│   │   └── queues/          # 异步队列消费 (如：SendEmailWorker.ts)
-│   ├── routes/              # 🛣️ 【路由分发层】(极度薄，只接客不干活)
-│   │   ├── api.ts           # 供第三方或 Webhook 调用的 JSON 接口
-│   │   └── web.ts           # 响应 HTMX 请求的视图路由
-│   ├── views/               # 🎨 【视图层】(DaisyUI + HTMX)
-│   │   ├── layouts/         # BaseLayout.tsx (包含 head, tailwind 引入)
-│   │   ├── pages/           # 完整页面 (Home.tsx, Checkout.tsx)
-│   │   └── partials/        # 局部刷新块 (OrderList.tsx, Toast.tsx)
-│   ├── middleware/          # 🛡️ 中间件 (Auth, RateLimit, ErrorHandler)
-│   ├── app.ts               # Hono 实例装配 (注册路由与中间件)
-│   └── index.ts             # Worker 入口 (export default { fetch, scheduled, queue })
-├── public/                  # 🖼️ 静态资源 (Logo, Favicon)
+│   │   ├── supabase.ts      # ⚠️ 机器生成 (禁止手动修改)
+│   │   ├── api.ts
+│   │   ├── env.d.ts
+│   │   └── index.ts         # ✨ 新增：类型导出
+│   ├── utils/               # ✨ 新增【工具函数层】
+│   │   ├── validators.ts    # 验证函数
+│   │   ├── formatters.ts    # 格式化函数
+│   │   └── crypto.ts        # 加密工具
+│   ├── middleware/          # 🛡️ 中间件
+│   │   ├── logger.ts
+│   │   ├── errorHandler.ts
+│   │   ├── csrf.ts
+│   │   └── auth.ts          # ✨ 新增（预留）
+│   ├── adapters/            # 🔌 【防腐层】
+│   │   ├── database/
+│   │   │   └── supabase.ts
+│   │   ├── payment/         # ✨ 从 lib/ 迁移
+│   │   │   ├── index.ts
+│   │   │   ├── types.ts
+│   │   │   ├── alimpay/
+│   │   │   │   ├── client.ts
+│   │   │   │   └── types.ts
+│   │   │   └── bepusdt/
+│   │   │       ├── client.ts
+│   │   │       ├── signer.ts
+│   │   │       └── types.ts
+│   │   └── upstream/        # ✨ 从 lib/ 迁移
+│   │       └── client.ts
+│   ├── domains/             # 🏢 【领域层】
+│   │   ├── order/
+│   │   │   ├── order.schema.ts
+│   │   │   ├── order.repo.ts
+│   │   │   └── order.service.ts
+│   │   ├── product/
+│   │   │   ├── product.schema.ts
+│   │   │   ├── product.repo.ts
+│   │   │   └── product.service.ts
+│   │   ├── payment/         # ✨ 新增：支付领域
+│   │   │   ├── payment.schema.ts
+│   │   │   └── payment.service.ts
+│   │   └── sms/             # ✨ 新增：短信领域
+│   │       ├── sms.schema.ts
+│   │       └── sms.service.ts
+│   ├── routes/              # 🛣️ 【路由分发层】
+│   │   ├── api/
+│   │   │   ├── orders.ts
+│   │   │   ├── sms.ts
+│   │   │   ├── sync.ts
+│   │   │   ├── services.ts
+│   │   │   └── payment.ts
+│   │   └── web/             # ✨ 新增：Web 路由
+│   │       └── pages.ts
+│   ├── views/               # 🎨 【视图层】
+│   │   ├── layouts/         # ✨ 新增
+│   │   │   └── BaseLayout.tsx
+│   │   ├── pages/
+│   │   │   ├── ReceivePage.tsx
+│   │   │   ├── PurchasePage.tsx
+│   │   │   ├── CheckoutPage.tsx
+│   │   │   └── SuccessPage.tsx
+│   │   ├── components/      # ✨ 从根目录移过来
+│   │   │   ├── Header.tsx
+│   │   │   └── Footer.tsx
+│   │   └── partials/        # ✨ 新增：HTMX 局部片段
+│   │       └── OrderList.tsx
+│   ├── app.ts               # Hono 实例装配
+│   └── index.ts             # Worker 入口
+├── public/                  # 🖼️ 静态资源
 ├── supabase/
-│   ├── migrations/          # SQL 变更记录
-│   └── seed.sql             # 初始化测试数据
-│   └── config.toml          # 数据库配置
-├── wrangler.toml            # ☁️ Cloudflare 核心资源绑定 (KV, D1, Cron 声明)
+│   ├── migrations/
+│   ├── seed.sql
+│   └── config.toml
+├── wrangler.toml
+├── tsconfig.json
 ├── package.json
-└── tsconfig.json
+├── README.md                # ✨ 新增
+└── .env.example             # ✨ 新增
 ```
+
+**关键改进说明：**
+
+1. **src/core/** - 基础设施集中管理
+   - env.ts: 环境变量 Zod 校验
+   - errors.ts: 统一错误定义
+   - logger.ts: 日志配置
+
+2. **src/constants/** - 常量集中管理（新增）
+   - api.ts: API 端点、超时等
+   - errors.ts: 错误码定义
+   - business.ts: 业务常量
+
+3. **src/utils/** - 工具函数复用（新增）
+   - validators.ts: 通用验证函数
+   - formatters.ts: 格式化函数
+   - crypto.ts: 加密工具
+
+4. **src/adapters/** - 防腐层重构
+   - payment/: 从 src/lib/payment/ 迁移
+   - upstream/: 从 src/lib/upstream.ts 迁移
+   - 删除 src/lib/ 目录
+
+5. **src/domains/** - 领域层完善
+   - payment/: 支付业务领域（新增）
+   - sms/: 短信业务领域（新增）
+   - order/: 添加 order.service.ts
+
+6. **src/views/** - 视图层细分
+   - layouts/: 页面布局（新增）
+   - components/: 从根目录移过来
+   - partials/: HTMX 局部片段（新增）
+
+7. **src/routes/web/** - Web 路由（新增）
+   - pages.ts: 页面路由集中管理
+
+8. **tests/** - 测试结构完善
+   - e2e/: 端到端测试（新增）
+   - fixtures/: 测试数据（新增）
+
+9. **docs/** - 文档目录（新增）
+   - API.md: API 文档
+   - SETUP.md: 开发环境搭建
+   - DEPLOYMENT.md: 部署指南
+
+10. **.env.example** - 环境变量模板（新增）
 Read Before Write (先读后写)：在修改任何已有文件前，必须先 read_file 完整阅读内容，严禁基于假设覆盖逻辑。
 
 Safety First (安全第一)：

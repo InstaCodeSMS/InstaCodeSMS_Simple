@@ -101,7 +101,7 @@ export class AlimpayClient {
     // 构建请求 URL
     // 注意：URL 参数值不进行编码（AliMPay 期望原始 URL）
     const baseUrl = this.config.apiUrl.replace(/\/$/, '')
-    
+
     // 手动构建查询字符串（只对 name 进行 URL 编码）
     const queryParams = [
       `money=${options.amount}`,

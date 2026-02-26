@@ -22,7 +22,7 @@ import { requestLogger } from './middleware/logger'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler'
 
 // 导入上游客户端
-import { createUpstreamClient } from './lib/upstream'
+import { createUpstreamClient } from './adapters/upstream'
 
 // 导入类型
 import type { Env } from './types/env'

@@ -121,7 +121,7 @@ app.get('/:id/prefixes', async (c) => {
     }
 
     // 获取号码前缀需要调用上游 API
-    const { createUpstreamClient } = await import('../../lib/upstream')
+    const { createUpstreamClient } = await import('../../adapters/upstream')
     const client = createUpstreamClient({
       UPSTREAM_API_URL: c.env.UPSTREAM_API_URL,
       UPSTREAM_API_TOKEN: c.env.UPSTREAM_API_TOKEN,

@@ -1,68 +1,46 @@
 /**
- * 全局错误处理中间件
- * 分级异常处理：区分客户端错误、上游错误、内部错误
+ * 改进的错误处理中间件
+ * 支持 AppError、Zod 验证错误、上游错误等
  */
 
 import { Context } from 'hono'
-import {
-  AppError,
-  ErrorCode,
-  isAppError,
-  isTimeoutError,
-  isConnectionError,
-} from '../types/errors'
+import { AppError, isAppError } from '../core/errors'
+import { ZodError } from 'zod'
 
 /**
  * 错误响应格式
  */
 interface ErrorResponse {
   success: false
-  error: {
-    code: ErrorCode
-    message: string
-    details?: unknown
-    requestId?: string
-  }
-}
-
-/**
- * 全局错误处理中间件
- */
-export function errorHandler(err: Error, c: Context): Response {
-  const requestId = c.get('requestId') as string | undefined
-  const statusCode = getStatusCode(err)
-  const errorResponse = buildErrorResponse(err, requestId)
-
-  // 设置响应头
-  if (requestId) {
-    c.header('X-Request-ID', requestId)
-  }
-
-  // 记录错误日志
-  logError(err, requestId, statusCode)
-
-  return c.json(errorResponse, statusCode as any)
+  message: string
+  code?: string
+  details?: unknown
+  requestId?: string
 }
 
 /**
  * 获取 HTTP 状态码
  */
 function getStatusCode(err: Error): number {
-  if (isAppError(err)) {
+  if (err instanceof AppError) {
     return err.statusCode
   }
 
-  // 超时错误 -> 504
-  if (isTimeoutError(err)) {
+  if (err instanceof ZodError) {
+    return 400
+  }
+
+  // 检查错误消息中的特定模式
+  const message = err.message || ''
+
+  if (message.includes('timeout') || message.includes('超时')) {
     return 504
   }
 
-  // 连接错误 -> 503
-  if (isConnectionError(err)) {
+  if (message.includes('connection') || message.includes('连接')) {
     return 503
   }
 
-  // 默认 500
   return 500
 }
 
@@ -71,64 +49,57 @@ function getStatusCode(err: Error): number {
  */
 function buildErrorResponse(err: Error, requestId?: string): ErrorResponse {
   // AppError 处理
-  if (isAppError(err)) {
+  if (err instanceof AppError) {
     return {
       success: false,
-      error: {
-        code: err.code,
-        message: err.message,
-        details: err.details,
-        requestId,
-      },
+      message: err.message,
+      code: err.code,
+      details: err.details,
+      requestId,
+    }
+  }
+
+  // Zod 验证错误
+  if (err instanceof ZodError) {
+    return {
+      success: false,
+      message: '参数验证失败',
+      code: 'VALIDATION_ERROR',
+      details: err.issues.map((issue) => ({
+        path: issue.path.join('.'),
+        message: issue.message,
+        code: issue.code,
+      })),
+      requestId,
     }
   }
 
   // 超时错误
-  if (isTimeoutError(err)) {
+  if (err.message.includes('timeout') || err.message.includes('超时')) {
     return {
       success: false,
-      error: {
-        code: ErrorCode.UPSTREAM_TIMEOUT,
-        message: '上游服务响应超时，请稍后重试',
-        requestId,
-      },
+      message: '请求超时，请稍后重试',
+      code: 'TIMEOUT_ERROR',
+      requestId,
     }
   }
 
   // 连接错误
-  if (isConnectionError(err)) {
+  if (err.message.includes('connection') || err.message.includes('连接')) {
     return {
       success: false,
-      error: {
-        code: ErrorCode.UPSTREAM_UNAVAILABLE,
-        message: '上游服务暂时不可用，请稍后重试',
-        details: { reason: err.message },
-        requestId,
-      },
-    }
-  }
-
-  // Zod 校验错误
-  if (err.name === 'ZodError') {
-    return {
-      success: false,
-      error: {
-        code: ErrorCode.VALIDATION_ERROR,
-        message: '参数校验失败',
-        details: (err as any).errors,
-        requestId,
-      },
+      message: '服务暂时不可用，请稍后重试',
+      code: 'CONNECTION_ERROR',
+      requestId,
     }
   }
 
   // 未知错误 - 隐藏内部细节
   return {
     success: false,
-    error: {
-      code: ErrorCode.INTERNAL_ERROR,
-      message: '服务器内部错误',
-      requestId,
-    },
+    message: '服务器内部错误',
+    code: 'INTERNAL_ERROR',
+    requestId,
   }
 }
 
@@ -158,6 +129,25 @@ function logError(err: Error, requestId: string | undefined, statusCode: number)
 }
 
 /**
+ * 全局错误处理中间件
+ */
+export function errorHandler(err: Error, c: Context): Response {
+  const requestId = c.get('requestId') as string | undefined
+  const statusCode = getStatusCode(err)
+  const errorResponse = buildErrorResponse(err, requestId)
+
+  // 设置响应头
+  if (requestId) {
+    c.header('X-Request-ID', requestId)
+  }
+
+  // 记录错误日志
+  logError(err, requestId, statusCode)
+
+  return c.json(errorResponse, statusCode as any)
+}
+
+/**
  * 404 处理中间件
  */
 export function notFoundHandler(c: Context): Response {
@@ -166,11 +156,9 @@ export function notFoundHandler(c: Context): Response {
   return c.json(
     {
       success: false,
-      error: {
-        code: ErrorCode.NOT_FOUND,
-        message: '请求的资源不存在',
-        requestId,
-      },
+      message: '请求的资源不存在',
+      code: 'NOT_FOUND',
+      requestId,
     },
     404
   )

@@ -5,16 +5,16 @@
  */
 
 import { Hono } from 'hono'
-import { createBepusdtClient, BepusdtError } from '../../lib/payment/bepusdt/client'
-import { createAlimpayClient, AlimpayError } from '../../lib/payment/alimpay/client'
+import { createBepusdtClient, BepusdtError } from '../../adapters/payment/bepusdt/client'
+import { createAlimpayClient, AlimpayError } from '../../adapters/payment/alimpay/client'
 import { createSupabaseServiceClient } from '../../adapters/database/supabase'
 import { createOrderRepository } from '../../domains/order/order.repo'
 import { PaymentOrderStatus, type ProductSnapshot } from '../../domains/order/order.schema'
 import type { Env } from '../../types/env'
 import type { ApiResponse } from '../../types/api'
-import { PaymentStatus, type CreatePaymentRequest, type CreatePaymentResponse } from '../../lib/payment/types'
-import type { BepusdtCallbackData } from '../../lib/payment/bepusdt/types'
-import type { CallbackParams as AlimpayCallbackParams } from '../../lib/payment/alimpay/types'
+import { PaymentStatus, type CreatePaymentRequest, type CreatePaymentResponse } from '../../adapters/payment/types'
+import type { BepusdtCallbackData } from '../../adapters/payment/bepusdt/types'
+import type { CallbackParams as AlimpayCallbackParams } from '../../adapters/payment/alimpay/types'
 
 const app = new Hono<{ Bindings: Env }>()
 

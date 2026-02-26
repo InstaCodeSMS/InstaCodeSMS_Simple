@@ -4,7 +4,7 @@
  */
 
 import { createSupabaseClient, createSupabaseServiceClient } from '../../adapters/database/supabase'
-import { createUpstreamClient } from '../../lib/upstream'
+import { createUpstreamClient } from '../../adapters/upstream'
 import { ProductRepository, UpstreamProductRepository } from './product.repo'
 import type { ProductListItem, CreateProductInput, UpdateProductInput } from './product.schema'
 import type { Env } from '../../types/env'
