@@ -1,57 +1,17 @@
 /**
  * Checkout 页面视图
  * 订单确认 + 支付页面
- * 对接 BEpusdt USDT 支付
  * 
  * Why: 根据 .clinerules 规范，视图层应放在 src/views/pages/ 目录
+ * 使用 Layout 组件避免重复的 HTML 结构
  */
 
-export default function CheckoutPage(): string {
-  return `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>确认支付 - SimpleFaka</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@5/dist/full.min.css" rel="stylesheet" type="text/css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <script src="https://unpkg.com/htmx.org@2.0.8"></script>
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+import Layout from '../components/Layout'
+import { raw } from 'hono/html'
+
+export default function CheckoutPage(csrfToken: string = ''): string {
+  const content = `
   <style>
-    [x-cloak] { display: none !important; }
-    
-    .dark {
-      --bg-primary: rgb(12, 15, 22);
-      --bg-secondary: rgb(19, 22, 32);
-      --bg-tertiary: rgb(26, 30, 44);
-      --text-primary: rgb(228, 232, 241);
-      --text-secondary: rgb(148, 163, 184);
-      --text-muted: rgb(100, 116, 139);
-      --border-color: rgba(200, 210, 240, 0.06);
-      --border-color-light: rgba(200, 210, 240, 0.08);
-      --accent-blue: rgb(37, 99, 235);
-    }
-    
-    .light {
-      --bg-primary: rgb(248, 250, 252);
-      --bg-secondary: rgb(255, 255, 255);
-      --bg-tertiary: rgb(241, 245, 249);
-      --text-primary: rgb(15, 23, 42);
-      --text-secondary: rgb(71, 85, 105);
-      --text-muted: rgb(100, 116, 139);
-      --border-color: rgba(226, 232, 240, 0.8);
-      --border-color-light: rgba(226, 232, 240, 1);
-      --accent-blue: rgb(37, 99, 235);
-    }
-    
-    body {
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-    
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
@@ -67,13 +27,8 @@ export default function CheckoutPage(): string {
       animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
   </style>
-</head>
-<body class="min-h-screen transition-colors duration-300" 
-      x-data="checkoutApp()"
-      :class="theme"
-      x-init="init()">
-  
-  <main class="min-h-screen py-24 px-6 relative flex items-center justify-center overflow-hidden">
+
+  <main x-data="checkoutApp()" class="min-h-screen py-24 px-6 relative flex items-center justify-center overflow-hidden">
     <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] rounded-full pointer-events-none"
          :class="theme === 'dark' ? 'bg-blue-600/5 blur-[120px]' : 'bg-blue-400/10 blur-[150px]'"></div>
 
@@ -206,9 +161,7 @@ export default function CheckoutPage(): string {
                 <div class="relative group flex justify-center">
                   <div class="absolute -inset-4 bg-blue-600/15 rounded-[2rem] blur-xl"></div>
                   <div class="relative w-48 h-48 bg-white p-3 rounded-3xl shadow-2xl flex items-center justify-center overflow-hidden">
-                    <!-- 如果是 base64 二维码 -->
                     <img x-show="qrCodeBase64" :src="'data:image/png;base64,' + qrCodeBase64" class="w-full h-full rounded-2xl object-contain" />
-                    <!-- 如果是二维码 URL -->
                     <img x-show="qrCodeUrl && !qrCodeBase64" :src="qrCodeUrl" class="w-full h-full rounded-2xl object-contain" />
                   </div>
                 </div>
@@ -238,7 +191,6 @@ export default function CheckoutPage(): string {
                   </p>
                 </div>
 
-                <!-- 支付状态 -->
                 <div x-show="isChecking" class="flex items-center justify-center gap-2 text-[10px]" style="color: var(--text-muted);">
                   <div class="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
                   <span>正在等待支付确认...</span>
@@ -287,12 +239,11 @@ export default function CheckoutPage(): string {
     </div>
   </main>
 
+  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script>
     function checkoutApp() {
       return {
         theme: localStorage.getItem('theme') || 'dark',
-        
-        // 订单信息
         orderId: '',
         tradeId: '',
         productName: '',
@@ -302,32 +253,23 @@ export default function CheckoutPage(): string {
         totalAmount: '0.00',
         actualAmount: '',
         paymentMethod: 'usdt',
-        
-        // 支付信息
         walletAddress: '',
         expirationTime: 600,
         timeLeft: 600,
-        
-        // 支付宝专属
         qrCodeBase64: '',
         qrCodeUrl: '',
-        
-        // 状态
         error: null,
         isChecking: false,
         isProcessing: false,
         isCreating: false,
         timer: null,
         pollTimer: null,
-        
-        // Toast
         toastShow: false,
         toastMsg: '',
         
         init() {
           this.$watch('theme', val => localStorage.setItem('theme', val));
           
-          // 从 URL 参数获取订单信息
           const params = new URLSearchParams(window.location.search);
           this.productName = params.get('title') || '未知产品';
           this.region = params.get('region') || 'US';
@@ -336,17 +278,14 @@ export default function CheckoutPage(): string {
           this.totalAmount = params.get('amount') || '0.00';
           this.paymentMethod = params.get('method') || 'usdt';
           
-          // 从 URL 获取产品 ID
           const serviceId = params.get('id');
           if (!serviceId) {
             this.error = '缺少产品信息，请重新选择';
             return;
           }
           
-          // 获取有效期选项
           const expiryValue = parseInt(params.get('expiry') || '0');
           
-          // 创建支付订单（防止重复调用）
           if (!this.isCreating) {
             this.isCreating = true;
             this.createPaymentOrder(serviceId, expiryValue);
@@ -355,7 +294,6 @@ export default function CheckoutPage(): string {
         
         async createPaymentOrder(serviceId, expiryValue) {
           try {
-            // 生成订单号
             this.orderId = 'ORD' + Date.now() + Math.random().toString(36).substr(2, 6).toUpperCase();
             
             const response = await fetch('/api/payment/create', {
@@ -383,30 +321,24 @@ export default function CheckoutPage(): string {
               throw new Error(data.message || '创建支付订单失败');
             }
             
-            // 设置支付信息
             this.tradeId = data.data.trade_id;
             this.walletAddress = data.data.token;
             this.actualAmount = data.data.actual_amount;
             this.expirationTime = data.data.expiration_time;
             this.timeLeft = data.data.expiration_time;
             
-            // 支付宝专属：设置二维码
             if (this.paymentMethod === 'alipay') {
               this.qrCodeBase64 = data.data.qr_code || '';
               this.qrCodeUrl = data.data.qr_code_url || '';
             }
             
-            // 生成二维码（USDT）
             if (this.paymentMethod === 'usdt') {
               this.$nextTick(() => {
                 this.generateQRCode();
               });
             }
             
-            // 启动倒计时
             this.startTimer();
-            
-            // 启动轮询
             this.startPolling();
             
           } catch (err) {
@@ -418,14 +350,10 @@ export default function CheckoutPage(): string {
         generateQRCode() {
           const canvas = document.getElementById('qrcode');
           if (canvas && this.walletAddress) {
-            const qrContent = this.walletAddress;
-            QRCode.toCanvas(canvas, qrContent, {
+            QRCode.toCanvas(canvas, this.walletAddress, {
               width: 180,
               margin: 2,
-              color: {
-                dark: '#000000',
-                light: '#ffffff'
-              }
+              color: { dark: '#000000', light: '#ffffff' }
             }, function(error) {
               if (error) console.error('生成二维码失败:', error);
             });
@@ -448,13 +376,11 @@ export default function CheckoutPage(): string {
           this.pollTimer = setInterval(() => {
             this.checkPaymentStatus();
           }, 5000);
-          
           this.checkPaymentStatus();
         },
         
         async checkPaymentStatus() {
           if (!this.tradeId || this.isProcessing) return;
-          
           this.isChecking = true;
           
           try {
@@ -465,9 +391,7 @@ export default function CheckoutPage(): string {
               this.isProcessing = true;
               clearInterval(this.timer);
               clearInterval(this.pollTimer);
-              
               this.showToast('支付成功，正在创建订单...');
-              
               await this.createUpstreamOrder();
             }
           } catch (err) {
@@ -551,7 +475,14 @@ export default function CheckoutPage(): string {
         }
       }
     }
-  </script>
-</body>
-</html>`
+  </script>`
+
+  const result = Layout({
+    title: '确认支付',
+    children: raw(content),
+    showHeader: false,
+    showFooter: false,
+    csrfToken
+  })
+  return result.toString()
 }

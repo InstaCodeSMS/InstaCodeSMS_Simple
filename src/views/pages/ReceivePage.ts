@@ -3,109 +3,39 @@
  * 接码终端页面
  * 
  * Why: 根据 .clinerules 规范，视图层应放在 src/views/pages/ 目录
+ * 使用 Layout 组件避免重复的 HTML 结构
  */
 
-export default function ReceivePage(): string {
-  return `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>接码终端 - SimpleFaka</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet" type="text/css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <script src="https://unpkg.com/htmx.org@2.0.8"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+import Layout from '../components/Layout'
+import { raw } from 'hono/html'
+
+export default function ReceivePage(csrfToken: string = ''): string {
+  const content = `
   <style>
-    [x-cloak] { display: none !important; }
-    
-    /* ===== 主题变量 ===== */
-    .dark {
-      --bg-primary: #0C0F16;
-      --bg-secondary: #171B28;
-      --bg-tertiary: rgba(30, 41, 59, 0.6);
-      --bg-card: rgba(19, 22, 32, 0.3);
-      --bg-input: #171B28;
-      --bg-footer: #0A0D14;
-      --text-primary: #E4E8F1;
-      --text-secondary: #4D5470;
-      --text-muted: #4D5470;
-      --border-color: rgba(51, 65, 85, 0.5);
-      --border-subtle: rgba(200, 210, 240, 0.06);
-      --border-input: rgba(200, 210, 240, 0.1);
-      --accent-primary: #2563EB;
-      --accent-light: #3B82F6;
-      --accent-dark: #1D4ED8;
-      --nav-bg: rgba(12, 15, 22, 0.78);
-      --glow-color: rgba(37, 99, 235, 0.15);
-    }
-    
-    .light {
-      --bg-primary: #ffffff;
-      --bg-secondary: #f8f9fd;
-      --bg-tertiary: #f0f4f8;
-      --bg-card: rgba(255, 255, 255, 0.7);
-      --bg-input: #f8f9fd;
-      --bg-footer: #f8fafc;
-      --text-primary: #1a1a2e;
-      --text-secondary: #64748b;
-      --text-muted: #94a3b8;
-      --border-color: #e2e8f0;
-      --border-subtle: #e2e8f0;
-      --border-input: #e2e8f0;
-      --accent-primary: #2563EB;
-      --accent-light: #3B82F6;
-      --accent-dark: #1D4ED8;
-      --nav-bg: rgba(255, 255, 255, 0.85);
-      --glow-color: rgba(59, 130, 246, 0.1);
-    }
-    
-    body {
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-      transition: background-color 0.3s, color 0.3s;
-      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Helvetica, "Segoe UI", Arial, Roboto, "PingFang SC", miui, "Hiragino Sans GB", "Microsoft Yahei", sans-serif;
-    }
-    
+    /* 页面特定样式 */
     .card-bg {
-      background-color: var(--bg-card);
-      border-color: var(--border-subtle);
+      background-color: var(--bg-card, rgba(19, 22, 32, 0.3));
+      border-color: var(--border-subtle, rgba(200, 210, 240, 0.06));
       backdrop-filter: blur(24px);
       -webkit-backdrop-filter: blur(24px);
     }
     
     .input-bg {
-      background-color: var(--bg-input);
-      border-color: var(--border-input);
-      color: var(--text-primary);
+      background-color: var(--bg-input, #171B28);
+      border-color: var(--border-input, rgba(200, 210, 240, 0.1));
+      color: var(--text-primary, #E4E8F1);
     }
     
     .text-muted {
-      color: var(--text-secondary);
+      color: var(--text-secondary, #4D5470);
     }
     
     .border-theme {
-      border-color: var(--border-subtle);
-    }
-
-    .nav-bg {
-      background-color: var(--nav-bg);
-      border-color: var(--border-subtle);
+      border-color: var(--border-subtle, rgba(200, 210, 240, 0.06));
     }
     
     .footer-bg {
-      background-color: var(--bg-footer);
-    }
-    
-    /* ===== 动画 ===== */
-    .pulse-animation {
-      animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-    }
-    
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
+      background-color: var(--bg-footer, #0A0D14);
     }
     
     @keyframes scan {
@@ -123,15 +53,6 @@ export default function ReceivePage(): string {
     /* Toast 动画 */
     .toast-enter-active, .toast-leave-active { transition: all 0.3s ease; }
     .toast-enter-from, .toast-leave-to { opacity: 0; transform: translate(-50%, 20px); }
-    
-    /* 列表动画 */
-    .list-enter-active, .list-leave-active { transition: all 0.4s ease; }
-    .list-enter-from, .list-leave-to { opacity: 0; transform: translateY(-10px); }
-    
-    /* 自定义滚动条 */
-    ::-webkit-scrollbar { width: 4px; height: 4px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--accent-primary); border-radius: 10px; opacity: 0.3; }
     
     /* 验证码高亮 */
     .code-highlight {
@@ -166,105 +87,26 @@ export default function ReceivePage(): string {
       background: radial-gradient(ellipse, rgba(59, 130, 246, 0.06) 0%, transparent 70%);
     }
   </style>
-</head>
-<body class="min-h-screen transition-colors duration-300 relative overflow-x-hidden" 
-      x-data="receiveApp()"
-      :class="theme"
-      x-init="init()">
-  
+
   <!-- 顶部光晕效果 -->
   <div class="top-glow blur-[100px]"></div>
 
-  <!-- 导航栏 -->
-  <nav class="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl border-b nav-bg transition-all duration-300">
-    <div class="max-w-5xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-3">
-        <div class="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <i class="fas fa-bolt text-white text-sm"></i>
-        </div>
-        <span class="text-lg font-bold tracking-tight">
-          <span class="text-blue-500">SIMPLE</span><span class="text-purple-500">FAKA</span>
-        </span>
-      </a>
-      
-      <div class="flex items-center gap-2">
-        <div class="hidden sm:flex items-center gap-1">
-          <a href="/purchase" class="px-4 py-2 rounded-xl text-muted hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)] transition-all text-xs font-bold uppercase tracking-wider">
-            <span x-text="t('nav.purchase')"></span>
-          </a>
-          <a href="/receive" class="px-4 py-2 rounded-xl text-blue-500 bg-blue-500/10 text-xs font-bold uppercase tracking-wider">
-            <span x-text="t('nav.receive')"></span>
-          </a>
-        </div>
-        
-        <!-- 语言切换 -->
-        <button 
-          @click="toggleLanguage()"
-          class="h-10 px-3 rounded-xl flex items-center gap-2 hover:bg-[var(--bg-tertiary)] transition-all text-sm"
-          :title="lang === 'zh' ? 'Switch to English' : '切换到中文'"
-        >
-          <img :src="lang === 'zh' ? 'https://flagcdn.com/w40/cn.png' : 'https://flagcdn.com/w40/gb.png'" 
-               class="w-5 h-4 rounded object-cover" :alt="lang">
-          <i class="fas fa-chevron-down text-xs text-muted"></i>
-        </button>
-        
-        <!-- 主题切换 -->
-        <button 
-          @click="toggleTheme()"
-          class="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] transition-all"
-          :title="theme === 'dark' ? t('nav.light_mode') : t('nav.dark_mode')"
-        >
-          <i x-show="theme === 'dark'" class="fas fa-sun text-yellow-500"></i>
-          <i x-show="theme === 'light'" class="fas fa-moon text-blue-500"></i>
-        </button>
-        
-        <!-- 移动端菜单 -->
-        <div class="sm:hidden relative" x-data="{ mobileOpen: false }">
-          <button 
-            @click="mobileOpen = !mobileOpen"
-            class="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-[var(--bg-tertiary)] transition-all"
-          >
-            <i class="fas fa-bars text-sm"></i>
-          </button>
-          <div 
-            x-show="mobileOpen" 
-            x-cloak
-            @click.away="mobileOpen = false"
-            x-transition
-            class="absolute right-0 top-12 w-40 card-bg border rounded-2xl shadow-xl overflow-hidden"
-          >
-            <a href="/purchase" class="block px-4 py-3 hover:bg-[var(--bg-tertiary)] text-sm">
-              <span x-text="t('nav.purchase')"></span>
-            </a>
-            <a href="/receive" class="block px-4 py-3 hover:bg-[var(--bg-tertiary)] text-blue-500 text-sm">
-              <span x-text="t('nav.receive')"></span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </nav>
-
   <!-- 主内容 -->
-  <main class="pt-28 pb-8 px-4 sm:px-6 relative z-10">
+  <main x-data="receiveApp()" class="pt-28 pb-8 px-4 sm:px-6 relative z-10">
     <div class="max-w-3xl mx-auto">
       
       <!-- 标题区域 -->
       <header class="mb-12">
         <div class="flex flex-col lg:flex-row lg:items-end justify-between gap-8">
           <!-- 状态指示器 -->
-          <div class="order-2 lg:order-1 animate-in fade-in slide-in-from-left-4 duration-700">
+          <div class="order-2 lg:order-1">
             <div class="relative w-24 h-24 shrink-0">
-              <!-- 脉冲动画 -->
               <div class="absolute inset-0 bg-blue-500/20 rounded-full animate-ping-slow" x-show="isPolling"></div>
-              <!-- 主体 -->
               <div class="relative w-full h-full rounded-full border backdrop-blur-xl flex flex-col items-center justify-center overflow-hidden"
                    :class="theme === 'dark' 
                      ? 'bg-[#131620]/50 border-[rgba(200,210,240,0.08)]' 
                      : 'bg-white/60 border-slate-200/60 shadow-sm'">
-                <!-- 扫描动画 -->
                 <div class="absolute inset-0 bg-gradient-to-t from-blue-500/10 to-transparent translate-y-full animate-scan" x-show="isPolling"></div>
-                <!-- 状态点 -->
                 <div class="w-3 h-3 rounded-full mb-1.5 transition-all duration-500"
                      :class="isPolling ? 'bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.8)]' : 'bg-slate-400'"></div>
                 <span class="text-[8px] font-mono text-blue-700 tracking-tighter uppercase font-bold">Node</span>
@@ -275,8 +117,7 @@ export default function ReceivePage(): string {
             </div>
           </div>
           
-          <!-- 标题文字 -->
-          <div class="order-1 lg:order-2 text-center lg:text-right animate-in fade-in slide-in-from-right-4 duration-700">
+          <div class="order-1 lg:order-2 text-center lg:text-right">
             <h2 class="text-[10px] font-mono tracking-[0.4em] text-blue-600 uppercase mb-3 italic leading-none">
               <span x-text="t('receive.terminal_receiver')"></span>
             </h2>
@@ -291,12 +132,10 @@ export default function ReceivePage(): string {
       <section class="mb-10">
         <div class="card-bg border rounded-[2rem] p-6 sm:p-8 shadow-lg transition-all duration-300"
              :class="theme === 'dark' ? 'shadow-black/20' : 'shadow-slate-200/40'">
-          <!-- Label 放在外面，不影响对齐 -->
           <label class="block text-xs font-mono text-muted uppercase tracking-widest mb-3">
             <span x-text="t('receive.access_token')"></span>
           </label>
           
-          <!-- 核心对齐区域：只有 input 和 button -->
           <div class="flex flex-col sm:flex-row gap-4">
             <div class="flex-1 relative">
               <input 
@@ -330,7 +169,6 @@ export default function ReceivePage(): string {
             </button>
           </div>
           
-          <!-- Hint 放在外面，不影响对齐 -->
           <p class="text-xs text-muted mt-2">
             <i class="fas fa-info-circle mr-1"></i>
             <span x-text="t('receive.token_hint')"></span>
@@ -349,7 +187,6 @@ export default function ReceivePage(): string {
           </div>
           
           <div class="flex items-center gap-2 flex-wrap">
-            <!-- 通知开关 -->
             <button 
               type="button"
               @click="toggleNotification()"
@@ -357,13 +194,11 @@ export default function ReceivePage(): string {
               :class="notificationEnabled 
                 ? 'bg-blue-500/10 text-blue-500 border-blue-500/30' 
                 : 'bg-[var(--bg-tertiary)] text-muted border-[var(--border-color)]'"
-              :title="notificationEnabled ? t('receive.notification_on') : t('receive.notification_off')"
             >
               <i :class="notificationEnabled ? 'fas fa-bell' : 'fas fa-bell-slash'" class="mr-1.5"></i>
               <span x-text="notificationEnabled ? 'ON' : 'OFF'"></span>
             </button>
             
-            <!-- 清空历史 -->
             <button 
               type="button"
               @click="clearHistory()"
@@ -377,7 +212,6 @@ export default function ReceivePage(): string {
               <span x-text="t('receive.clear_history')"></span>
             </button>
             
-            <!-- 导出 -->
             <button 
               type="button"
               @click="exportMessages()"
@@ -405,7 +239,6 @@ export default function ReceivePage(): string {
             >
               <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div class="flex-1 w-full">
-                  <!-- 时间和状态 -->
                   <div class="flex items-center gap-2 mb-3 font-mono text-[10px] text-muted uppercase tracking-widest">
                     <div class="w-1.5 h-1.5 rounded-full"
                          :class="msg.id === 'waiting' ? 'bg-yellow-500 animate-pulse' : (msg.id === 'err' ? 'bg-red-500' : 'bg-emerald-500')"></div>
@@ -413,10 +246,8 @@ export default function ReceivePage(): string {
                     <span x-show="msg.tel" class="text-blue-500" x-text="'[' + msg.tel + ']'"></span>
                   </div>
                   
-                  <!-- 消息内容 -->
                   <p class="text-base sm:text-lg leading-relaxed whitespace-pre-wrap" x-html="highlightCodes(msg.text)"></p>
                   
-                  <!-- 验证码快速复制区 -->
                   <div x-show="msg.codes && msg.codes.length > 0" class="mt-4 flex flex-wrap items-center gap-3">
                     <template x-for="(code, idx) in msg.codes" :key="idx">
                       <div class="flex items-center gap-2">
@@ -438,7 +269,6 @@ export default function ReceivePage(): string {
                   </div>
                 </div>
                 
-                <!-- 复制全文按钮 -->
                 <button 
                   x-show="!['waiting', 'err'].includes(msg.id)"
                   @click="copyText(msg.text)"
@@ -453,7 +283,6 @@ export default function ReceivePage(): string {
             </div>
           </template>
           
-          <!-- 空状态 -->
           <div x-show="messages.length === 0" class="py-20 text-center border rounded-[2.5rem] border-theme">
             <p class="text-muted font-mono text-sm tracking-[0.2em] uppercase opacity-50 italic">
               <span x-text="t('receive.awaiting_input')"></span>
@@ -464,23 +293,6 @@ export default function ReceivePage(): string {
 
     </div>
   </main>
-
-  <!-- Footer -->
-  <footer class="border-t border-theme footer-bg py-10 px-4 sm:px-6 relative z-10">
-    <div class="max-w-3xl mx-auto">
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
-        <span class="text-base font-bold">
-          <span class="text-blue-500">SIMPLE</span><span class="text-purple-500">FAKA</span>
-        </span>
-        <div class="flex items-center gap-6 text-sm text-muted">
-          <a href="#" class="hover:text-[var(--text-primary)] transition-colors" x-text="t('footer.contact')"></a>
-          <a href="/PrivacyPolicy" class="hover:text-[var(--text-primary)] transition-colors" x-text="t('footer.privacy')"></a>
-          <a href="#" class="hover:text-[var(--text-primary)] transition-colors" x-text="t('footer.terms')"></a>
-        </div>
-        <p class="text-muted text-xs">© 2026 SIMPLEFAKA PROTOCOL. <span x-text="t('footer.copyright')"></span></p>
-      </div>
-    </div>
-  </footer>
 
   <!-- Toast 提示 -->
   <div 
@@ -605,19 +417,16 @@ export default function ReceivePage(): string {
     // ===== Alpine.js 应用 =====
     function receiveApp() {
       return {
-        // 状态
-        theme: 'dark',
-        lang: 'zh',
+        theme: localStorage.getItem('theme') || 'dark',
+        lang: localStorage.getItem('receive_language') || 'zh',
         token: '',
         showToken: false,
         isPolling: false,
         messages: [],
-        notificationEnabled: false,
+        notificationEnabled: localStorage.getItem('receive_notification_enabled') === 'true',
         toastShow: false,
         toastMsg: '',
         pollInterval: null,
-        
-        // 常量
         STORAGE_KEY: 'receive_messages_history',
         NOTIFICATION_KEY: 'receive_notification_enabled',
         LANGUAGE_KEY: 'receive_language',
@@ -625,26 +434,21 @@ export default function ReceivePage(): string {
         POLL_INTERVAL: 5000,
         TOAST_DURATION: 3000,
         
-        // ===== 初始化 =====
         init() {
-          // 加载保存的状态
           this.theme = localStorage.getItem('theme') || 'dark';
           this.lang = localStorage.getItem(this.LANGUAGE_KEY) || 'zh';
           this.notificationEnabled = localStorage.getItem(this.NOTIFICATION_KEY) === 'true';
           this.loadMessages();
           
-          // 监听主题变化
           this.$watch('theme', (val) => {
             localStorage.setItem('theme', val);
-            document.body.className = 'min-h-screen transition-colors duration-300 relative overflow-x-hidden ' + val;
+            document.body.className = 'min-h-screen transition-colors duration-300 ' + val;
           });
           
-          // 监听语言变化
           this.$watch('lang', (val) => {
             localStorage.setItem(this.LANGUAGE_KEY, val);
           });
           
-          // 检查URL参数
           const urlParams = new URLSearchParams(window.location.search);
           const tokenParam = urlParams.get('token');
           if (tokenParam) {
@@ -652,13 +456,11 @@ export default function ReceivePage(): string {
             this.$nextTick(() => this.startRadar());
           }
           
-          // 请求通知权限
           if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
           }
         },
         
-        // ===== 翻译函数 =====
         t(key) {
           const keys = key.split('.');
           let value = i18n[this.lang];
@@ -668,32 +470,26 @@ export default function ReceivePage(): string {
           return value || key;
         },
         
-        // ===== 主题切换 =====
         toggleTheme() {
           this.theme = this.theme === 'dark' ? 'light' : 'dark';
           this.showToast(this.theme === 'dark' ? this.t('nav.dark_mode') : this.t('nav.light_mode'));
         },
         
-        // ===== 语言切换 =====
         toggleLanguage() {
           this.lang = this.lang === 'zh' ? 'en' : 'zh';
           document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
         },
         
-        // ===== Token 输入处理 =====
         sanitizeToken(e) {
           const input = e.target.value;
           const originalLength = input.length;
           const sanitized = input.replace(/[^a-zA-Z0-9]/g, '');
-          
           if (sanitized.length < originalLength) {
             this.showToast(this.t('receive.token_invalid_char'));
           }
-          
           this.token = sanitized;
         },
         
-        // ===== 雷达控制 =====
         toggleRadar() {
           if (this.isPolling) {
             this.stopRadar();
@@ -723,24 +519,17 @@ export default function ReceivePage(): string {
             clearInterval(this.pollInterval);
             this.pollInterval = null;
           }
-          // 移除等待消息
           this.messages = this.messages.filter(m => m.id !== 'waiting');
           this.showToast(this.t('receive.radar_offline'));
         },
         
-        // ===== API 请求 =====
         fetchSms() {
           fetch('/api/sms/' + this.token.trim() + '/json')
             .then(res => res.json())
             .then(data => {
               if (data.success && data.data && data.data.sms) {
-                // 移除等待消息
                 this.messages = this.messages.filter(m => m.id !== 'waiting');
-                
-                // 提取验证码
                 const codes = this.extractCodes(data.data.sms);
-                
-                // 添加新消息
                 const newMessage = {
                   id: Date.now(),
                   text: data.data.sms,
@@ -748,26 +537,15 @@ export default function ReceivePage(): string {
                   codes: codes,
                   time: this.formatTime()
                 };
-                
                 this.messages.unshift(newMessage);
-                
-                // 限制消息数量
                 if (this.messages.length > this.MAX_MESSAGES) {
                   this.messages = this.messages.slice(0, this.MAX_MESSAGES);
                 }
-                
-                // 保存到 localStorage
                 this.saveMessages();
-                
-                // 发送通知
                 this.playNotification(data.data.sms);
-                
-                // 停止雷达
                 this.stopRadar();
-                
                 this.showToast(this.t('receive.new_signal'));
               } else if (this.messages.length === 0 || this.messages[0].id !== 'waiting') {
-                // 显示等待状态
                 this.messages = [{
                   id: 'waiting',
                   text: this.t('receive.radar_scanning'),
@@ -782,7 +560,6 @@ export default function ReceivePage(): string {
             });
         },
         
-        // ===== 验证码提取 =====
         extractCodes(text) {
           const codes = [];
           const patterns = [
@@ -791,56 +568,45 @@ export default function ReceivePage(): string {
             /[【\\[（(]([A-Z0-9]{4,8})[】\\]）)]/gi,
             /\\b([0-9]{4,8})\\b/g
           ];
-          
           const seen = new Set();
-          
           for (const pattern of patterns) {
             const matches = text.matchAll(pattern);
             for (const match of matches) {
               if (match[1] && !seen.has(match[1])) {
                 const code = match[1].toUpperCase();
-                // 过滤全是相同字符的验证码
                 if (!/^(.)\\1+$/.test(code) && code.length >= 4) {
                   codes.push(code);
                   seen.add(code);
                 }
               }
             }
-            if (codes.length > 0) break; // 找到后停止
+            if (codes.length > 0) break;
           }
-          
           return codes;
         },
         
-        // ===== 高亮验证码 =====
         highlightCodes(text) {
           if (!text) return text;
-          
           const codes = this.extractCodes(text);
           let highlighted = text;
-          
           codes.forEach(code => {
             const regex = new RegExp('\\\\b' + code + '\\\\b', 'g');
             highlighted = highlighted.replace(regex, '<span class="code-highlight">' + code + '</span>');
           });
-          
           return highlighted;
         },
         
-        // ===== 手机号脱敏 =====
         maskPhone(phone) {
           const phoneStr = String(phone);
           if (phoneStr.length < 7) return phoneStr;
           return phoneStr.slice(0, 3) + '****' + phoneStr.slice(-4);
         },
         
-        // ===== 时间格式化 =====
         formatTime() {
           const now = new Date();
           return now.toLocaleTimeString('zh-CN', { hour12: false });
         },
         
-        // ===== 复制功能 =====
         copyText(text) {
           if (navigator.clipboard && navigator.clipboard.writeText) {
             navigator.clipboard.writeText(text)
@@ -867,7 +633,6 @@ export default function ReceivePage(): string {
           document.body.removeChild(textarea);
         },
         
-        // ===== Toast 提示 =====
         showToast(msg) {
           this.toastMsg = msg;
           this.toastShow = true;
@@ -876,7 +641,6 @@ export default function ReceivePage(): string {
           }, this.TOAST_DURATION);
         },
         
-        // ===== 消息持久化 =====
         saveMessages() {
           try {
             const validMessages = this.messages.filter(m => !['waiting', 'err'].includes(m.id));
@@ -900,7 +664,6 @@ export default function ReceivePage(): string {
           }
         },
         
-        // ===== 清空历史 =====
         clearHistory() {
           if (confirm(this.t('receive.confirm_clear'))) {
             this.messages = [];
@@ -909,36 +672,23 @@ export default function ReceivePage(): string {
           }
         },
         
-        // ===== 导出功能 (TXT格式) =====
         exportMessages() {
           const validMessages = this.messages.filter(m => !['waiting', 'err'].includes(m.id));
-          
           if (validMessages.length === 0) {
             this.showToast(this.t('receive.no_messages_export'));
             return;
           }
-          
-          // 构建 TXT 内容
           let content = '=== SimpleFaka 消息记录导出 ===\\n';
           content += '导出时间: ' + new Date().toLocaleString('zh-CN') + '\\n';
-          content += '消息总数: ' + validMessages.length + '\\n';
-          content += '\\n' + '-'.repeat(50) + '\\n\\n';
-          
-          validMessages.forEach((msg, idx) => {
-            content += '[' + msg.time + ']';
-            if (msg.tel) content += ' ' + msg.tel;
-            content += '\\n';
+          content += '消息总数: ' + validMessages.length + '\\n\\n';
+          validMessages.forEach((msg) => {
+            content += '[' + msg.time + '] ' + (msg.tel || '') + '\\n';
             content += '内容: ' + msg.text + '\\n';
             if (msg.codes && msg.codes.length > 0) {
               content += '验证码: ' + msg.codes.join(', ') + '\\n';
             }
-            content += '\\n' + '-'.repeat(50) + '\\n\\n';
+            content += '\\n';
           });
-          
-          content += '--- END OF EXPORT ---\\n';
-          content += '© 2026 SIMPLEFAKA PROTOCOL\\n';
-          
-          // 创建下载
           const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
           const url = URL.createObjectURL(blob);
           const a = document.createElement('a');
@@ -948,11 +698,9 @@ export default function ReceivePage(): string {
           a.click();
           document.body.removeChild(a);
           URL.revokeObjectURL(url);
-          
           this.showToast(this.t('receive.export_success'));
         },
         
-        // ===== 通知功能 =====
         toggleNotification() {
           this.notificationEnabled = !this.notificationEnabled;
           localStorage.setItem(this.NOTIFICATION_KEY, String(this.notificationEnabled));
@@ -961,44 +709,39 @@ export default function ReceivePage(): string {
         
         playNotification(text) {
           if (!this.notificationEnabled) return;
-          
-          // 浏览器通知
           if ('Notification' in window && Notification.permission === 'granted') {
             new Notification('SimpleFaka - ' + this.t('receive.new_signal'), {
               body: text.substring(0, 100),
               icon: '/logo.png'
             });
           }
-          
-          // 音频提示音
           try {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-            
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
-            
             oscillator.frequency.value = 800;
             oscillator.type = 'sine';
-            
             gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
-            
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + 0.3);
           } catch (e) {
             console.log('Audio notification failed:', e);
           }
-          
-          // 移动端震动
           if (navigator.vibrate) {
             navigator.vibrate([200, 100, 200]);
           }
         }
       };
     }
-  </script>
-</body>
-</html>`
+  </script>`
+
+  const result = Layout({
+    title: '接码终端',
+    children: raw(content),
+    csrfToken
+  })
+  return result.toString()
 }

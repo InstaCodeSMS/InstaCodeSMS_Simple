@@ -3,152 +3,16 @@
  * 购买服务页面
  * 
  * Why: 根据 .clinerules 规范，视图层应放在 src/views/pages/ 目录
+ * 使用 Layout 组件避免重复的 HTML 结构
  */
 
-export default function PurchasePage(): string {
-  return `<!DOCTYPE html>
-<html lang="zh-CN">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>购买服务 - SimpleFaka</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdn.jsdelivr.net/npm/daisyui@5/dist/full.min.css" rel="stylesheet" type="text/css" />
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <script src="https://unpkg.com/htmx.org@2.0.8"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <style>
-    [x-cloak] { display: none !important; }
-    
-    /* ===== 主题变量系统 ===== */
-    .dark {
-      --bg-primary: rgb(12, 15, 22);
-      --bg-secondary: rgb(19, 22, 32);
-      --bg-tertiary: rgb(26, 30, 44);
-      --bg-input: rgb(23, 27, 40);
-      --bg-nav: rgba(12, 15, 22, 0.78);
-      --bg-modal: rgb(19, 22, 32);
-      
-      --text-primary: rgb(228, 232, 241);
-      --text-secondary: rgb(148, 163, 184);
-      --text-muted: rgb(100, 116, 139);
-      
-      --border-color: rgba(200, 210, 240, 0.06);
-      --border-color-light: rgba(200, 210, 240, 0.08);
-      
-      --accent-blue: rgb(37, 99, 235);
-      --accent-blue-hover: rgb(59, 130, 246);
-      
-      --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.2);
-      --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
-      --shadow-glow: 0 0 40px rgba(37, 99, 235, 0.15);
-    }
-    
-    .light {
-      --bg-primary: rgb(248, 250, 252);
-      --bg-secondary: rgb(255, 255, 255);
-      --bg-tertiary: rgb(241, 245, 249);
-      --bg-input: rgb(255, 255, 255);
-      --bg-nav: rgba(248, 250, 252, 0.85);
-      --bg-modal: rgb(255, 255, 255);
-      
-      --text-primary: rgb(15, 23, 42);
-      --text-secondary: rgb(71, 85, 105);
-      --text-muted: rgb(100, 116, 139);
-      
-      --border-color: rgba(226, 232, 240, 0.8);
-      --border-color-light: rgba(226, 232, 240, 1);
-      
-      --accent-blue: rgb(37, 99, 235);
-      --accent-blue-hover: rgb(59, 130, 246);
-      
-      --shadow-card: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
-      --shadow-modal: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-      --shadow-glow: 0 0 40px rgba(37, 99, 235, 0.1);
-    }
-    
-    body {
-      background-color: var(--bg-primary);
-      color: var(--text-primary);
-      transition: background-color 0.3s ease, color 0.3s ease;
-    }
-    
-    .card-hover {
-      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    .card-hover:hover {
-      transform: translateY(-4px);
-    }
-    
-    .custom-scrollbar::-webkit-scrollbar { width: 4px; }
-    .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-    .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(37, 99, 235, 0.2); border-radius: 10px; }
-    
-    .modal-content {
-      animation: modalIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-    @keyframes modalIn {
-      from { opacity: 0; transform: scale(0.95); }
-      to { opacity: 1; transform: scale(1); }
-    }
-  </style>
-</head>
-<body class="min-h-screen transition-colors duration-300" 
-      x-data="purchaseApp()"
-      :class="theme"
-      x-init="init()">
-  
-  <!-- 导航栏 -->
-  <nav class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b transition-colors duration-300"
-       style="background-color: var(--bg-nav); border-color: var(--border-color);">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-      <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
-        <div class="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <i class="fas fa-bolt text-white text-sm"></i>
-        </div>
-        <span class="text-xl font-black tracking-tight">
-          <span style="color: var(--accent-blue)">SIMPLE</span><span class="text-purple-500">FAKA</span>
-        </span>
-      </a>
-      
-      <div class="hidden sm:flex items-center gap-2">
-        <a href="/purchase" class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300"
-           style="background-color: rgba(37, 99, 235, 0.1); color: var(--accent-blue);">
-          购买服务
-        </a>
-        <a href="/receive" class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:opacity-80"
-           style="color: var(--text-secondary); background-color: var(--bg-tertiary);">
-          接码终端
-        </a>
-      </div>
-      
-      <div class="flex items-center gap-2">
-        <button type="button" @click="theme = theme === 'dark' ? 'light' : 'dark'"
-                class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105"
-                style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color-light);">
-          <i x-show="theme === 'dark'" class="fas fa-sun text-yellow-500"></i>
-          <i x-show="theme === 'light'" class="fas fa-moon text-blue-500"></i>
-        </button>
-        
-        <div class="sm:hidden relative" x-data="{ mobileOpen: false }">
-          <button @click="mobileOpen = !mobileOpen"
-                  class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300"
-                  style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color-light);">
-            <i class="fas fa-bars text-sm" style="color: var(--text-primary);"></i>
-          </button>
-          <div x-show="mobileOpen" x-cloak @click.away="mobileOpen = false" x-transition
-               class="absolute right-0 top-11 w-40 rounded-xl overflow-hidden shadow-lg z-50"
-               style="background-color: var(--bg-secondary); border: 0.667px solid var(--border-color-light);">
-            <a href="/purchase" class="block px-4 py-3 text-sm" style="color: var(--accent-blue);">购买服务</a>
-            <a href="/receive" class="block px-4 py-3 text-sm" style="color: var(--text-secondary);">接码终端</a>
-          </div>
-        </div>
-      </div>
-    </div>
-  </nav>
+import Layout from '../components/Layout'
+import { raw } from 'hono/html'
 
+export default function PurchasePage(csrfToken: string = ''): string {
+  const content = `
   <!-- 主内容区 -->
-  <main class="min-h-screen py-24 px-4 sm:px-6 relative overflow-x-hidden">
+  <main x-data="purchaseApp()" class="min-h-screen py-24 px-4 sm:px-6 relative overflow-x-hidden">
     <div class="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-7xl h-[600px] rounded-full pointer-events-none"
          :class="theme === 'dark' ? 'bg-blue-600/5 blur-[120px]' : 'bg-blue-400/10 blur-[150px]'"></div>
     
@@ -420,23 +284,6 @@ export default function PurchasePage(): string {
     </div>
   </main>
 
-  <footer class="border-t transition-colors duration-300 py-14 px-6"
-          style="background-color: var(--bg-primary); border-color: var(--border-color);">
-    <div class="max-w-7xl mx-auto">
-      <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
-        <span class="text-xl font-black tracking-tight">
-          <span style="color: var(--accent-blue)">SIMPLE</span><span class="text-purple-500">FAKA</span>
-        </span>
-        <div class="flex items-center gap-6 text-sm" style="color: var(--text-secondary);">
-          <a href="#" class="hover:opacity-80 transition-opacity">联系支持</a>
-          <a href="#" class="hover:opacity-80 transition-opacity">隐私政策</a>
-          <a href="#" class="hover:opacity-80 transition-opacity">服务条款</a>
-        </div>
-        <p class="text-xs" style="color: var(--text-muted);">© 2026 SIMPLEFAKA PROTOCOL. 版权所有.</p>
-      </div>
-    </div>
-  </footer>
-
   <script>
     function purchaseApp() {
       return {
@@ -571,7 +418,12 @@ export default function PurchasePage(): string {
         }
       }
     }
-  </script>
-</body>
-</html>`
+  </script>`
+
+  const result = Layout({
+    title: '购买服务',
+    children: raw(content),
+    csrfToken
+  })
+  return result.toString()
 }

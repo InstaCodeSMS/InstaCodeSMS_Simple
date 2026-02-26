@@ -27,18 +27,6 @@ import { createUpstreamClient } from './adapters/upstream'
 // 导入类型
 import type { Env } from './types/env'
 
-/**
- * 将 CSRF Token 注入到 HTML body 标签中
- * 让 HTMX 自动在所有请求中携带此 token
- */
-function injectCsrfToken(html: string, csrfToken: string): string {
-  // 在 body 标签中添加 hx-headers 属性
-  return html.replace(
-    /<body([^>]*)>/i,
-    `<body$1 hx-headers='{"X-CSRF-Token": "${csrfToken}"}'>`
-  )
-}
-
 // 创建应用
 const app = new Hono<{ Bindings: Env }>()
 
@@ -84,28 +72,29 @@ app.get('/', (c) => {
 // 购买服务页面
 app.get('/purchase', (c) => {
   const csrfToken = c.var.csrfToken || ''
-  const html = injectCsrfToken(PurchasePage(), csrfToken)
+  // 直接调用 PurchasePage 并传入 csrfToken
+  const html = PurchasePage(csrfToken)
   return c.html(html)
 })
 
 // 接码终端页面
 app.get('/receive', (c) => {
   const csrfToken = c.var.csrfToken || ''
-  const html = injectCsrfToken(ReceivePage(), csrfToken)
+  const html = ReceivePage(csrfToken)
   return c.html(html)
 })
 
 // 结算页面
 app.get('/checkout', (c) => {
   const csrfToken = c.var.csrfToken || ''
-  const html = injectCsrfToken(CheckoutPage(), csrfToken)
+  const html = CheckoutPage(csrfToken)
   return c.html(html)
 })
 
 // 支付成功页面
 app.get('/success', (c) => {
   const csrfToken = c.var.csrfToken || ''
-  const html = injectCsrfToken(SuccessPage(), csrfToken)
+  const html = SuccessPage(csrfToken)
   return c.html(html)
 })
 
