@@ -7,6 +7,8 @@ compatibility_flags = ["nodejs_compat"]
 port = 3000
 local_protocol = "http"
 
-# 配置 ESBuild 模块解析
-[build]
-command = ""
+# 配置 ESBuild 模块解析规则
+[[rules]]
+type = "ESModule"
+globs = ["**/*.ts"]
+fallthrough = true
