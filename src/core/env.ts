@@ -14,6 +14,11 @@ const envSchema = z.object({
   ALIPAY_PRIVATE_KEY: z.string().optional(),
   ALIPAY_PUBLIC_KEY: z.string().optional(),
 
+  // Telegram Bot 配置
+  TELEGRAM_BOT_TOKEN: z.string().optional(),
+  TELEGRAM_WEBHOOK_URL: z.string().url().optional(),
+  TELEGRAM_WEBHOOK_SECRET: z.string().optional(),
+
   // 价格配置
   PRICE_MARKUP: z.string().default('1.0'),
 

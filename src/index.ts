@@ -16,6 +16,11 @@ import ordersApi from './routes/api/orders'
 import smsApi from './routes/api/sms'
 import syncApi from './routes/api/sync'
 import paymentApi from './routes/api/payment'
+import telegramApi from './routes/api/telegram'
+import telegramMiniAppApi from './routes/api/telegram-mini-app'
+
+// 导入 Web 路由
+import telegramMiniAppWeb from './routes/web/telegram-mini-app'
 
 // 导入中间件
 import { requestLogger } from './middleware/logger'
@@ -114,6 +119,15 @@ app.route('/api/sync', syncApi)
 
 // 支付 API
 app.route('/api/payment', paymentApi)
+
+// Telegram Bot API
+app.route('/api/telegram', telegramApi)
+
+// Telegram Mini App API
+app.route('/api/telegram-mini-app', telegramMiniAppApi)
+
+// Telegram Mini App Web
+app.route('/telegram-mini-app', telegramMiniAppWeb)
 
 // 健康检查
 app.get('/api/health', (c) => {

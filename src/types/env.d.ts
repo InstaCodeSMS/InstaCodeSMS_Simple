@@ -22,12 +22,21 @@ export interface Env {
   ALIMPAY_API_URL?: string // AliMPay 部署地址
   ALIMPAY_PID?: string // 商户 ID
   ALIMPAY_KEY?: string // 商户密钥
+
+  // Telegram Bot 配置
+  TELEGRAM_BOT_TOKEN?: string
+  TELEGRAM_WEBHOOK_URL?: string
+  TELEGRAM_WEBHOOK_SECRET?: string
 }
+
+// 导入 Telegram 认证用户类型
+import type { AuthenticatedUser } from './telegram'
 
 // 扩展 Hono 的环境类型
 declare module 'hono' {
   interface ContextVariableMap {
     env: Env
     csrfToken: string  // CSRF Token，由 CSRF 中间件自动注入
+    telegramUser?: AuthenticatedUser  // Telegram 认证用户，由 telegram-auth 中间件注入
   }
 }

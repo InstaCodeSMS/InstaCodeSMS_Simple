@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "dev": "wrangler dev --port 3000",
+    "dev:bot": "tsx src/dev.ts",
     "start": "wrangler dev --port 3000",
     "build": "tsc",
     "test": "vitest --run",
@@ -16,11 +17,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@grammyjs/hydrate": "^1.6.0",
+    "@grammyjs/router": "^2.0.0",
     "@supabase/supabase-js": "^2.97.0",
     "alpinejs": "^3.15.8",
     "blueimp-md5": "^2.19.0",
     "daisyui": "^4.12.14",
     "dotenv": "^17.3.1",
+    "grammy": "^1.40.1",
     "hono": "^4.12.0",
     "htmx.org": "^2.0.8",
     "nanoid": "^5.1.6",

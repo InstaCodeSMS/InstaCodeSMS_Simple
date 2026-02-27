@@ -16,3 +16,7 @@ fallthrough = true
 # 配置 ESBuild 路径别名
 [build]
 command = ""
+
+# 环境变量配置
+[env.production]
+vars = { UPSTREAM_API_URL = "https://api.example.com", PRICE_MARKUP = "1.5", LOG_LEVEL = "info" }

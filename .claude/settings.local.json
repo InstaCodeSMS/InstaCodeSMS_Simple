@@ -2,7 +2,9 @@
   "permissions": {
     "allow": [
       "Bash(npm run build:*)",
-      "Bash(npm run test:*)"
+      "Bash(npm run test:*)",
+      "mcp__ide__getDiagnostics",
+      "Bash(npm test:*)"
     ]
   }
 }
