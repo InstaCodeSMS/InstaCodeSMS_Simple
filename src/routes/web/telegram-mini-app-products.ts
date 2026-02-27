@@ -18,7 +18,12 @@ app.get('/list', async (c) => {
   try {
     const user = getCurrentUser(c)
     if (!user) {
-      return c.html('<div class="text-center text-red-500">未认证</div>')
+      return c.html(`
+        <div class="text-center py-8 text-red-500 p-4">
+          <div class="text-2xl mb-2">❌</div>
+          <p>认证失败，请重新登录</p>
+        </div>
+      `)
     }
 
     const client = createUpstreamClient({
@@ -43,9 +48,6 @@ app.get('/list', async (c) => {
           .map(
             (product) => `
           <div class="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition cursor-pointer"
-               hx-get="/mini-app/api/products/detail?id=${product.id}"
-               hx-target="body"
-               hx-swap="beforeend"
                onclick="showProductDetail(${product.id})">
             <div class="text-sm font-semibold text-gray-800 truncate">${product.name}</div>
             <div class="text-xs text-gray-500 mt-1">库存: ${product.num}</div>
@@ -54,8 +56,9 @@ app.get('/list', async (c) => {
                     hx-post="/api/telegram-mini-app/cart/add"
                     hx-vals='{"app_id": ${product.id}, "name": "${product.name}", "price": "${product.price}", "quantity": 1}'
                     hx-swap="none"
-                    onclick="event.stopPropagation(); addToCart(event)">
-              加入购物车
+                    onclick="event.stopPropagation(); addToCart(event)"
+                    ${product.num <= 0 ? 'disabled' : ''}>
+              ${product.num <= 0 ? '已售罄' : '加入购物车'}
             </button>
           </div>
         `
@@ -67,7 +70,15 @@ app.get('/list', async (c) => {
     return c.html(html)
   } catch (error) {
     const message = error instanceof Error ? error.message : '加载商品失败'
-    return c.html(`<div class="text-center text-red-500 p-4">${message}</div>`)
+    return c.html(`
+      <div class="text-center text-red-500 p-4">
+        <div class="text-2xl mb-2">⚠️</div>
+        <p>${message}</p>
+        <button hx-get="/mini-app/api/products/list" hx-target="#products-list" class="mt-3 text-blue-500 underline">
+          重试
+        </button>
+      </div>
+    `)
   }
 })
 
@@ -79,7 +90,7 @@ app.get('/search', async (c) => {
   try {
     const user = getCurrentUser(c)
     if (!user) {
-      return c.html('<div class="text-center text-red-500">未认证</div>')
+      return c.html('<div class="text-center text-red-500 p-4">未认证</div>')
     }
 
     const name = c.req.query('q') || ''
@@ -114,9 +125,6 @@ app.get('/search', async (c) => {
           .map(
             (product) => `
           <div class="bg-white border border-gray-200 rounded-lg p-3 hover:shadow-md transition cursor-pointer"
-               hx-get="/mini-app/api/products/detail?id=${product.id}"
-               hx-target="body"
-               hx-swap="beforeend"
                onclick="showProductDetail(${product.id})">
             <div class="text-sm font-semibold text-gray-800 truncate">${product.name}</div>
             <div class="text-xs text-gray-500 mt-1">库存: ${product.num}</div>
@@ -125,8 +133,9 @@ app.get('/search', async (c) => {
                     hx-post="/api/telegram-mini-app/cart/add"
                     hx-vals='{"app_id": ${product.id}, "name": "${product.name}", "price": "${product.price}", "quantity": 1}'
                     hx-swap="none"
-                    onclick="event.stopPropagation(); addToCart(event)">
-              加入购物车
+                    onclick="event.stopPropagation(); addToCart(event)"
+                    ${product.num <= 0 ? 'disabled' : ''}>
+              ${product.num <= 0 ? '已售罄' : '加入购物车'}
             </button>
           </div>
         `
@@ -138,7 +147,12 @@ app.get('/search', async (c) => {
     return c.html(html)
   } catch (error) {
     const message = error instanceof Error ? error.message : '搜索失败'
-    return c.html(`<div class="text-center text-red-500 p-4">${message}</div>`)
+    return c.html(`
+      <div class="text-center text-red-500 p-4">
+        <div class="text-2xl mb-2">⚠️</div>
+        <p>${message}</p>
+      </div>
+    `)
   }
 })
 

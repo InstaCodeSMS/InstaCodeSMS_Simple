@@ -18,7 +18,12 @@ app.get('/view', async (c) => {
   try {
     const user = getCurrentUser(c)
     if (!user) {
-      return c.html('<div class="text-center text-red-500">未认证</div>')
+      return c.html(`
+        <div class="p-4 text-center py-12 text-red-500">
+          <div class="text-2xl mb-2">❌</div>
+          <p>认证失败，请重新登录</p>
+        </div>
+      `)
     }
 
     const cart = getOrCreateCart(user)
@@ -98,7 +103,15 @@ app.get('/view', async (c) => {
     `)
   } catch (error) {
     const message = error instanceof Error ? error.message : '加载结算页面失败'
-    return c.html(`<div class="text-center text-red-500 p-4">${message}</div>`)
+    return c.html(`
+      <div class="p-4 text-center text-red-500">
+        <div class="text-2xl mb-2">⚠️</div>
+        <p>${message}</p>
+        <button hx-get="/mini-app/api/checkout/view" hx-target="#checkout-container" class="mt-3 text-blue-500 underline">
+          重试
+        </button>
+      </div>
+    `)
   }
 })
 

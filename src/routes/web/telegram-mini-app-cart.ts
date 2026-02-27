@@ -18,7 +18,12 @@ app.get('/view', async (c) => {
   try {
     const user = getCurrentUser(c)
     if (!user) {
-      return c.html('<div class="text-center text-red-500">未认证</div>')
+      return c.html(`
+        <div class="p-4 text-center py-12 text-red-500">
+          <div class="text-2xl mb-2">❌</div>
+          <p>认证失败，请重新登录</p>
+        </div>
+      `)
     }
 
     const cart = getOrCreateCart(user)
@@ -49,10 +54,11 @@ app.get('/view', async (c) => {
         </div>
         <div class="flex items-center gap-2">
           <button hx-post="/mini-app/api/cart/update"
-                  hx-vals='{"app_id": ${item.app_id}, "quantity": ${item.quantity - 1}, "type": ${item.type || 1}, "expiry": ${item.expiry || 0}}'
+                  hx-vals='{"app_id": ${item.app_id}, "quantity": ${Math.max(1, item.quantity - 1)}, "type": ${item.type || 1}, "expiry": ${item.expiry || 0}}'
                   hx-target="#cart-container"
                   hx-swap="innerHTML"
-                  class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-1 px-2 rounded">
+                  class="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-1 px-2 rounded disabled:opacity-50"
+                  ${item.quantity <= 1 ? 'disabled' : ''}>
             −
           </button>
           <span class="w-8 text-center">${item.quantity}</span>
@@ -90,15 +96,23 @@ app.get('/view', async (c) => {
             <span class="font-semibold">总计:</span>
             <span class="font-bold text-blue-600">¥${total.toFixed(2)}</span>
           </div>
-          <button class="w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition">
+          <a href="/mini-app/checkout" class="block w-full bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition text-center">
             去结算
-          </button>
+          </a>
         </div>
       </div>
     `)
   } catch (error) {
     const message = error instanceof Error ? error.message : '加载购物车失败'
-    return c.html(`<div class="text-center text-red-500 p-4">${message}</div>`)
+    return c.html(`
+      <div class="p-4 text-center text-red-500">
+        <div class="text-2xl mb-2">⚠️</div>
+        <p>${message}</p>
+        <button hx-get="/mini-app/api/cart/view" hx-target="#cart-container" class="mt-3 text-blue-500 underline">
+          重试
+        </button>
+      </div>
+    `)
   }
 })
 
@@ -110,11 +124,15 @@ app.post('/remove', async (c) => {
   try {
     const user = getCurrentUser(c)
     if (!user) {
-      return c.html('<div class="text-center text-red-500">未认证</div>')
+      return c.html('<div class="text-center text-red-500 p-4">未认证</div>')
     }
 
     const body = await c.req.json()
     const { app_id, type, expiry } = body
+
+    if (!app_id) {
+      return c.html('<div class="text-center text-red-500 p-4">参数错误</div>')
+    }
 
     removeFromCart(user, app_id, type, expiry)
     const cart = getOrCreateCart(user)

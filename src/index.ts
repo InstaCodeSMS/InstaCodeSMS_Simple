@@ -21,6 +21,7 @@ import telegramMiniAppApi from './routes/api/telegram-mini-app'
 import miniAppAuthApi from './routes/api/mini-app-auth'
 import miniAppProductsApi from './routes/api/telegram-mini-app-products'
 import miniAppOrdersApi from './routes/api/telegram-mini-app-orders'
+import miniAppPaymentApi from './routes/api/telegram-mini-app-payment'
 
 // 导入 Web 路由
 import telegramMiniAppWeb from './routes/web/telegram-mini-app'
@@ -142,6 +143,9 @@ app.route('/api/telegram-mini-app', miniAppProductsApi)
 
 // Telegram Mini App 订单 API
 app.route('/api/telegram-mini-app/orders', miniAppOrdersApi)
+
+// Telegram Mini App 支付 API
+app.route('/api/telegram-mini-app/payment', miniAppPaymentApi)
 
 // Telegram Mini App 商品列表 Web
 app.route('/mini-app/api/products', telegramMiniAppProducts)
