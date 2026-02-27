@@ -1,37 +1,168 @@
 /**
- * Telegram Mini App Web 路由
- * 渲染 Mini App 页面
+ * Telegram Mini App 前端路由 - 使用 HTML 字符串
+ * 简化版本，快速上线
  */
 
 import { Hono } from 'hono'
-import TelegramMiniAppIndex from '../../views/telegram-mini-app/index'
-import TelegramMiniAppCheckout from '../../views/telegram-mini-app/checkout'
-import TelegramMiniAppSuccess from '../../views/telegram-mini-app/success'
+import type { Env } from '@/types/env'
 
-const app = new Hono()
+const app = new Hono<{ Bindings: Env }>()
 
 /**
- * GET /telegram-mini-app
- * Mini App 主页面
+ * 基础 HTML 模板
+ */
+function baseLayout(title: string, content: string, user?: any) {
+  return `<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.14/dist/full.min.css" rel="stylesheet">
+  <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body { margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .mini-app-container { max-width: 100%; height: 100vh; display: flex; flex-direction: column; }
+    .mini-app-content { flex: 1; overflow-y: auto; padding-bottom: 60px; }
+    .mini-app-nav { position: fixed; bottom: 0; left: 0; right: 0; height: 60px; border-top: 1px solid #e5e7eb; background: white; z-index: 50; }
+  </style>
+</head>
+<body>
+  <div class="mini-app-container">
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
+      <div class="px-4 py-3 flex items-center justify-between">
+        <h1 class="text-xl font-bold">SimpleFaka</h1>
+        ${user ? `<span class="text-sm text-gray-600">${user.firstName}</span>` : ''}
+      </div>
+    </header>
+    <main class="mini-app-content">
+      ${content}
+    </main>
+    <nav class="mini-app-nav">
+      <div class="flex h-full items-center justify-around">
+        <a href="/mini-app" class="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-3m0 0l7-4 7 4M5 9v10a1 1 0 001 1h12a1 1 0 001-1V9m-9 11l4-4m0 0l4 4m-4-4v4"></path></svg>
+          <span class="text-xs mt-1">首页</span>
+        </a>
+        <a href="/mini-app/products" class="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path></svg>
+          <span class="text-xs mt-1">商品</span>
+        </a>
+        <a href="/mini-app/cart" class="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+          <span class="text-xs mt-1">购物车</span>
+        </a>
+        <a href="/mini-app/orders" class="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+          <span class="text-xs mt-1">订单</span>
+        </a>
+      </div>
+    </nav>
+  </div>
+  <script>
+    if (window.Telegram?.WebApp) {
+      const tg = window.Telegram.WebApp;
+      tg.ready();
+      tg.expand();
+      tg.setHeaderColor('#ffffff');
+      tg.setBackgroundColor('#ffffff');
+    }
+  </script>
+</body>
+</html>`
+}
+
+/**
+ * GET /mini-app
+ * 首页
  */
 app.get('/', (c) => {
-  return c.html(TelegramMiniAppIndex())
+  const content = `
+    <div class="p-4 space-y-4">
+      <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
+        <h2 class="text-2xl font-bold mb-2">欢迎来到 SimpleFaka</h2>
+        <p class="text-blue-100">快速便捷的虚拟号码接码平台</p>
+      </div>
+      <div class="grid grid-cols-2 gap-4">
+        <a href="/mini-app/products" class="bg-white border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition">
+          <div class="text-3xl mb-2">🛍️</div>
+          <div class="font-semibold text-gray-800">浏览商品</div>
+          <div class="text-xs text-gray-500 mt-1">查看所有可用商品</div>
+        </a>
+        <a href="/mini-app/orders" class="bg-white border border-gray-200 rounded-lg p-4 text-center hover:shadow-md transition">
+          <div class="text-3xl mb-2">📋</div>
+          <div class="font-semibold text-gray-800">我的订单</div>
+          <div class="text-xs text-gray-500 mt-1">查看订单历史</div>
+        </a>
+      </div>
+      <div class="bg-white border border-gray-200 rounded-lg p-4">
+        <h3 class="font-semibold text-gray-800 mb-3">✨ 特色功能</h3>
+        <ul class="space-y-2 text-sm text-gray-600">
+          <li class="flex items-start gap-2"><span class="text-blue-500 mt-1">✓</span><span>即时交付 - 支付后立即获得卡密</span></li>
+          <li class="flex items-start gap-2"><span class="text-blue-500 mt-1">✓</span><span>安全可靠 - 所有交易都经过验证</span></li>
+          <li class="flex items-start gap-2"><span class="text-blue-500 mt-1">✓</span><span>多种支付 - 支持多种支付方式</span></li>
+          <li class="flex items-start gap-2"><span class="text-blue-500 mt-1">✓</span><span>24/7 支持 - 随时获得帮助</span></li>
+        </ul>
+      </div>
+    </div>
+  `
+  return c.html(baseLayout('SimpleFaka - 首页', content))
 })
 
 /**
- * GET /telegram-mini-app/checkout
- * 结算页面
+ * GET /mini-app/products
+ * 商品列表页面
  */
-app.get('/checkout', (c) => {
-  return c.html(TelegramMiniAppCheckout())
+app.get('/products', (c) => {
+  const content = `
+    <div class="p-4 space-y-4">
+      <div class="bg-white border border-gray-200 rounded-lg p-3">
+        <input type="text" placeholder="搜索商品..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div class="text-center py-8 text-gray-500">
+        <div class="text-4xl mb-2">📭</div>
+        <p>加载商品中...</p>
+      </div>
+    </div>
+  `
+  return c.html(baseLayout('SimpleFaka - 商品', content))
 })
 
 /**
- * GET /telegram-mini-app/success
- * 成功页面
+ * GET /mini-app/cart
+ * 购物车页面
  */
-app.get('/success', (c) => {
-  return c.html(TelegramMiniAppSuccess())
+app.get('/cart', (c) => {
+  const content = `
+    <div class="p-4 text-center py-12 text-gray-500">
+      <div class="text-5xl mb-4">🛒</div>
+      <p class="text-lg mb-4">购物车是空的</p>
+      <a href="/mini-app/products" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition">
+        继续购物
+      </a>
+    </div>
+  `
+  return c.html(baseLayout('SimpleFaka - 购物车', content))
+})
+
+/**
+ * GET /mini-app/orders
+ * 订单列表页面
+ */
+app.get('/orders', (c) => {
+  const content = `
+    <div class="p-4 text-center py-12 text-gray-500">
+      <div class="text-5xl mb-4">📭</div>
+      <p class="text-lg mb-4">暂无订单</p>
+      <a href="/mini-app/products" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition">
+        去购物
+      </a>
+    </div>
+  `
+  return c.html(baseLayout('SimpleFaka - 订单', content))
 })
 
 export default app

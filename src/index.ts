@@ -126,8 +126,8 @@ app.route('/api/telegram', telegramApi)
 // Telegram Mini App API
 app.route('/api/telegram-mini-app', telegramMiniAppApi)
 
-// Telegram Mini App Web
-app.route('/telegram-mini-app', telegramMiniAppWeb)
+// Telegram Mini App Web (前端路由)
+app.route('/mini-app', telegramMiniAppWeb)
 
 // 健康检查
 app.get('/api/health', (c) => {

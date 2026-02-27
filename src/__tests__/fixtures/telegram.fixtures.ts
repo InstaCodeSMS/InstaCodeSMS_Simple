@@ -28,16 +28,20 @@ export function generateValidInitData(overrides?: Record<string, any>) {
     ...overrides?.user,
   }
 
-  const params = {
-    user: JSON.stringify(user),
+  const params: Record<string, string> = {
     auth_date: now.toString(),
     chat_instance: '123456789',
     chat_type: 'private',
-    ...overrides,
   }
 
-  // 删除 user 覆盖（已处理）
-  delete params.user
+  // 应用覆盖（排除 user）
+  if (overrides) {
+    Object.entries(overrides).forEach(([key, value]) => {
+      if (key !== 'user') {
+        params[key] = String(value)
+      }
+    })
+  }
 
   // 按字母顺序排序参数
   const sortedParams = Object.entries(params)
@@ -45,7 +49,7 @@ export function generateValidInitData(overrides?: Record<string, any>) {
     .map(([key, value]) => `${key}=${value}`)
     .join('\n')
 
-  // 添加 user 参数
+  // 添加 user 参数（必须在最前面）
   const allParams = `user=${JSON.stringify(user)}\n${sortedParams}`
 
   // 计算签名
