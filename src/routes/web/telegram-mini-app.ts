@@ -86,6 +86,28 @@ function baseLayout(title: string, content: string, user?: any) {
       tg.setHeaderColor('#ffffff');
       tg.setBackgroundColor('#ffffff');
     }
+
+    // 添加到购物车
+    function addToCart(event) {
+      event.preventDefault();
+      const button = event.target;
+      const originalText = button.textContent;
+      button.textContent = '添加中...';
+      button.disabled = true;
+
+      setTimeout(() => {
+        button.textContent = '✓ 已添加';
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.disabled = false;
+        }, 1500);
+      }, 500);
+    }
+
+    // 显示商品详情
+    function showProductDetail(productId) {
+      console.log('Show product detail:', productId);
+    }
   </script>
 </body>
 </html>`
@@ -156,11 +178,20 @@ app.get('/products', (c) => {
   const content = `
     <div class="p-4 space-y-4">
       <div class="bg-white border border-gray-200 rounded-lg p-3">
-        <input type="text" placeholder="搜索商品..." class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+        <input
+          type="text"
+          placeholder="搜索商品..."
+          hx-get="/mini-app/api/products/search"
+          hx-trigger="keyup changed delay:500ms"
+          hx-target="#products-list"
+          class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
       </div>
-      <div class="text-center py-8 text-gray-500">
-        <div class="text-4xl mb-2">📭</div>
-        <p>加载商品中...</p>
+      <div id="products-list" hx-get="/mini-app/api/products/list" hx-trigger="load" hx-swap="innerHTML">
+        <div class="text-center py-8 text-gray-500">
+          <div class="text-4xl mb-2">⏳</div>
+          <p>加载商品中...</p>
+        </div>
       </div>
     </div>
   `
@@ -179,12 +210,11 @@ app.get('/cart', (c) => {
   }
 
   const content = `
-    <div class="p-4 text-center py-12 text-gray-500">
-      <div class="text-5xl mb-4">🛒</div>
-      <p class="text-lg mb-4">购物车是空的</p>
-      <a href="/mini-app/products" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition">
-        继续购物
-      </a>
+    <div id="cart-container" hx-get="/mini-app/api/cart/view" hx-trigger="load" hx-swap="innerHTML">
+      <div class="text-center py-12 text-gray-500">
+        <div class="text-5xl mb-4">⏳</div>
+        <p>加载购物车中...</p>
+      </div>
     </div>
   `
   return c.html(baseLayout('SimpleFaka - 购物车', content, user))

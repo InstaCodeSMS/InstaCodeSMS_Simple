@@ -19,9 +19,12 @@ import paymentApi from './routes/api/payment'
 import telegramApi from './routes/api/telegram'
 import telegramMiniAppApi from './routes/api/telegram-mini-app'
 import miniAppAuthApi from './routes/api/mini-app-auth'
+import miniAppProductsApi from './routes/api/telegram-mini-app-products'
 
 // 导入 Web 路由
 import telegramMiniAppWeb from './routes/web/telegram-mini-app'
+import telegramMiniAppProducts from './routes/web/telegram-mini-app-products'
+import telegramMiniAppCart from './routes/web/telegram-mini-app-cart'
 
 // 导入中间件
 import { requestLogger } from './middleware/logger'
@@ -130,6 +133,15 @@ app.route('/api/telegram-mini-app', telegramMiniAppApi)
 
 // Telegram Mini App 认证 API
 app.route('/mini-app/api/auth', miniAppAuthApi)
+
+// Telegram Mini App 商品 API
+app.route('/api/telegram-mini-app', miniAppProductsApi)
+
+// Telegram Mini App 商品列表 Web
+app.route('/mini-app/api/products', telegramMiniAppProducts)
+
+// Telegram Mini App 购物车 Web
+app.route('/mini-app/api/cart', telegramMiniAppCart)
 
 // Telegram Mini App Web (前端路由) - 使用认证中间件
 app.use('/mini-app/*', miniAppAuthMiddleware)
