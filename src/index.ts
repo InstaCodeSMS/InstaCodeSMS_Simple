@@ -20,11 +20,14 @@ import telegramApi from './routes/api/telegram'
 import telegramMiniAppApi from './routes/api/telegram-mini-app'
 import miniAppAuthApi from './routes/api/mini-app-auth'
 import miniAppProductsApi from './routes/api/telegram-mini-app-products'
+import miniAppOrdersApi from './routes/api/telegram-mini-app-orders'
 
 // 导入 Web 路由
 import telegramMiniAppWeb from './routes/web/telegram-mini-app'
 import telegramMiniAppProducts from './routes/web/telegram-mini-app-products'
 import telegramMiniAppCart from './routes/web/telegram-mini-app-cart'
+import telegramMiniAppCheckout from './routes/web/telegram-mini-app-checkout'
+import telegramMiniAppOrders from './routes/web/telegram-mini-app-orders'
 
 // 导入中间件
 import { requestLogger } from './middleware/logger'
@@ -137,11 +140,20 @@ app.route('/mini-app/api/auth', miniAppAuthApi)
 // Telegram Mini App 商品 API
 app.route('/api/telegram-mini-app', miniAppProductsApi)
 
+// Telegram Mini App 订单 API
+app.route('/api/telegram-mini-app/orders', miniAppOrdersApi)
+
 // Telegram Mini App 商品列表 Web
 app.route('/mini-app/api/products', telegramMiniAppProducts)
 
 // Telegram Mini App 购物车 Web
 app.route('/mini-app/api/cart', telegramMiniAppCart)
+
+// Telegram Mini App 结算 Web
+app.route('/mini-app/api/checkout', telegramMiniAppCheckout)
+
+// Telegram Mini App 订单列表 Web
+app.route('/mini-app/api/orders', telegramMiniAppOrders)
 
 // Telegram Mini App Web (前端路由) - 使用认证中间件
 app.use('/mini-app/*', miniAppAuthMiddleware)

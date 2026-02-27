@@ -232,12 +232,11 @@ app.get('/orders', (c) => {
   }
 
   const content = `
-    <div class="p-4 text-center py-12 text-gray-500">
-      <div class="text-5xl mb-4">📭</div>
-      <p class="text-lg mb-4">暂无订单</p>
-      <a href="/mini-app/products" class="inline-block bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-6 rounded-lg transition">
-        去购物
-      </a>
+    <div id="orders-container" hx-get="/mini-app/api/orders/view" hx-trigger="load" hx-swap="innerHTML">
+      <div class="text-center py-12 text-gray-500">
+        <div class="text-5xl mb-4">⏳</div>
+        <p>加载订单中...</p>
+      </div>
     </div>
   `
   return c.html(baseLayout('SimpleFaka - 订单', content, user))
