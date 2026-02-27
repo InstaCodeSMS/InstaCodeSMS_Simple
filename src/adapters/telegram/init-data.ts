@@ -3,7 +3,7 @@
  * 确保请求真的来自 Telegram，而不是黑客伪造
  */
 
-import { createHmac } from 'crypto'
+import { createHmac } from 'node:crypto'
 import type { InitData, VerifyInitDataResult } from '../../types/telegram'
 
 /**
