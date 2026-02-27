@@ -18,6 +18,7 @@ import syncApi from './routes/api/sync'
 import paymentApi from './routes/api/payment'
 import telegramApi from './routes/api/telegram'
 import telegramMiniAppApi from './routes/api/telegram-mini-app'
+import miniAppAuthApi from './routes/api/mini-app-auth'
 
 // 导入 Web 路由
 import telegramMiniAppWeb from './routes/web/telegram-mini-app'
@@ -25,6 +26,7 @@ import telegramMiniAppWeb from './routes/web/telegram-mini-app'
 // 导入中间件
 import { requestLogger } from './middleware/logger'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler'
+import { miniAppAuthMiddleware } from './middleware/mini-app-auth'
 
 // 导入上游客户端
 import { createUpstreamClient } from './adapters/upstream'
@@ -126,7 +128,11 @@ app.route('/api/telegram', telegramApi)
 // Telegram Mini App API
 app.route('/api/telegram-mini-app', telegramMiniAppApi)
 
-// Telegram Mini App Web (前端路由)
+// Telegram Mini App 认证 API
+app.route('/mini-app/api/auth', miniAppAuthApi)
+
+// Telegram Mini App Web (前端路由) - 使用认证中间件
+app.use('/mini-app/*', miniAppAuthMiddleware)
 app.route('/mini-app', telegramMiniAppWeb)
 
 // 健康检查

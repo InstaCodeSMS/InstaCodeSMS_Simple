@@ -5,6 +5,8 @@
 
 import { Hono } from 'hono'
 import type { Env } from '@/types/env'
+import { getCurrentUser } from '@/middleware/mini-app-auth'
+import { AuthPage } from '@/views/telegram-mini-app/auth'
 
 const app = new Hono<{ Bindings: Env }>()
 
@@ -12,6 +14,18 @@ const app = new Hono<{ Bindings: Env }>()
  * 基础 HTML 模板
  */
 function baseLayout(title: string, content: string, user?: any) {
+  const userSection = user ? `
+    <div class="flex items-center gap-3">
+      <div class="text-right">
+        <div class="text-sm font-semibold text-gray-800">${user.firstName}</div>
+        <div class="text-xs text-gray-500">${user.username ? '@' + user.username : ''}</div>
+      </div>
+      <button hx-post="/mini-app/api/auth/logout" hx-confirm="确定要登出吗?" class="text-red-500 hover:text-red-700 text-sm font-semibold">
+        登出
+      </button>
+    </div>
+  ` : ''
+
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -35,12 +49,14 @@ function baseLayout(title: string, content: string, user?: any) {
     <header class="bg-white border-b border-gray-200 sticky top-0 z-40">
       <div class="px-4 py-3 flex items-center justify-between">
         <h1 class="text-xl font-bold">SimpleFaka</h1>
-        ${user ? `<span class="text-sm text-gray-600">${user.firstName}</span>` : ''}
+        ${userSection}
       </div>
     </header>
+
     <main class="mini-app-content">
       ${content}
     </main>
+
     <nav class="mini-app-nav">
       <div class="flex h-full items-center justify-around">
         <a href="/mini-app" class="flex flex-col items-center justify-center w-full h-full hover:bg-gray-50">
@@ -76,14 +92,28 @@ function baseLayout(title: string, content: string, user?: any) {
 }
 
 /**
+ * GET /mini-app/auth
+ * 认证页面
+ */
+app.get('/auth', (c) => {
+  return c.html(AuthPage())
+})
+
+/**
  * GET /mini-app
- * 首页
+ * 首页 - 检查认证状态
  */
 app.get('/', (c) => {
+  const user = getCurrentUser(c)
+
+  if (!user) {
+    return c.redirect('/mini-app/auth')
+  }
+
   const content = `
     <div class="p-4 space-y-4">
       <div class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-white">
-        <h2 class="text-2xl font-bold mb-2">欢迎来到 SimpleFaka</h2>
+        <h2 class="text-2xl font-bold mb-2">欢迎回来，${user.firstName}！</h2>
         <p class="text-blue-100">快速便捷的虚拟号码接码平台</p>
       </div>
       <div class="grid grid-cols-2 gap-4">
@@ -109,7 +139,7 @@ app.get('/', (c) => {
       </div>
     </div>
   `
-  return c.html(baseLayout('SimpleFaka - 首页', content))
+  return c.html(baseLayout('SimpleFaka - 首页', content, user))
 })
 
 /**
@@ -117,6 +147,12 @@ app.get('/', (c) => {
  * 商品列表页面
  */
 app.get('/products', (c) => {
+  const user = getCurrentUser(c)
+
+  if (!user) {
+    return c.redirect('/mini-app/auth')
+  }
+
   const content = `
     <div class="p-4 space-y-4">
       <div class="bg-white border border-gray-200 rounded-lg p-3">
@@ -128,7 +164,7 @@ app.get('/products', (c) => {
       </div>
     </div>
   `
-  return c.html(baseLayout('SimpleFaka - 商品', content))
+  return c.html(baseLayout('SimpleFaka - 商品', content, user))
 })
 
 /**
@@ -136,6 +172,12 @@ app.get('/products', (c) => {
  * 购物车页面
  */
 app.get('/cart', (c) => {
+  const user = getCurrentUser(c)
+
+  if (!user) {
+    return c.redirect('/mini-app/auth')
+  }
+
   const content = `
     <div class="p-4 text-center py-12 text-gray-500">
       <div class="text-5xl mb-4">🛒</div>
@@ -145,7 +187,7 @@ app.get('/cart', (c) => {
       </a>
     </div>
   `
-  return c.html(baseLayout('SimpleFaka - 购物车', content))
+  return c.html(baseLayout('SimpleFaka - 购物车', content, user))
 })
 
 /**
@@ -153,6 +195,12 @@ app.get('/cart', (c) => {
  * 订单列表页面
  */
 app.get('/orders', (c) => {
+  const user = getCurrentUser(c)
+
+  if (!user) {
+    return c.redirect('/mini-app/auth')
+  }
+
   const content = `
     <div class="p-4 text-center py-12 text-gray-500">
       <div class="text-5xl mb-4">📭</div>
@@ -162,7 +210,7 @@ app.get('/orders', (c) => {
       </a>
     </div>
   `
-  return c.html(baseLayout('SimpleFaka - 订单', content))
+  return c.html(baseLayout('SimpleFaka - 订单', content, user))
 })
 
 export default app
