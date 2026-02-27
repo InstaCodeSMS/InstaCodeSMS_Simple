@@ -84,5 +84,5 @@ export function cleanupExpiredSessions(): void {
   }
 }
 
-// 定期清理过期会话（每小时一次）
-setInterval(cleanupExpiredSessions, 60 * 60 * 1000)
+// 注意：Cloudflare Workers 不允许在全局作用域使用 setInterval
+// 过期会话会在 getSession 调用时被检查并清理
