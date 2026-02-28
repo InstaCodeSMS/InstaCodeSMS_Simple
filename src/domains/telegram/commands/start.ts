@@ -12,19 +12,9 @@ export async function handleStart(ctx: Context, env: Env) {
     const service = new TelegramService(env)
     const message = service.getWelcomeMessage()
 
-    // 获取 Mini App URL
-    const baseUrl = env.TELEGRAM_WEBHOOK_URL?.replace('/api/telegram/webhook', '') || 'https://example.com'
-    const miniAppUrl = `${baseUrl}/telegram-mini-app`
-
     await ctx.reply(message, {
       reply_markup: {
         inline_keyboard: [
-          [
-            {
-              text: '🛍️ 打开商城',
-              web_app: { url: miniAppUrl }
-            }
-          ],
           [
             { text: '📦 我的订单', callback_data: 'orders' },
             { text: '📱 接码终端', callback_data: 'receive' }
