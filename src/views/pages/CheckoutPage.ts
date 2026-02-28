@@ -239,7 +239,8 @@ export default function CheckoutPage(csrfToken: string = ''): string {
     </div>
   </main>
 
-  <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+  <!-- QRCode 库 - 使用 unpkg CDN（jsdelivr 路径有问题） -->
+  <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script>
     function checkoutApp() {
       return {
@@ -294,13 +295,10 @@ export default function CheckoutPage(csrfToken: string = ''): string {
         
         async createPaymentOrder(serviceId, expiryValue) {
           try {
-            this.orderId = 'ORD' + Date.now() + Math.random().toString(36).substr(2, 6).toUpperCase();
-            
             const response = await fetch('/api/payment/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                order_id: this.orderId,
                 amount: parseFloat(this.totalAmount),
                 payment_method: this.paymentMethod,
                 trade_type: 'usdt.trc20',
@@ -314,33 +312,38 @@ export default function CheckoutPage(csrfToken: string = ''): string {
                 }
               })
             });
-            
+
             const data = await response.json();
-            
+
             if (!data.success) {
               throw new Error(data.message || '创建支付订单失败');
             }
-            
+
+            if (!data.data || !data.data.trade_id || !data.data.order_id) {
+              throw new Error('支付平台返回数据异常，请稍后重试');
+            }
+
+            this.orderId = data.data.order_id;
             this.tradeId = data.data.trade_id;
             this.walletAddress = data.data.token;
             this.actualAmount = data.data.actual_amount;
             this.expirationTime = data.data.expiration_time;
             this.timeLeft = data.data.expiration_time;
-            
+
             if (this.paymentMethod === 'alipay') {
               this.qrCodeBase64 = data.data.qr_code || '';
               this.qrCodeUrl = data.data.qr_code_url || '';
             }
-            
+
             if (this.paymentMethod === 'usdt') {
               this.$nextTick(() => {
                 this.generateQRCode();
               });
             }
-            
+
             this.startTimer();
             this.startPolling();
-            
+
           } catch (err) {
             console.error('创建支付订单失败:', err);
             this.error = err.message || '创建支付订单失败，请稍后重试';

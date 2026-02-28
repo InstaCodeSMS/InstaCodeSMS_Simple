@@ -36,10 +36,8 @@ function isIpInRange(ip: string, range: string): boolean {
  * 将 IP 地址转换为数字
  */
 function ipToNumber(ip: string): number {
-  const parts = ip.split('.')
-  return parts.reduce((acc, part, i) => {
-    return acc + parseInt(part) * Math.pow(256, 3 - i)
-  }, 0)
+  const [a, b, c, d] = ip.split('.').map(Number)
+  return ((a << 24) + (b << 16) + (c << 8) + d) >>> 0
 }
 
 /**
@@ -134,8 +132,7 @@ app.post('/webhook/set', async (c) => {
     return c.json(
       {
         success: false,
-        message: 'Failed to set webhook',
-        error: String(error)
+        message: 'Failed to set webhook'
       },
       500
     )
@@ -166,7 +163,7 @@ app.post('/webhook/info', async (c) => {
     return c.json(
       {
         success: false,
-        error: String(error)
+        message: 'Failed to get webhook info'
       },
       500
     )
@@ -213,8 +210,7 @@ app.post('/menu/set', async (c) => {
     return c.json(
       {
         success: false,
-        message: 'Failed to set menu button',
-        error: String(error)
+        message: 'Failed to set menu button'
       },
       500
     )

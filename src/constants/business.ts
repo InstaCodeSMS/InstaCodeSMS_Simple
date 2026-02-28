@@ -43,3 +43,9 @@ export const CACHE_TTL = {
   MEDIUM: 3600,    // 1 小时
   LONG: 86400,     // 24 小时
 } as const
+
+// 支付超时时间（秒）
+export const PAYMENT_TIMEOUT = {
+  ALIPAY: 300,     // 5 分钟
+  USDT: 600,       // 10 分钟
+} as const

@@ -23,19 +23,21 @@ app.post('/create', async (c) => {
   try {
     const body = await c.req.json<CreatePaymentRequest>()
 
-    if (!body.order_id || !body.amount || !body.payment_method || !body.product_info) {
+    if (!body.amount || !body.payment_method || !body.product_info) {
       return c.json<ApiResponse>(
         { success: false, message: '缺少必要参数' },
         400
       )
     }
 
+    // 服务端生成订单ID
+    const orderId = `ORD${Date.now()}${Math.random().toString(36).substr(2, 6).toUpperCase()}`
+
     const supabase = createSupabaseServiceClient(c.env)
     const paymentService = new PaymentService(supabase, c.env)
-    const baseUrl = new URL(c.req.url).origin
 
     const result = await paymentService.createPayment({
-      order_id: body.order_id,
+      order_id: orderId,
       amount: body.amount,
       payment_method: body.payment_method as any,
       product_info: body.product_info,
@@ -44,7 +46,7 @@ app.post('/create', async (c) => {
 
     const response: CreatePaymentResponse = {
       trade_id: result.trade_id,
-      order_id: body.order_id,
+      order_id: orderId,
       payment_method: body.payment_method,
       status: 0,
       expiration_time: body.payment_method === 'alipay' ? 300 : 600,

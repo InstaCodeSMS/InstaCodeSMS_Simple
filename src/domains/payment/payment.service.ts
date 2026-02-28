@@ -10,6 +10,7 @@ import { OrderRepository } from '../order/order.repo'
 import { PaymentOrderStatus, type ProductSnapshot } from '../order/order.schema'
 import { PaymentMethod, PaymentStatus, type CreatePaymentInput, type PaymentOrderResponse } from './payment.schema'
 import type { Env } from '../../types/env'
+import { PAYMENT_TIMEOUT } from '../../constants/business'
 
 /**
  * 支付服务
@@ -83,7 +84,7 @@ export class PaymentService {
         product_info: input.product_info as ProductSnapshot,
         token: payment.qr_code_url || payment.qr_code,
         trade_type: 'alipay',
-        expiration_time: 300, // 5分钟
+        expiration_time: PAYMENT_TIMEOUT.ALIPAY,
       })
 
       return {
@@ -135,7 +136,7 @@ export class PaymentService {
         product_info: input.product_info as ProductSnapshot,
         token: transaction.token,
         trade_type: input.trade_type,
-        expiration_time: transaction.expiration_time,
+        expiration_time: PAYMENT_TIMEOUT.USDT,
       })
 
       return {
