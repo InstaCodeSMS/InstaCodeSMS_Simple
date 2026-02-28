@@ -7,7 +7,7 @@
 import { Hono } from 'hono'
 import { createSupabaseServiceClient } from '../../adapters/database/supabase'
 import { PaymentService } from '../../domains/payment/payment.service'
-import { createBepusdtClient, createAlimpayClient } from '../../adapters/payment'
+import { createBepusdtClient, createAlimpayClient, paymentRegistry } from '../../adapters/payment'
 import { createOrderRepository } from '../../domains/order/order.repo'
 import { PaymentStatus } from '../../domains/payment/payment.schema'
 import type { Env } from '../../types/env'
@@ -122,16 +122,8 @@ app.get('/status', async (c) => {
  */
 app.post('/callback', async (c) => {
   try {
-    const body = await c.req.json<BepusdtCallbackData>()
+    const body = await c.req.json()
 
-    // 验证签名
-    const client = createBepusdtClient(c.env)
-    if (!client.verifyCallback(body)) {
-      console.warn('支付回调签名验证失败:', body)
-      return c.text('invalid signature', 400)
-    }
-
-    // 初始化仓库
     const supabase = createSupabaseServiceClient(c.env)
     const orderRepo = createOrderRepository(supabase)
 
@@ -142,20 +134,20 @@ app.post('/callback', async (c) => {
       return c.text('order not found', 404)
     }
 
+    // 验证签名
+    const strategy = paymentRegistry.get('usdt')
+    if (!strategy.verifyCallback(body)) {
+      console.warn('支付回调签名验证失败:', body)
+      return c.text('invalid signature', 400)
+    }
+
     // 更新订单状态
     if (body.status === 2) {
-      // 支付成功
-      await orderRepo.markAsPaid(
-        body.trade_id,
-        parseFloat(String(body.actual_amount)),
-        body.block_transaction_id || ''
-      )
+      await strategy.markAsPaid(body.trade_id, parseFloat(String(body.actual_amount)), body.block_transaction_id || '')
     } else if (body.status === 3) {
-      // 支付超时
       await orderRepo.markAsTimeout(body.trade_id)
     }
 
-    // 返回成功响应
     return c.text('ok')
   } catch (error) {
     console.error('处理支付回调失败:', error)
@@ -169,7 +161,6 @@ app.post('/callback', async (c) => {
  */
 app.get('/callback/alipay', async (c) => {
   try {
-    // AliMPay 使用 GET 方式回调
     const params: AlimpayCallbackParams = {
       pid: c.req.query('pid') || '',
       trade_no: c.req.query('trade_no') || '',
@@ -182,32 +173,16 @@ app.get('/callback/alipay', async (c) => {
       sign_type: (c.req.query('sign_type') as 'MD5') || 'MD5',
     }
 
-    // 验证签名
-    if (!c.env.ALIMPAY_API_URL || !c.env.ALIMPAY_PID || !c.env.ALIMPAY_KEY) {
-      console.error('[AliMPay Callback] 环境变量未配置')
-      return c.text('fail', 400)
-    }
-
-    const alimpayClient = createAlimpayClient({
-      apiUrl: c.env.ALIMPAY_API_URL,
-      pid: c.env.ALIMPAY_PID,
-      key: c.env.ALIMPAY_KEY,
-    })
-
-    const isValidSign = alimpayClient.verifyCallback(params)
-    console.log('[AliMPay Callback] 签名验证结果:', isValidSign)
-
-    if (!isValidSign) {
-      console.error('[AliMPay Callback] 签名验证失败:', {
-        received_sign: params.sign,
-        params: params
-      })
-      return c.text('fail', 400)
-    }
-
     // 验证交易状态
     if (params.trade_status !== 'TRADE_SUCCESS') {
       console.log('[AliMPay Callback] 交易状态非成功:', params.trade_status)
+      return c.text('fail', 400)
+    }
+
+    // 验证签名
+    const strategy = paymentRegistry.get('alipay')
+    if (!strategy.verifyCallback(params)) {
+      console.error('[AliMPay Callback] 签名验证失败:', { received_sign: params.sign, params })
       return c.text('fail', 400)
     }
 
@@ -222,24 +197,8 @@ app.get('/callback/alipay', async (c) => {
       return c.text('fail', 404)
     }
 
-    console.log('[AliMPay Callback] 找到订单:', {
-      trade_id: order.trade_id,
-      order_id: order.order_id,
-      current_status: order.status
-    })
-
     // 更新订单状态
-    const updatedOrder = await orderRepo.markAsPaid(
-      params.trade_no,
-      parseFloat(params.money),
-      params.trade_no // 使用平台订单号作为交易ID
-    )
-
-    console.log('[AliMPay Callback] 订单状态已更新:', {
-      trade_id: updatedOrder.trade_id,
-      status: updatedOrder.status,
-      paid_at: updatedOrder.paid_at
-    })
+    await strategy.markAsPaid(params.trade_no, parseFloat(params.money), params.trade_no)
 
     return c.text('success')
   } catch (error) {

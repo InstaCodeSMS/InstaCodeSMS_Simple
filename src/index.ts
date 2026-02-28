@@ -4,6 +4,9 @@ import { cors } from 'hono/cors'
 // 导入 CSRF 中间件
 import { csrfProtection } from './middleware/csrf'
 
+// 导入支付策略初始化中间件
+import { paymentStrategyInitializer } from './middleware/payment-init'
+
 // 导入页面视图
 import ReceivePage from './views/pages/ReceivePage'
 import PurchasePage from './views/pages/PurchasePage'
@@ -33,6 +36,7 @@ import type { Env } from './types/env'
 const app = new Hono<{ Bindings: Env }>()
 
 // ========== 中间件 ==========
+app.use('*', paymentStrategyInitializer)  // 初始化支付策略
 app.use('*', requestLogger)  // 请求日志 + request-id
 app.use('*', cors())
 
