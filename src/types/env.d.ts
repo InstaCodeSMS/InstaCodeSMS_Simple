@@ -26,8 +26,10 @@ export interface Env {
   // Telegram Bot 配置
   TELEGRAM_BOT_TOKEN?: string
   TELEGRAM_WEBHOOK_URL?: string
-  TELEGRAM_WEBHOOK_SECRET?: string
-}
+  SHOP_URL?: string // 商城网页 URL
+
+  // 管理员配置
+  ADMIN_SECRET?: string // 管理员操作密钥
 
 // 导入 Telegram 认证用户类型
 import type { AuthenticatedUser } from './telegram'
@@ -37,6 +39,5 @@ declare module 'hono' {
   interface ContextVariableMap {
     env: Env
     csrfToken: string  // CSRF Token，由 CSRF 中间件自动注入
-    telegramUser?: AuthenticatedUser  // Telegram 认证用户，由 telegram-auth 中间件注入
   }
 }

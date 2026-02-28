@@ -43,6 +43,14 @@ function ipToNumber(ip: string): number {
 }
 
 /**
+ * 验证管理员权限
+ */
+function verifyAdminSecret(token: string | undefined, adminSecret: string | undefined): boolean {
+  if (!adminSecret || !token) return false
+  return token === adminSecret
+}
+
+/**
  * 验证 IP 白名单
  */
 function verifyIpWhitelist(clientIp: string | undefined): boolean {
@@ -60,9 +68,8 @@ function verifyIpWhitelist(clientIp: string | undefined): boolean {
  */
 app.post('/webhook', async (c) => {
   try {
-    // 获取客户端 IP
-    const clientIp = c.req.header('cf-connecting-ip') ||
-                     c.req.header('x-forwarded-for')?.split(',')[0].trim()
+    // 获取客户端 IP（仅使用 Cloudflare 设置的 IP，x-forwarded-for 可被伪造）
+    const clientIp = c.req.header('cf-connecting-ip')
 
     // 验证 IP 白名单
     if (!verifyIpWhitelist(clientIp)) {
@@ -85,11 +92,17 @@ app.post('/webhook', async (c) => {
 })
 
 /**
- * GET /api/telegram/webhook/set
+ * POST /api/telegram/webhook/set
  * 设置 Webhook URL（管理员使用）
  */
-app.get('/webhook/set', async (c) => {
+app.post('/webhook/set', async (c) => {
   try {
+    // 验证管理员权限
+    const adminToken = c.req.header('x-admin-token')
+    if (!verifyAdminSecret(adminToken, c.env.ADMIN_SECRET)) {
+      return c.json({ success: false, message: 'Unauthorized' }, 401)
+    }
+
     const webhookUrl = c.env.TELEGRAM_WEBHOOK_URL
 
     if (!webhookUrl) {
@@ -130,11 +143,17 @@ app.get('/webhook/set', async (c) => {
 })
 
 /**
- * GET /api/telegram/webhook/info
+ * POST /api/telegram/webhook/info
  * 获取 Webhook 信息
  */
-app.get('/webhook/info', async (c) => {
+app.post('/webhook/info', async (c) => {
   try {
+    // 验证管理员权限
+    const adminToken = c.req.header('x-admin-token')
+    if (!verifyAdminSecret(adminToken, c.env.ADMIN_SECRET)) {
+      return c.json({ success: false, message: 'Unauthorized' }, 401)
+    }
+
     const bot = getBot(c.env)
     const info = await bot.api.getWebhookInfo()
 
@@ -147,6 +166,54 @@ app.get('/webhook/info', async (c) => {
     return c.json(
       {
         success: false,
+        error: String(error)
+      },
+      500
+    )
+  }
+})
+
+/**
+ * POST /api/telegram/menu/set
+ * 设置菜单按钮（管理员使用）
+ */
+app.post('/menu/set', async (c) => {
+  try {
+    // 验证管理员权限
+    const adminToken = c.req.header('x-admin-token')
+    if (!verifyAdminSecret(adminToken, c.env.ADMIN_SECRET)) {
+      return c.json({ success: false, message: 'Unauthorized' }, 401)
+    }
+
+    const shopUrl = c.env.SHOP_URL || 'https://yoursite.com/purchase'
+    const bot = getBot(c.env)
+
+    const result = await bot.api.setChatMenuButton({
+      menu_button: {
+        type: 'web_app',
+        text: '🛍️ 商城',
+        web_app: {
+          url: shopUrl
+        }
+      }
+    })
+
+    console.log('[Telegram] Menu button set successfully')
+
+    return c.json({
+      success: true,
+      message: 'Menu button set successfully',
+      data: {
+        text: '🛍️ 商城',
+        url: shopUrl
+      }
+    })
+  } catch (error) {
+    console.error('[Telegram] Failed to set menu button:', error)
+    return c.json(
+      {
+        success: false,
+        message: 'Failed to set menu button',
         error: String(error)
       },
       500

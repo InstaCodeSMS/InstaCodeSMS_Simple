@@ -83,23 +83,35 @@ app.post('/create', async (c) => {
         returnUrl,
       })
 
+      // 验证必要字段
+      if (!payment.trade_no) {
+        console.error('[Payment] AliMPay 响应缺少 trade_no:', payment)
+        return c.json<ApiResponse>(
+          {
+            success: false,
+            message: '支付平台返回数据异常：缺少订单号',
+          },
+          500
+        )
+      }
+
       // 存储订单到 Supabase
       await orderRepo.create({
-        trade_id: payment.trade_no!,
+        trade_id: payment.trade_no,
         order_id: body.order_id,
         payment_method: 'alipay',
         amount: body.amount,
         actual_amount: payment.payment_amount || body.amount,
         status: PaymentOrderStatus.PENDING,
         product_info: body.product_info as ProductSnapshot,
-      token: payment.qr_code_url || payment.qr_code || undefined,
+        token: payment.qr_code_url || payment.qr_code || undefined,
         trade_type: 'alipay',
         expiration_time: 300, // 5 分钟超时
       })
 
       // 构建响应
       const response: CreatePaymentResponse = {
-        trade_id: payment.trade_no!,
+        trade_id: payment.trade_no,
         order_id: body.order_id,
         payment_method: 'alipay',
         status: PaymentStatus.PENDING,
@@ -129,20 +141,11 @@ app.post('/create', async (c) => {
       )
     }
 
-    console.log('[Payment] 创建 USDT 支付订单:', {
-      orderId: body.order_id,
-      amount: body.amount,
-      bepusdtUrl: c.env.BEPUSDT_API_URL,
-      bepusdtToken: c.env.BEPUSDT_API_TOKEN ? '(已配置)' : '(未配置)',
-    })
-
     const bepusdtClient = createBepusdtClient(c.env)
 
     // 构建回调地址
     const notifyUrl = c.env.BEPUSDT_NOTIFY_URL || `${baseUrl}/api/payment/callback`
     const redirectUrl = `${baseUrl}/success`
-
-    console.log('[Payment] 调用 BEpusdt createTransaction...')
 
     // 创建 BEpusdt 交易
     const transaction = await bepusdtClient.createTransaction({
@@ -336,6 +339,16 @@ app.post('/callback', async (c) => {
  * AliMPay 支付回调
  */
 app.get('/callback/alipay', async (c) => {
+  // 记录原始请求信息
+  const rawUrl = c.req.url
+  const rawQuery = Object.fromEntries(new URL(rawUrl).searchParams)
+  
+  console.log('[AliMPay Callback] 收到回调请求:', {
+    url: rawUrl,
+    query: rawQuery,
+    timestamp: new Date().toISOString()
+  })
+
   try {
     // AliMPay 使用 GET 方式回调
     const params: AlimpayCallbackParams = {
@@ -350,9 +363,11 @@ app.get('/callback/alipay', async (c) => {
       sign_type: (c.req.query('sign_type') as 'MD5') || 'MD5',
     }
 
+    console.log('[AliMPay Callback] 解析后的参数:', JSON.stringify(params, null, 2))
+
     // 验证签名
     if (!c.env.ALIMPAY_API_URL || !c.env.ALIMPAY_PID || !c.env.ALIMPAY_KEY) {
-      console.warn('AliMPay 未配置')
+      console.error('[AliMPay Callback] 环境变量未配置')
       return c.text('fail', 400)
     }
 
@@ -362,14 +377,20 @@ app.get('/callback/alipay', async (c) => {
       key: c.env.ALIMPAY_KEY,
     })
 
-    if (!alimpayClient.verifyCallback(params)) {
-      console.warn('AliMPay 回调签名验证失败:', params)
+    const isValidSign = alimpayClient.verifyCallback(params)
+    console.log('[AliMPay Callback] 签名验证结果:', isValidSign)
+
+    if (!isValidSign) {
+      console.error('[AliMPay Callback] 签名验证失败:', {
+        received_sign: params.sign,
+        params: params
+      })
       return c.text('fail', 400)
     }
 
     // 验证交易状态
     if (params.trade_status !== 'TRADE_SUCCESS') {
-      console.log('AliMPay 交易状态非成功:', params.trade_status)
+      console.log('[AliMPay Callback] 交易状态非成功:', params.trade_status)
       return c.text('fail', 400)
     }
 
@@ -380,26 +401,32 @@ app.get('/callback/alipay', async (c) => {
     // 查找订单
     const order = await orderRepo.findByTradeId(params.trade_no)
     if (!order) {
-      console.warn('AliMPay 回调订单不存在:', params.trade_no)
+      console.error('[AliMPay Callback] 订单不存在:', params.trade_no)
       return c.text('fail', 404)
     }
 
+    console.log('[AliMPay Callback] 找到订单:', {
+      trade_id: order.trade_id,
+      order_id: order.order_id,
+      current_status: order.status
+    })
+
     // 更新订单状态
-    await orderRepo.markAsPaid(
+    const updatedOrder = await orderRepo.markAsPaid(
       params.trade_no,
       parseFloat(params.money),
       params.trade_no // 使用平台订单号作为交易ID
     )
 
-    console.log('AliMPay 支付成功:', {
-      trade_id: params.trade_no,
-      order_id: params.out_trade_no,
-      money: params.money,
+    console.log('[AliMPay Callback] 订单状态已更新:', {
+      trade_id: updatedOrder.trade_id,
+      status: updatedOrder.status,
+      paid_at: updatedOrder.paid_at
     })
 
     return c.text('success')
   } catch (error) {
-    console.error('处理 AliMPay 回调失败:', error)
+    console.error('[AliMPay Callback] 处理失败:', error)
     return c.text('fail', 500)
   }
 })

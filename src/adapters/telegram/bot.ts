@@ -12,16 +12,10 @@ import { handleOrders } from '../../domains/telegram/commands/orders'
 import { handleReceive, handleReceiveOrdernum, handleStop } from '../../domains/telegram/commands/receive'
 import { handleHelp } from '../../domains/telegram/commands/help'
 
-let botInstance: Bot | null = null
-
 /**
  * 创建 Bot 实例
  */
 export function createBot(env: Env): Bot {
-  if (botInstance) {
-    return botInstance
-  }
-
   if (!env.TELEGRAM_BOT_TOKEN) {
     throw new Error('TELEGRAM_BOT_TOKEN is not configured')
   }
@@ -86,7 +80,6 @@ export function createBot(env: Env): Bot {
     await ctx.answerCallbackQuery()
   })
 
-  botInstance = bot
   return bot
 }
 
@@ -94,15 +87,12 @@ export function createBot(env: Env): Bot {
  * 获取 Bot 实例
  */
 export function getBot(env: Env): Bot {
-  if (!botInstance) {
-    return createBot(env)
-  }
-  return botInstance
+  return createBot(env)
 }
 
 /**
  * 重置 Bot 实例（用于测试）
  */
 export function resetBot(): void {
-  botInstance = null
+  // 无需重置，每次都创建新实例
 }
