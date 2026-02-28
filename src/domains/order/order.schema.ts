@@ -21,7 +21,7 @@ export enum PaymentOrderStatus {
 /**
  * 支付方式
  */
-export type PaymentMethod = 'usdt' | 'alipay'
+export type PaymentMethod = 'usdt' | 'alipay' | 'epay' | 'tokenpay' | 'paypal' | 'stripe' | 'wechatpay'
 
 /**
  * 产品信息快照

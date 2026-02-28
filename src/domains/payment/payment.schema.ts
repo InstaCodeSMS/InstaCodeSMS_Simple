@@ -11,6 +11,11 @@ import { z } from 'zod'
 export enum PaymentMethod {
   ALIPAY = 'alipay',
   USDT = 'usdt',
+  EPAY = 'epay',
+  TOKENPAY = 'tokenpay',
+  PAYPAL = 'paypal',
+  STRIPE = 'stripe',
+  WECHATPAY = 'wechatpay',
 }
 
 /**
@@ -29,7 +34,7 @@ export enum PaymentStatus {
 export const CreatePaymentSchema = z.object({
   order_id: z.string().min(1, '订单ID不能为空'),
   amount: z.number().positive('金额必须大于0'),
-  payment_method: z.enum(['alipay', 'usdt']),
+  payment_method: z.enum(['alipay', 'usdt', 'epay', 'tokenpay', 'paypal', 'stripe', 'wechatpay']),
   product_info: z.object({
     service_id: z.number().int().positive(),
     title: z.string().min(1),

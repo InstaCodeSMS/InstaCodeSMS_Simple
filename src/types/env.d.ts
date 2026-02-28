@@ -25,6 +25,33 @@ export interface Env {
   ALIMPAY_PID?: string // 商户 ID
   ALIMPAY_KEY?: string // 商户密钥
 
+  // E-pay 支付配置
+  EPAY_API_URL?: string // E-pay API 地址
+  EPAY_PID?: string // 商户 ID
+  EPAY_KEY?: string // 商户密钥
+  EPAY_SIGN_TYPE?: string // 签名类型 (MD5 或 RSA)
+
+  // Token Pay 支付配置
+  TOKENPAY_API_URL?: string // Token Pay API 地址
+  TOKENPAY_MERCHANT_ID?: string // 商户 ID
+  TOKENPAY_API_KEY?: string // API 密钥
+
+  // PayPal 支付配置
+  PAYPAL_CLIENT_ID?: string // PayPal Client ID
+  PAYPAL_CLIENT_SECRET?: string // PayPal Client Secret
+  PAYPAL_MODE?: string // 模式 (sandbox 或 live)
+
+  // Stripe 支付配置
+  STRIPE_SECRET_KEY?: string // Stripe Secret Key
+  STRIPE_PUBLISHABLE_KEY?: string // Stripe Publishable Key
+  STRIPE_WEBHOOK_SECRET?: string // Stripe Webhook Secret
+
+  // WeChat Pay 支付配置
+  WECHATPAY_MERCHANT_ID?: string // 商户 ID
+  WECHATPAY_API_V3_KEY?: string // API v3 密钥
+  WECHATPAY_PRIVATE_KEY?: string // 私钥
+  WECHATPAY_CERTIFICATE?: string // 证书
+
   // Telegram Bot 配置
   TELEGRAM_BOT_TOKEN?: string
   TELEGRAM_WEBHOOK_URL?: string
