@@ -36,7 +36,11 @@ export class PaymentService {
     qr_code_url?: string
     actual_amount: string
   }> {
-    const baseUrl = 'https://api.example.com' // 应该从环境变量获取
+    if (!this.env.API_BASE_URL) {
+      throw new Error('缺少环境变量：API_BASE_URL')
+    }
+
+    const baseUrl = this.env.API_BASE_URL
 
     if (input.payment_method === PaymentMethod.ALIPAY) {
       return this.createAlipayPayment(input, baseUrl)

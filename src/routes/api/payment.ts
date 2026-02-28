@@ -7,6 +7,9 @@
 import { Hono } from 'hono'
 import { createSupabaseServiceClient } from '../../adapters/database/supabase'
 import { PaymentService } from '../../domains/payment/payment.service'
+import { createBepusdtClient, createAlimpayClient } from '../../adapters/payment'
+import { createOrderRepository } from '../../domains/order/order.repo'
+import { PaymentStatus } from '../../domains/payment/payment.schema'
 import type { Env } from '../../types/env'
 import type { ApiResponse } from '../../types/api'
 import { type CreatePaymentRequest, type CreatePaymentResponse } from '../../adapters/payment/types'
@@ -30,6 +33,13 @@ app.post('/create', async (c) => {
       )
     }
 
+    if (!c.env.API_BASE_URL) {
+      return c.json<ApiResponse>(
+        { success: false, message: '服务器配置错误：缺少 API_BASE_URL' },
+        500
+      )
+    }
+
     // 服务端生成订单ID
     const orderId = `ORD${Date.now()}${Math.random().toString(36).substr(2, 6).toUpperCase()}`
 
@@ -48,7 +58,7 @@ app.post('/create', async (c) => {
       trade_id: result.trade_id,
       order_id: orderId,
       payment_method: body.payment_method,
-      status: 0,
+      status: PaymentStatus.PENDING,
       expiration_time: body.payment_method === 'alipay' ? 300 : 600,
       token: result.qr_code_url || result.qr_code,
       actual_amount: result.actual_amount,

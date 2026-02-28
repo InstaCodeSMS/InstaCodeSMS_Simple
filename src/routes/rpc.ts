@@ -8,9 +8,9 @@ import { createSupabaseServiceClient } from '../adapters/database/supabase'
 import { PaymentService } from '../domains/payment/payment.service'
 import { OrderRepository } from '../domains/order/order.repo'
 import type { Env } from '../types/env'
-import type { ApiResponse, OrderCreateData } from '../types/api'
+import type { ApiResponse, OrderCreateParams } from '../types/api'
 import { type CreatePaymentRequest, type CreatePaymentResponse } from '../adapters/payment/types'
-import { PaymentMethod } from '../domains/payment/payment.schema'
+import { PaymentMethod, PaymentStatus } from '../domains/payment/payment.schema'
 import { createUpstreamClient, UpstreamError } from '../adapters/upstream'
 
 const app = new Hono<{ Bindings: Env }>()
@@ -45,7 +45,7 @@ app.post('/payment/create', async (c) => {
       trade_id: result.trade_id,
       order_id: orderId,
       payment_method: body.payment_method,
-      status: 0,
+      status: PaymentStatus.PENDING,
       expiration_time: body.payment_method === 'alipay' ? 300 : 600,
       token: result.qr_code_url || result.qr_code,
       actual_amount: result.actual_amount,
@@ -133,7 +133,7 @@ app.get('/payment/order/:trade_id', async (c) => {
 
 app.post('/orders/create', async (c) => {
   try {
-    const body = await c.req.json<OrderCreateData>()
+    const body = await c.req.json<OrderCreateParams>()
 
     const appId = body.app_id
     const num = body.num
@@ -157,7 +157,14 @@ app.post('/orders/create', async (c) => {
       UPSTREAM_API_TOKEN: c.env.UPSTREAM_API_TOKEN,
     })
 
-    const result = await client.createOrder(appId, num, body.expiry)
+    const result = await client.createOrder({
+      app_id: appId,
+      type: body.type,
+      num,
+      expiry: body.expiry,
+      prefix: body.prefix,
+      exclude_prefix: body.exclude_prefix,
+    })
 
     return c.json<ApiResponse>({
       success: true,
