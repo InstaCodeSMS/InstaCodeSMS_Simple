@@ -295,7 +295,7 @@ export default function CheckoutPage(csrfToken: string = ''): string {
         
         async createPaymentOrder(serviceId, expiryValue) {
           try {
-            const response = await fetch('/api/payment/create', {
+            const response = await fetch('/rpc/payment/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
@@ -385,9 +385,9 @@ export default function CheckoutPage(csrfToken: string = ''): string {
         async checkPaymentStatus() {
           if (!this.tradeId || this.isProcessing) return;
           this.isChecking = true;
-          
+
           try {
-            const response = await fetch('/api/payment/status?trade_id=' + this.tradeId);
+            const response = await fetch('/rpc/payment/status?trade_id=' + this.tradeId);
             const data = await response.json();
             
             if (data.success && data.data.status === 2) {
@@ -414,16 +414,16 @@ export default function CheckoutPage(csrfToken: string = ''): string {
         
         async createUpstreamOrder() {
           try {
-            const orderResponse = await fetch('/api/payment/order/' + this.tradeId);
+            const orderResponse = await fetch('/rpc/payment/order/' + this.tradeId);
             const orderData = await orderResponse.json();
-            
+
             if (!orderData.success) {
               throw new Error('获取订单信息失败');
             }
-            
+
             const productInfo = orderData.data.product_info;
-            
-            const response = await fetch('/api/orders/create', {
+
+            const response = await fetch('/rpc/orders/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

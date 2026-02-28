@@ -17,23 +17,11 @@ import smsApi from './routes/api/sms'
 import syncApi from './routes/api/sync'
 import paymentApi from './routes/api/payment'
 import telegramApi from './routes/api/telegram'
-import telegramMiniAppApi from './routes/api/telegram-mini-app'
-import miniAppAuthApi from './routes/api/mini-app-auth'
-import miniAppProductsApi from './routes/api/telegram-mini-app-products'
-import miniAppOrdersApi from './routes/api/telegram-mini-app-orders'
-import miniAppPaymentApi from './routes/api/telegram-mini-app-payment'
-
-// 导入 Web 路由
-import telegramMiniAppWeb from './routes/web/telegram-mini-app'
-import telegramMiniAppProducts from './routes/web/telegram-mini-app-products'
-import telegramMiniAppCart from './routes/web/telegram-mini-app-cart'
-import telegramMiniAppCheckout from './routes/web/telegram-mini-app-checkout'
-import telegramMiniAppOrders from './routes/web/telegram-mini-app-orders'
+import rpcApp from './routes/rpc'
 
 // 导入中间件
 import { requestLogger } from './middleware/logger'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler'
-import { miniAppAuthMiddleware } from './middleware/mini-app-auth'
 
 // 导入上游客户端
 import { createUpstreamClient } from './adapters/upstream'
@@ -132,36 +120,8 @@ app.route('/api/payment', paymentApi)
 // Telegram Bot API
 app.route('/api/telegram', telegramApi)
 
-// Telegram Mini App API
-app.route('/api/telegram-mini-app', telegramMiniAppApi)
-
-// Telegram Mini App 认证 API
-app.route('/mini-app/api/auth', miniAppAuthApi)
-
-// Telegram Mini App 商品 API
-app.route('/api/telegram-mini-app', miniAppProductsApi)
-
-// Telegram Mini App 订单 API
-app.route('/api/telegram-mini-app/orders', miniAppOrdersApi)
-
-// Telegram Mini App 支付 API
-app.route('/api/telegram-mini-app/payment', miniAppPaymentApi)
-
-// Telegram Mini App 商品列表 Web
-app.route('/mini-app/api/products', telegramMiniAppProducts)
-
-// Telegram Mini App 购物车 Web
-app.route('/mini-app/api/cart', telegramMiniAppCart)
-
-// Telegram Mini App 结算 Web
-app.route('/mini-app/api/checkout', telegramMiniAppCheckout)
-
-// Telegram Mini App 订单列表 Web
-app.route('/mini-app/api/orders', telegramMiniAppOrders)
-
-// Telegram Mini App Web (前端路由) - 使用认证中间件
-app.use('/mini-app/*', miniAppAuthMiddleware)
-app.route('/mini-app', telegramMiniAppWeb)
+// RPC 路由（类型安全 API）
+app.route('/rpc', rpcApp)
 
 // 健康检查
 app.get('/api/health', (c) => {
