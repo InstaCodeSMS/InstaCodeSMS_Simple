@@ -2,6 +2,8 @@
  * 订单相关类型定义
  */
 
+import { z } from 'zod'
+
 /**
  * 支付订单状态枚举
  */
@@ -98,3 +100,30 @@ export interface UpdatePaymentOrderParams {
   paid_at?: string
   block_transaction_id?: string
 }
+
+// Zod 验证 schema
+export const ProductSnapshotSchema = z.object({
+  service_id: z.number(),
+  title: z.string(),
+  quantity: z.number(),
+  expiry: z.number(),
+  expiry_days: z.string(),
+  unit_price: z.number(),
+})
+
+export const PaymentOrderRecordSchema = z.object({
+  trade_id: z.string(),
+  order_id: z.string(),
+  payment_method: z.enum(['usdt', 'alipay']),
+  amount: z.number(),
+  actual_amount: z.number().nullable(),
+  status: z.number(),
+  product_info: ProductSnapshotSchema,
+  token: z.string().nullable(),
+  trade_type: z.string().nullable(),
+  expiration_time: z.number(),
+  created_at: z.string(),
+  updated_at: z.string(),
+  paid_at: z.string().nullable(),
+  block_transaction_id: z.string().nullable(),
+})

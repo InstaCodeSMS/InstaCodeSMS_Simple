@@ -10,6 +10,7 @@ import {
   type CreatePaymentOrderParams,
   type UpdatePaymentOrderParams,
   type ProductSnapshot,
+  PaymentOrderRecordSchema,
 } from './order.schema'
 
 /**
@@ -165,18 +166,20 @@ export class OrderRepository {
    */
   async findExpiredOrders(): Promise<PaymentOrderRecord[]> {
     const now = new Date()
-    
+
+    // 在数据库中计算过期时间，避免加载全表
     const { data, error } = await this.client
       .from(this.tableName)
       .select()
       .eq('status', PaymentOrderStatus.PENDING)
-      .lt('created_at', now.toISOString())
+      .lt('created_at', new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString())
+      .limit(100)
 
     if (error) {
       throw new Error(`查询过期订单失败: ${error.message}`)
     }
 
-    // 在应用层过滤已过期的订单
+    // 在应用层再次验证过期时间
     const expiredOrders = data.filter((item) => {
       const createdAt = new Date(item.created_at)
       const expiresAt = new Date(createdAt.getTime() + item.expiration_time * 1000)
@@ -190,22 +193,22 @@ export class OrderRepository {
    * 映射数据库记录到类型
    */
   private mapRecord(data: Record<string, unknown>): PaymentOrderRecord {
-    return {
-      trade_id: data.trade_id as string,
-      order_id: data.order_id as string,
-      payment_method: data.payment_method as 'usdt' | 'alipay',
-      amount: data.amount as number,
-      actual_amount: data.actual_amount as number | null,
-      status: data.status as PaymentOrderStatus,
-      product_info: data.product_info as ProductSnapshot,
-      token: data.token as string | null,
-      trade_type: data.trade_type as string | null,
-      expiration_time: data.expiration_time as number,
-      created_at: data.created_at as string,
-      updated_at: data.updated_at as string,
-      paid_at: data.paid_at as string | null,
-      block_transaction_id: data.block_transaction_id as string | null,
-    }
+    return PaymentOrderRecordSchema.parse({
+      trade_id: data.trade_id,
+      order_id: data.order_id,
+      payment_method: data.payment_method,
+      amount: Number(data.amount),
+      actual_amount: data.actual_amount != null ? Number(data.actual_amount) : null,
+      status: Number(data.status),
+      product_info: data.product_info,
+      token: data.token || null,
+      trade_type: data.trade_type || null,
+      expiration_time: Number(data.expiration_time),
+      created_at: data.created_at,
+      updated_at: data.updated_at,
+      paid_at: data.paid_at || null,
+      block_transaction_id: data.block_transaction_id || null,
+    })
   }
 }
 
