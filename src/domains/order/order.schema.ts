@@ -114,7 +114,7 @@ export const ProductSnapshotSchema = z.object({
 export const PaymentOrderRecordSchema = z.object({
   trade_id: z.string(),
   order_id: z.string(),
-  payment_method: z.enum(['usdt', 'alipay']),
+  payment_method: z.enum(['usdt', 'alipay', 'epay', 'tokenpay', 'paypal', 'stripe', 'wechatpay']),
   amount: z.number(),
   actual_amount: z.number().nullable(),
   status: z.number(),

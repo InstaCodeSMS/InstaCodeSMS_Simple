@@ -6,7 +6,7 @@
 /**
  * 支付方式枚举
  */
-export type PaymentMethod = 'usdt' | 'alipay'
+export type PaymentMethod = 'usdt' | 'alipay' | 'epay' | 'tokenpay' | 'paypal' | 'stripe' | 'wechatpay'
 
 /**
  * 支付订单状态
