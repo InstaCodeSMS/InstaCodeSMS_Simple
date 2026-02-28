@@ -120,8 +120,6 @@ app.post('/webhook/set', async (c) => {
       allowed_updates: ['message', 'callback_query']
     })
 
-    console.log('[Telegram] Webhook set successfully:', result)
-
     return c.json({
       success: true,
       message: 'Webhook set successfully',
@@ -194,8 +192,6 @@ app.post('/menu/set', async (c) => {
         }
       }
     })
-
-    console.log('[Telegram] Menu button set successfully')
 
     return c.json({
       success: true,

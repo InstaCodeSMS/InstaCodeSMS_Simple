@@ -140,13 +140,6 @@ app.post('/callback', async (c) => {
         parseFloat(String(body.actual_amount)),
         body.block_transaction_id || ''
       )
-
-      console.log('支付成功:', {
-        trade_id: body.trade_id,
-        order_id: body.order_id,
-        amount: body.amount,
-        actual_amount: body.actual_amount,
-      })
     } else if (body.status === 3) {
       // 支付超时
       await orderRepo.markAsTimeout(body.trade_id)
@@ -165,16 +158,6 @@ app.post('/callback', async (c) => {
  * AliMPay 支付回调
  */
 app.get('/callback/alipay', async (c) => {
-  // 记录原始请求信息
-  const rawUrl = c.req.url
-  const rawQuery = Object.fromEntries(new URL(rawUrl).searchParams)
-  
-  console.log('[AliMPay Callback] 收到回调请求:', {
-    url: rawUrl,
-    query: rawQuery,
-    timestamp: new Date().toISOString()
-  })
-
   try {
     // AliMPay 使用 GET 方式回调
     const params: AlimpayCallbackParams = {
@@ -188,8 +171,6 @@ app.get('/callback/alipay', async (c) => {
       sign: c.req.query('sign') || '',
       sign_type: (c.req.query('sign_type') as 'MD5') || 'MD5',
     }
-
-    console.log('[AliMPay Callback] 解析后的参数:', JSON.stringify(params, null, 2))
 
     // 验证签名
     if (!c.env.ALIMPAY_API_URL || !c.env.ALIMPAY_PID || !c.env.ALIMPAY_KEY) {
