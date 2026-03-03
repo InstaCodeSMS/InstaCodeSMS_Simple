@@ -122,12 +122,19 @@ export class EpayClient {
     }
 
     try {
-      const pemHeader = '-----BEGIN PRIVATE KEY-----'
-      const pemFooter = '-----END PRIVATE KEY-----'
-      const pemContents = this.config.privateKey
-        .replace(pemHeader, '')
-        .replace(pemFooter, '')
-        .replace(/\s/g, '')
+      let pemContents = this.config.privateKey.trim()
+      
+      // 检查是否包含 PEM 头尾标记
+      if (pemContents.includes('BEGIN PRIVATE KEY')) {
+        // 如果有，去除头尾标记
+        pemContents = pemContents
+          .replace('-----BEGIN PRIVATE KEY-----', '')
+          .replace('-----END PRIVATE KEY-----', '')
+          .replace(/\s/g, '')
+      } else {
+        // 如果没有，说明是纯 base64，直接使用
+        pemContents = pemContents.replace(/\s/g, '')
+      }
       
       const binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0))
       
@@ -162,12 +169,19 @@ export class EpayClient {
     }
 
     try {
-      const pemHeader = '-----BEGIN PUBLIC KEY-----'
-      const pemFooter = '-----END PUBLIC KEY-----'
-      const pemContents = this.config.publicKey
-        .replace(pemHeader, '')
-        .replace(pemFooter, '')
-        .replace(/\s/g, '')
+      let pemContents = this.config.publicKey.trim()
+      
+      // 检查是否包含 PEM 头尾标记
+      if (pemContents.includes('BEGIN PUBLIC KEY')) {
+        // 如果有，去除头尾标记
+        pemContents = pemContents
+          .replace('-----BEGIN PUBLIC KEY-----', '')
+          .replace('-----END PUBLIC KEY-----', '')
+          .replace(/\s/g, '')
+      } else {
+        // 如果没有，说明是纯 base64，直接使用
+        pemContents = pemContents.replace(/\s/g, '')
+      }
       
       const binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0))
       
