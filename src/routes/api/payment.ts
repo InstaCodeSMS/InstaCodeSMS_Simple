@@ -89,22 +89,22 @@ app.get('/callback/epay', async (c) => {
     })
     await orderRepo.markAsPaid(params.out_trade_no, parseFloat(params.money), params.trade_no)
 
-    // 调用上游API购买商品
-    try {
-      console.log('[E-pay Callback] 开始调用上游API购买商品')
-      
-      const productInfo = order.product_info as any
-      if (!productInfo?.id) {
-        console.error('[E-pay Callback] 订单缺少产品信息')
-        return c.text('success')
-      }
+      // 调用上游API购买商品
+      try {
+        console.log('[E-pay Callback] 开始调用上游API购买商品')
+        
+        const productInfo = order.product_info as any
+        if (!productInfo?.service_id) {
+          console.error('[E-pay Callback] 订单缺少产品信息')
+          return c.text('success')
+        }
 
-      // 查询产品信息
-      const { data: product, error: productError } = await supabase
-        .from('products')
-        .select('*')
-        .eq('id', productInfo.id)
-        .single()
+        // 查询产品信息
+        const { data: product, error: productError } = await supabase
+          .from('products')
+          .select('*')
+          .eq('id', productInfo.service_id)
+          .single()
 
       if (productError || !product) {
         console.error('[E-pay Callback] 查询产品失败:', productError)
