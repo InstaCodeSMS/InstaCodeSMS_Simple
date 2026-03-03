@@ -77,10 +77,10 @@ export class EpayClient {
     const callback = data as Record<string, string>
     if (!callback.sign) return false
 
-    // 排除 sign 和 sign_type，包含所有其他参数
+    // 排除 sign、sign_type 和空值，包含所有其他参数
     const params: Record<string, string> = {}
     for (const key in callback) {
-      if (key !== 'sign' && key !== 'sign_type') {
+      if (key !== 'sign' && key !== 'sign_type' && callback[key]) {
         params[key] = callback[key]
       }
     }
