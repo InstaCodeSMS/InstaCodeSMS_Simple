@@ -65,6 +65,7 @@ app.post('/payment/create', async (c) => {
       status: PaymentStatus.PENDING,
       expiration_time: 300,
       qr_code_url: qrCodeUrl,
+      payment_url: result.payment_url,
       actual_amount: result.actual_amount,
     }
 
