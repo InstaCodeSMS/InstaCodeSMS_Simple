@@ -394,17 +394,20 @@ export default function PurchasePage(csrfToken: string = ''): string {
           this.errorMessage = null;
           
           try {
-            const response = await fetch('/api/rpc/payment/create', {
+            const response = await fetch('/rpc/payment/create', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
               body: JSON.stringify({
-                service_id: this.activeService.id,
-                expiry: this.form.selectedExpiry,
-                quantity: this.form.quantity,
+                amount: parseFloat(this.calculateTotal()),
                 payment_method: 'epay',
-                payment_type: 'alipay'
+                product_info: {
+                  service_id: this.activeService.id,
+                  expiry: this.form.selectedExpiry,
+                  quantity: this.form.quantity
+                },
+                trade_type: 'alipay'
               })
             });
             
