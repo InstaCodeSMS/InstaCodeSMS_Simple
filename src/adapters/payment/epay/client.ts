@@ -74,17 +74,15 @@ export class EpayClient {
   }
 
   verifyCallback(data: unknown): boolean {
-    const callback = data as EpayCallbackData
+    const callback = data as Record<string, string>
     if (!callback.sign) return false
 
-    const params = {
-      pid: callback.pid,
-      trade_no: callback.trade_no,
-      out_trade_no: callback.out_trade_no,
-      type: callback.type,
-      name: callback.name,
-      money: callback.money,
-      trade_status: callback.trade_status,
+    // 排除 sign 和 sign_type，包含所有其他参数
+    const params: Record<string, string> = {}
+    for (const key in callback) {
+      if (key !== 'sign' && key !== 'sign_type') {
+        params[key] = callback[key]
+      }
     }
 
     const expectedSign = this.generateSign(params)
