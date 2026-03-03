@@ -53,6 +53,15 @@ app.get('/callback/epay', async (c) => {
       return c.text('success')
     }
 
+    // 调试日志：检查环境变量状态
+    console.log('[E-pay Debug] 环境变量检查:', {
+      hasPrivateKey: !!env.EPAY_PRIVATE_KEY,
+      privateKeyLength: env.EPAY_PRIVATE_KEY?.length || 0,
+      hasPublicKey: !!env.EPAY_PUBLIC_KEY,
+      publicKeyLength: env.EPAY_PUBLIC_KEY?.length || 0,
+      signType: env.EPAY_SIGN_TYPE,
+    })
+
     const epayClient = createEpayClient({
       apiUrl: env.EPAY_API_URL,
       pid: env.EPAY_PID,
