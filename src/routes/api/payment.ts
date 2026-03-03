@@ -57,6 +57,7 @@ app.get('/callback/epay', async (c) => {
       apiUrl: env.EPAY_API_URL,
       pid: env.EPAY_PID,
       key: env.EPAY_KEY,
+      signType: (env.EPAY_SIGN_TYPE as 'MD5' | 'RSA') || 'MD5',
     })
 
     if (!epayClient.verifyCallback(params)) {
