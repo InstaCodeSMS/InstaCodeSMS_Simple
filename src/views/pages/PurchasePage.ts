@@ -389,20 +389,38 @@ export default function PurchasePage(csrfToken: string = ''): string {
           }
         },
         
-        submitOrder() {
-          // 跳转到结算页面
-          const selectedOption = this.currentExpiryOptions.find(o => o.expiry === this.form.selectedExpiry);
-          const params = new URLSearchParams({
-            id: this.activeService.id.toString(),
-            title: this.activeService.title,
-            region: 'US',
-            expiry: this.form.selectedExpiry.toString(),
-            duration: selectedOption?.label || '未知',
-            quantity: this.form.quantity.toString(),
-            amount: this.calculateTotal(),
-            method: this.form.paymentMethod
-          });
-          window.location.href = '/checkout?' + params.toString();
+        async submitOrder() {
+          this.isProcessing = true;
+          this.errorMessage = null;
+          
+          try {
+            const response = await fetch('/api/rpc/payment/create', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                service_id: this.activeService.id,
+                expiry: this.form.selectedExpiry,
+                quantity: this.form.quantity,
+                payment_method: 'epay',
+                payment_type: 'alipay'
+              })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success && data.data.payment_url) {
+              // 直接跳转到易支付页面
+              window.location.href = data.data.payment_url;
+            } else {
+              this.errorMessage = data.message || '创建订单失败';
+              this.isProcessing = false;
+            }
+          } catch (error) {
+            this.errorMessage = '网络错误，请重试';
+            this.isProcessing = false;
+          }
         }
       }
     }
