@@ -27,7 +27,16 @@ export class EpayClient {
       timestamp: Math.floor(Date.now() / 1000).toString(),
     }
 
-    const sign = this.generateSign(params)
+    // 根据签名类型生成签名
+    let sign: string
+    if (this.config.signType === 'RSA') {
+      const paramsRecord = params as Record<string, string>
+      const sortedKeys = Object.keys(paramsRecord).sort()
+      const signStr = sortedKeys.map(key => `${key}=${paramsRecord[key]}`).join('&')
+      sign = await this.generateRSASign(signStr)
+    } else {
+      sign = this.generateSign(params as Record<string, string>)
+    }
 
     const formData = new URLSearchParams({
       ...params,
@@ -105,6 +114,46 @@ export class EpayClient {
     const signStr = sortedKeys.map(key => `${key}=${params[key]}`).join('&') + this.config.key
 
     return crypto.createHash('md5').update(signStr).digest('hex')
+  }
+
+  private async generateRSASign(data: string): Promise<string> {
+    if (!this.config.privateKey) {
+      throw new Error('RSA private key is required for RSA signature generation')
+    }
+
+    try {
+      const pemHeader = '-----BEGIN PRIVATE KEY-----'
+      const pemFooter = '-----END PRIVATE KEY-----'
+      const pemContents = this.config.privateKey
+        .replace(pemHeader, '')
+        .replace(pemFooter, '')
+        .replace(/\s/g, '')
+      
+      const binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0))
+      
+      const privateKey = await crypto.subtle.importKey(
+        'pkcs8',
+        binaryDer,
+        {
+          name: 'RSASSA-PKCS1-v1_5',
+          hash: 'SHA-256',
+        },
+        false,
+        ['sign']
+      )
+
+      const dataBytes = new TextEncoder().encode(data)
+      const signatureBytes = await crypto.subtle.sign(
+        'RSASSA-PKCS1-v1_5',
+        privateKey,
+        dataBytes
+      )
+      
+      return btoa(String.fromCharCode(...new Uint8Array(signatureBytes)))
+    } catch (error) {
+      console.error('[E-pay] RSA signature generation error:', error)
+      throw error
+    }
   }
 
   private async verifyRSASign(data: string, sign: string): Promise<boolean> {
