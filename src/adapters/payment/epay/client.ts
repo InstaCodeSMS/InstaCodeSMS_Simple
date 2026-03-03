@@ -73,7 +73,7 @@ export class EpayClient {
     }
   }
 
-  verifyCallback(data: unknown): boolean {
+  async verifyCallback(data: unknown): Promise<boolean> {
     const callback = data as Record<string, string>
     if (!callback.sign) return false
 
@@ -85,8 +85,19 @@ export class EpayClient {
       }
     }
 
-    const expectedSign = this.generateSign(params)
-    return expectedSign === callback.sign
+    // 根据签名类型选择验证方式
+    const signType = callback.sign_type || this.config.signType || 'MD5'
+    
+    if (signType === 'RSA') {
+      // RSA 签名验证
+      const sortedKeys = Object.keys(params).sort()
+      const signStr = sortedKeys.map(key => `${key}=${params[key]}`).join('&')
+      return await this.verifyRSASign(signStr, callback.sign)
+    } else {
+      // MD5 签名验证
+      const expectedSign = this.generateSign(params)
+      return expectedSign === callback.sign
+    }
   }
 
   private generateSign(params: Record<string, string>): string {
@@ -94,6 +105,47 @@ export class EpayClient {
     const signStr = sortedKeys.map(key => `${key}=${params[key]}`).join('&') + this.config.key
 
     return crypto.createHash('md5').update(signStr).digest('hex')
+  }
+
+  private async verifyRSASign(data: string, sign: string): Promise<boolean> {
+    if (!this.config.publicKey) {
+      throw new Error('RSA public key is required for RSA signature verification')
+    }
+
+    try {
+      const pemHeader = '-----BEGIN PUBLIC KEY-----'
+      const pemFooter = '-----END PUBLIC KEY-----'
+      const pemContents = this.config.publicKey
+        .replace(pemHeader, '')
+        .replace(pemFooter, '')
+        .replace(/\s/g, '')
+      
+      const binaryDer = Uint8Array.from(atob(pemContents), c => c.charCodeAt(0))
+      
+      const publicKey = await crypto.subtle.importKey(
+        'spki',
+        binaryDer,
+        {
+          name: 'RSASSA-PKCS1-v1_5',
+          hash: 'SHA-256',
+        },
+        false,
+        ['verify']
+      )
+
+      const signatureBytes = Uint8Array.from(atob(sign), c => c.charCodeAt(0))
+      const dataBytes = new TextEncoder().encode(data)
+      
+      return await crypto.subtle.verify(
+        'RSASSA-PKCS1-v1_5',
+        publicKey,
+        signatureBytes,
+        dataBytes
+      )
+    } catch (error) {
+      console.error('[E-pay] RSA signature verification error:', error)
+      return false
+    }
   }
 }
 

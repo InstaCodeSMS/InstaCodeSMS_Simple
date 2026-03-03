@@ -30,6 +30,8 @@ export interface Env {
   EPAY_PID?: string // 商户 ID
   EPAY_KEY?: string // 商户密钥
   EPAY_SIGN_TYPE?: string // 签名类型 (MD5 或 RSA)
+  EPAY_PUBLIC_KEY?: string // 平台公钥（RSA 验证用）
+  EPAY_PRIVATE_KEY?: string // 商户私钥（RSA 签名用）
 
   // Token Pay 支付配置
   TOKENPAY_API_URL?: string // Token Pay API 地址

@@ -58,9 +58,11 @@ app.get('/callback/epay', async (c) => {
       pid: env.EPAY_PID,
       key: env.EPAY_KEY,
       signType: (env.EPAY_SIGN_TYPE as 'MD5' | 'RSA') || 'MD5',
+      publicKey: env.EPAY_PUBLIC_KEY,
+      privateKey: env.EPAY_PRIVATE_KEY,
     })
 
-    if (!epayClient.verifyCallback(params)) {
+    if (!(await epayClient.verifyCallback(params))) {
       console.error('[E-pay Callback] 签名验证失败')
       return c.text('success')
     }

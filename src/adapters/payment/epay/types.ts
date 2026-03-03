@@ -7,6 +7,8 @@ export interface EpayConfig {
   pid: string
   key: string
   signType?: 'MD5' | 'RSA'
+  publicKey?: string
+  privateKey?: string
 }
 
 export interface EpayCreatePaymentRequest {
