@@ -19,7 +19,7 @@ app.get('/', (c) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SimpleFaka - 虚拟手机号码接码平台</title>
+  <title>即刻接码 - 虚拟手机号码接码平台</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@5/dist/full.min.css" rel="stylesheet" type="text/css" />
   <script src="https://unpkg.com/htmx.org@2.0.8"></script>

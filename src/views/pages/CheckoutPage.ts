@@ -111,92 +111,57 @@ export default function CheckoutPage(csrfToken: string = ''): string {
 
           <!-- 支付内容 -->
           <div x-show="tradeId && !error" x-cloak class="flex flex-col items-center justify-center space-y-6">
-            <!-- USDT 支付 - 显示二维码 -->
-            <template x-if="paymentMethod === 'usdt'">
-              <div class="w-full space-y-6">
-                <!-- 二维码 -->
-                <div class="relative group flex justify-center">
-                  <div class="absolute -inset-4 bg-blue-600/15 rounded-[2rem] blur-xl"></div>
-                  <div class="relative w-48 h-48 bg-white p-3 rounded-3xl shadow-2xl flex items-center justify-center">
-                    <canvas id="qrcode" class="w-full h-full rounded-2xl"></canvas>
-                  </div>
-                </div>
+          <!-- 易支付跳转 -->
+          <div x-show="paymentMethod === 'epay' && paymentUrl" class="w-full space-y-6">
+            <div class="flex items-center justify-center gap-2 border p-4 rounded-2xl transition-colors"
+                 :class="theme === 'dark'
+                   ? 'bg-[#1a1e2c] border-[rgba(200,210,240,0.08)]'
+                   : 'bg-slate-50 border-slate-200'">
+              <span class="text-[10px]" style="color: var(--text-secondary);">支付金额：</span>
+              <span class="text-xl font-black text-blue-500">¥<span x-text="actualAmount"></span></span>
+            </div>
+            <button @click="redirectToPayment()"
+              class="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/40 transition-all">
+              立即跳转支付
+            </button>
+          </div>
 
-                <!-- 钱包地址 -->
-                <div class="w-full space-y-2">
-                  <p class="text-[9px] font-black uppercase text-center tracking-widest" style="color: var(--text-muted);">钱包地址 (TRC20)</p>
-                  <div class="flex items-center gap-2 border p-4 rounded-2xl group transition-colors"
-                       :class="theme === 'dark'
-                         ? 'bg-[#1a1e2c] border-[rgba(200,210,240,0.08)] hover:border-blue-500/40'
-                         : 'bg-slate-50 border-slate-200 hover:border-blue-400/50'">
-                    <code class="flex-1 text-[11px] font-mono text-blue-500 break-all select-all" x-text="walletAddress"></code>
-                    <button @click="copyAddress()" class="p-2 transition-colors hover:scale-110" style="color: var(--text-muted);">📋</button>
-                  </div>
-                </div>
-
-                <!-- 提示信息 -->
-                <div class="w-full p-4 rounded-2xl text-center"
-                     :class="theme === 'dark' 
-                       ? 'bg-blue-600/5 border border-blue-600/10' 
-                       : 'bg-blue-50 border border-blue-100'">
-                  <p class="text-[10px] leading-relaxed" style="color: var(--text-secondary);">
-                    请使用 TRON 钱包扫描二维码或手动转账<br/>
-                    转账金额：<span class="font-bold text-blue-500" x-text="actualAmount"></span> USDT<br/>
-                    <span class="text-amber-500">请勿修改金额，否则可能无法自动到账</span>
-                  </p>
-                </div>
-
-                <!-- 支付状态 -->
-                <div x-show="isChecking" class="flex items-center gap-2 text-[10px]" style="color: var(--text-muted);">
-                  <div class="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span>正在等待支付确认...</span>
-                </div>
+          <!-- 支付宝二维码 -->
+          <div x-show="paymentMethod !== 'epay' || !paymentUrl" class="w-full space-y-6">
+            <div class="relative group flex justify-center">
+              <div class="absolute -inset-4 bg-blue-600/15 rounded-[2rem] blur-xl"></div>
+              <div class="relative w-48 h-48 bg-white p-3 rounded-3xl shadow-2xl flex items-center justify-center overflow-hidden">
+                <img id="qrcode-img" :src="qrCodeUrl" alt="QR Code" class="w-full h-full rounded-2xl" x-show="qrCodeUrl" />
               </div>
-            </template>
+            </div>
 
-            <!-- 支付宝支付 - 显示二维码 -->
-            <template x-if="paymentMethod === 'alipay'">
-              <div class="w-full space-y-6">
-                <!-- 二维码 -->
-                <div class="relative group flex justify-center">
-                  <div class="absolute -inset-4 bg-blue-600/15 rounded-[2rem] blur-xl"></div>
-                  <div class="relative w-48 h-48 bg-white p-3 rounded-3xl shadow-2xl flex items-center justify-center overflow-hidden">
-                    <img x-show="qrCodeBase64" :src="'data:image/png;base64,' + qrCodeBase64" class="w-full h-full rounded-2xl object-contain" />
-                    <img x-show="qrCodeUrl && !qrCodeBase64" :src="qrCodeUrl" class="w-full h-full rounded-2xl object-contain" />
-                  </div>
-                </div>
-
-                <!-- 支付金额 -->
-                <div class="w-full space-y-2">
-                  <p class="text-[9px] font-black uppercase text-center tracking-widest" style="color: var(--text-muted);">请使用支付宝扫码支付</p>
-                  <div class="flex items-center justify-center gap-2 border p-4 rounded-2xl transition-colors"
-                       :class="theme === 'dark'
-                         ? 'bg-[#1a1e2c] border-[rgba(200,210,240,0.08)]'
-                         : 'bg-slate-50 border-slate-200'">
-                    <span class="text-[10px]" style="color: var(--text-secondary);">支付金额：</span>
-                    <span class="text-xl font-black text-blue-500">¥<span x-text="actualAmount"></span></span>
-                  </div>
-                </div>
-
-                <!-- 提示信息 -->
-                <div class="w-full p-4 rounded-2xl text-center"
-                     :class="theme === 'dark' 
-                       ? 'bg-amber-600/5 border border-amber-600/10' 
-                       : 'bg-amber-50 border border-amber-100'">
-                  <p class="text-[10px] leading-relaxed" style="color: var(--text-secondary);">
-                    <span class="text-amber-500 font-bold">重要提示：</span><br/>
-                    请务必支付准确金额：<span class="font-bold text-amber-600">¥<span x-text="actualAmount"></span></span><br/>
-                    支付时无需填写备注信息<br/>
-                    请在 5 分钟内完成支付，超时订单将被自动删除
-                  </p>
-                </div>
-
-                <div x-show="isChecking" class="flex items-center justify-center gap-2 text-[10px]" style="color: var(--text-muted);">
-                  <div class="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                  <span>正在等待支付确认...</span>
-                </div>
+            <div class="w-full space-y-2">
+              <p class="text-[9px] font-black uppercase text-center tracking-widest" style="color: var(--text-muted);">请使用支付宝扫码支付</p>
+              <div class="flex items-center justify-center gap-2 border p-4 rounded-2xl transition-colors"
+                   :class="theme === 'dark'
+                     ? 'bg-[#1a1e2c] border-[rgba(200,210,240,0.08)]'
+                     : 'bg-slate-50 border-slate-200'">
+                <span class="text-[10px]" style="color: var(--text-secondary);">支付金额：</span>
+                <span class="text-xl font-black text-blue-500">¥<span x-text="actualAmount"></span></span>
               </div>
-            </template>
+            </div>
+
+            <div class="w-full p-4 rounded-2xl text-center"
+                 :class="theme === 'dark'
+                   ? 'bg-amber-600/5 border border-amber-600/10'
+                   : 'bg-amber-50 border border-amber-100'">
+              <p class="text-[10px] leading-relaxed" style="color: var(--text-secondary);">
+                <span class="text-amber-500 font-bold">重要提示：</span><br/>
+                请务必支付准确金额：<span class="font-bold text-amber-600">¥<span x-text="actualAmount"></span></span><br/>
+                请在 5 分钟内完成支付，超时订单将被自动删除
+              </p>
+            </div>
+
+            <div x-show="isChecking" class="flex items-center justify-center gap-2 text-[10px]" style="color: var(--text-muted);">
+              <div class="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+              <span>正在等待支付确认...</span>
+            </div>
+          </div>
             
             <div class="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full">
               <button @click="goBack()" 
@@ -239,8 +204,6 @@ export default function CheckoutPage(csrfToken: string = ''): string {
     </div>
   </main>
 
-  <!-- QRCode 库 - 使用 unpkg CDN（jsdelivr 路径有问题） -->
-  <script src="https://unpkg.com/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script>
     function checkoutApp() {
       return {
@@ -253,8 +216,9 @@ export default function CheckoutPage(csrfToken: string = ''): string {
         quantity: 1,
         totalAmount: '0.00',
         actualAmount: '',
-        paymentMethod: 'usdt',
         walletAddress: '',
+        paymentUrl: '',
+        paymentMethod: '',
         expirationTime: 600,
         timeLeft: 600,
         qrCodeBase64: '',
@@ -294,14 +258,20 @@ export default function CheckoutPage(csrfToken: string = ''): string {
         },
         
         async createPaymentOrder(serviceId, expiryValue) {
+          console.log('[Checkout] Creating payment order:', { serviceId, expiryValue, paymentMethod: this.paymentMethod });
+          
           try {
+            // 根据支付方式设置 trade_type
+            const tradeType = this.paymentMethod === 'alipay' ? 'alipay' : 'usdt.trc20';
+            console.log('[Checkout] trade_type:', tradeType);
+            
             const response = await fetch('/rpc/payment/create', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 amount: parseFloat(this.totalAmount),
                 payment_method: this.paymentMethod,
-                trade_type: 'usdt.trc20',
+                trade_type: tradeType,
                 product_info: {
                   service_id: parseInt(serviceId),
                   title: this.productName,
@@ -314,6 +284,7 @@ export default function CheckoutPage(csrfToken: string = ''): string {
             });
 
             const data = await response.json();
+            console.log('[Checkout] API Response:', data);
 
             if (!data.success) {
               throw new Error(data.message || '创建支付订单失败');
@@ -325,21 +296,11 @@ export default function CheckoutPage(csrfToken: string = ''): string {
 
             this.orderId = data.data.order_id;
             this.tradeId = data.data.trade_id;
-            this.walletAddress = data.data.token;
             this.actualAmount = data.data.actual_amount;
             this.expirationTime = data.data.expiration_time;
             this.timeLeft = data.data.expiration_time;
-
-            if (this.paymentMethod === 'alipay') {
-              this.qrCodeBase64 = data.data.qr_code || '';
-              this.qrCodeUrl = data.data.qr_code_url || '';
-            }
-
-            if (this.paymentMethod === 'usdt') {
-              this.$nextTick(() => {
-                this.generateQRCode();
-              });
-            }
+            this.paymentUrl = data.data.payment_url || '';
+            this.qrCodeUrl = data.data.qr_code_url || this.generateQRCodeUrl(data.data.payment_url || '');
 
             this.startTimer();
             this.startPolling();
@@ -350,17 +311,13 @@ export default function CheckoutPage(csrfToken: string = ''): string {
           }
         },
         
-        generateQRCode() {
-          const canvas = document.getElementById('qrcode');
-          if (canvas && this.walletAddress) {
-            QRCode.toCanvas(canvas, this.walletAddress, {
-              width: 180,
-              margin: 2,
-              color: { dark: '#000000', light: '#ffffff' }
-            }, function(error) {
-              if (error) console.error('生成二维码失败:', error);
-            });
-          }
+        // 使用 QR Server API 生成二维码图片 URL
+        // 避免 ORB 阻止问题，不需要加载外部 JS 库
+        generateQRCodeUrl(text) {
+          if (!text) return '';
+          const size = 200;
+          const encodedText = encodeURIComponent(text);
+          return 'https://api.qrserver.com/v1/create-qr-code/?size=' + size + 'x' + size + '&data=' + encodedText;
         },
         
         startTimer() {
@@ -390,7 +347,7 @@ export default function CheckoutPage(csrfToken: string = ''): string {
             const response = await fetch('/rpc/payment/status?trade_id=' + this.tradeId);
             const data = await response.json();
             
-            if (data.success && data.data.status === 2) {
+            if (data.success && Number(data.data.status) === 2) {
               this.isProcessing = true;
               clearInterval(this.timer);
               clearInterval(this.pollTimer);
@@ -428,6 +385,7 @@ export default function CheckoutPage(csrfToken: string = ''): string {
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 app_id: productInfo.service_id,
+                type: 1,
                 num: productInfo.quantity,
                 expiry: productInfo.expiry
               })
@@ -461,6 +419,12 @@ export default function CheckoutPage(csrfToken: string = ''): string {
           if (!this.walletAddress) return;
           navigator.clipboard.writeText(this.walletAddress);
           this.showToast('地址已复制到剪贴板');
+        },
+
+        redirectToPayment() {
+          if (this.paymentUrl) {
+            window.location.href = this.paymentUrl;
+          }
         },
         
         showToast(msg) {

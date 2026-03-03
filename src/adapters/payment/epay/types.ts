@@ -15,11 +15,13 @@ export interface EpayCreatePaymentRequest {
   name: string
   notifyUrl: string
   returnUrl: string
-  channel?: 'wechat' | 'alipay' | 'qq'
+  channel?: 'wechat' | 'alipay' | 'qq' | 'usdt'
+  clientIp?: string
 }
 
 export interface EpayPaymentResponse {
   trade_no: string
+  out_trade_no?: string
   payment_url?: string
   qr_code?: string
   qr_code_url?: string

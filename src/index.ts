@@ -132,6 +132,17 @@ app.get('/api/health', (c) => {
   return c.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
+// 调试：检查环境变量
+app.get('/api/debug/env', (c) => {
+  return c.json({
+    EPAY_API_URL: c.env.EPAY_API_URL ? 'SET' : 'MISSING',
+    EPAY_PID: c.env.EPAY_PID ? 'SET' : 'MISSING', 
+    EPAY_KEY: c.env.EPAY_KEY ? 'SET' : 'MISSING',
+    EPAY_SIGN_TYPE: c.env.EPAY_SIGN_TYPE || 'NOT SET',
+    API_BASE_URL: c.env.API_BASE_URL ? 'SET' : 'MISSING',
+  })
+})
+
 // ========== 测试连接端点 ==========
 
 /**

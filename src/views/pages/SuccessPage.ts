@@ -153,14 +153,33 @@ export default function SuccessPage(csrfToken: string = ''): string {
         toastShow: false,
         toastMsg: '',
         
-        init() {
-          this.$watch('theme', val => localStorage.setItem('theme', val));
-          
-          const params = new URLSearchParams(window.location.search);
-          this.orderId = params.get('order_id') || '未知';
-          this.phoneNumber = params.get('tel') || '';
-          this.token = params.get('token') || '';
-        },
+  init() {
+    this.$watch('theme', val => localStorage.setItem('theme', val));
+    
+    const params = new URLSearchParams(window.location.search);
+    this.orderId = params.get('order_id') || params.get('out_trade_no') || '未知';
+    
+    if (this.orderId && this.orderId !== '未知') {
+      this.fetchOrderDetails();
+    } else {
+      this.phoneNumber = params.get('tel') || '';
+      this.token = params.get('token') || '';
+    }
+  },
+  
+  async fetchOrderDetails() {
+    try {
+      const response = await fetch('/rpc/payment/order/' + this.orderId);
+      const data = await response.json();
+      
+      if (data.success && data.data) {
+        this.phoneNumber = data.data.tel || '';
+        this.token = data.data.token || '';
+      }
+    } catch (error) {
+      console.error('获取订单详情失败:', error);
+    }
+  },
         
         copyToClipboard(text) {
           if (!text) return;

@@ -219,25 +219,17 @@ export default function PurchasePage(csrfToken: string = ''): string {
             </div>
           </div>
 
-          <!-- Step 4: 选择付款方式 -->
+          <!-- Step 4: 支付方式 (固定为支付宝) -->
           <div class="space-y-4">
-            <p class="text-[9px] font-black uppercase tracking-widest" style="color: var(--text-muted);">Step 4 / 选择付款方式</p>
-            <div class="grid grid-cols-2 gap-3">
-              <template x-for="method in paymentMethods" :key="method.id">
-                <button @click="form.paymentMethod = method.id"
-                        :class="form.paymentMethod === method.id 
-                          ? 'border-blue-500 bg-blue-600/10 ring-1 ring-blue-500/30' 
-                          : 'border-[rgba(200,210,240,0.08)] bg-[#1a1e2c]'"
-                        class="flex items-center gap-4 p-5 rounded-[1.5rem] border transition-all text-left"
-                        :style="theme === 'light' && form.paymentMethod !== method.id ? 'background-color: var(--bg-tertiary); border-color: var(--border-color-light);' : ''">
-                  <span class="text-3xl" x-text="method.icon"></span>
-                  <div>
-                    <span class="text-base font-bold block" style="color: var(--text-primary);" x-text="method.name"></span>
-                    <span class="text-[10px]" style="color: var(--text-muted);" x-text="method.description"></span>
-                  </div>
-                  <i x-show="form.paymentMethod === method.id" class="fas fa-check-circle text-blue-500 ml-auto"></i>
-                </button>
-              </template>
+            <p class="text-[9px] font-black uppercase tracking-widest" style="color: var(--text-muted);">Step 4 / 支付方式</p>
+            <div class="flex items-center gap-4 p-5 rounded-[1.5rem] border border-blue-500 bg-blue-600/10"
+                 style="background-color: var(--bg-tertiary); border-color: var(--border-color-light);">
+              <span class="text-3xl">💳</span>
+              <div>
+                <span class="text-base font-bold block" style="color: var(--text-primary);">支付宝</span>
+                <span class="text-[10px]" style="color: var(--text-muted);">支付宝扫码支付</span>
+              </div>
+              <i class="fas fa-check-circle text-blue-500 ml-auto"></i>
             </div>
           </div>
 
@@ -303,7 +295,7 @@ export default function PurchasePage(csrfToken: string = ''): string {
           selectedExpiry: 1,
           selectedPrefix: null,
           quantity: 1,
-          paymentMethod: 'usdt'
+          paymentMethod: 'epay'
         },
         orderResult: null,
         errorMessage: null,
@@ -314,10 +306,6 @@ export default function PurchasePage(csrfToken: string = ''): string {
           { value: 4, days: '30-60', multiplier: 1, discount: 0 },
           { value: 5, days: '60-80', multiplier: 1, discount: 0 },
           { value: 6, days: '80+', multiplier: 1.1, discount: 0 }
-        ],
-        paymentMethods: [
-          { id: 'usdt', name: 'USDT', icon: '₮', description: '加密货币支付' },
-          { id: 'alipay', name: '支付宝', icon: '💳', description: '支付宝扫码支付' }
         ],
         
         get filteredServices() {

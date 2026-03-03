@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod'
+import { PaymentMethod } from '../payment/payment.schema'
 
 /**
  * 支付订单状态枚举
@@ -18,10 +19,6 @@ export enum PaymentOrderStatus {
   CANCELLED = 4,
 }
 
-/**
- * 支付方式
- */
-export type PaymentMethod = 'usdt' | 'alipay' | 'epay' | 'tokenpay' | 'paypal' | 'stripe' | 'wechatpay'
 
 /**
  * 产品信息快照
@@ -114,7 +111,7 @@ export const ProductSnapshotSchema = z.object({
 export const PaymentOrderRecordSchema = z.object({
   trade_id: z.string(),
   order_id: z.string(),
-  payment_method: z.enum(['usdt', 'alipay', 'epay', 'tokenpay', 'paypal', 'stripe', 'wechatpay']),
+  payment_method: z.nativeEnum(PaymentMethod),
   amount: z.number(),
   actual_amount: z.number().nullable(),
   status: z.number(),

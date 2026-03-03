@@ -6,6 +6,7 @@ compatibility_flags = ["nodejs_compat"]
 [dev]
 port = 3000
 local_protocol = "http"
+# 本地开发环境变量已移至 .dev.vars 文件
 
 # 配置 ESBuild 模块解析规则
 [[rules]]
@@ -18,5 +19,8 @@ fallthrough = true
 command = ""
 
 # 环境变量配置
+# 注意：敏感信息（API tokens, keys等）应该通过环境变量或 wrangler secret 设置
+# 不要在这里硬编码敏感信息
+
 [env.production]
 vars = { UPSTREAM_API_URL = "https://api.example.com", PRICE_MARKUP = "1.5", LOG_LEVEL = "info" }

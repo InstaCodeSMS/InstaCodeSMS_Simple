@@ -1,18 +1,15 @@
 /**
- * 支付领域 - 业务逻辑层
- * 协调支付适配器和订单仓库，处理支付流程
+ * 支付服务 - 最小MVP版本
+ * 直接调用易支付API
  */
 
 import type { SupabaseClient } from '@supabase/supabase-js'
 import { OrderRepository } from '../order/order.repo'
-import { PaymentStatus, type CreatePaymentInput, type PaymentOrderResponse } from './payment.schema'
+import { PaymentStatus, PaymentMethod, type CreatePaymentInput, type PaymentOrderResponse } from './payment.schema'
+import { PaymentOrderStatus } from '../order/order.schema'
+import { createEpayClient } from '../../adapters/payment/epay/client'
 import type { Env } from '../../types/env'
-import { paymentRegistry } from '../../adapters/payment/registry'
 
-/**
- * 支付服务
- * 处理支付订单的创建、查询、回调等业务逻辑
- */
 export class PaymentService {
   private orderRepo: OrderRepository
   private env: Env
@@ -22,32 +19,61 @@ export class PaymentService {
     this.env = env
   }
 
-  /**
-   * 创建支付订单
-   * 根据支付方式调用相应的支付网关
-   */
   async createPayment(input: CreatePaymentInput): Promise<{
     trade_id: string
-    payment_url?: string
-    qr_code?: string
     qr_code_url?: string
+    payment_url?: string
     actual_amount: string
   }> {
     if (!this.env.API_BASE_URL) {
       throw new Error('缺少环境变量：API_BASE_URL')
     }
 
+    if (!this.env.EPAY_API_URL || !this.env.EPAY_PID || !this.env.EPAY_KEY) {
+      throw new Error('易支付未配置')
+    }
+
+    const epayClient = createEpayClient({
+      apiUrl: this.env.EPAY_API_URL,
+      pid: this.env.EPAY_PID,
+      key: this.env.EPAY_KEY,
+      signType: (this.env.EPAY_SIGN_TYPE as 'MD5' | 'RSA') || 'MD5',
+    })
+
     const baseUrl = this.env.API_BASE_URL
-    const strategy = paymentRegistry.get(input.payment_method)
-    return strategy.createPayment(input, baseUrl)
+    const payment = await epayClient.createPayment({
+      orderId: input.order_id,
+      amount: input.amount,
+      name: input.product_info.title,
+      notifyUrl: `${baseUrl}/api/payment/callback/epay`,
+      returnUrl: `${baseUrl}/success?order_id=${input.order_id}`,
+      channel: 'alipay',
+      clientIp: '127.0.0.1',
+    })
+
+    await this.orderRepo.create({
+      trade_id: payment.trade_no!,
+      order_id: input.order_id,
+      payment_method: PaymentMethod.ALIPAY,
+      amount: input.amount,
+      actual_amount: payment.payment_amount || input.amount,
+      status: PaymentOrderStatus.PENDING,
+      product_info: input.product_info as any,
+      token: payment.payment_url,
+      trade_type: 'alipay',
+      expiration_time: 300,
+    })
+
+    return {
+      trade_id: payment.trade_no!,
+      qr_code_url: payment.qr_code_url,
+      payment_url: payment.payment_url,
+      actual_amount: String(payment.payment_amount || input.amount),
+    }
   }
 
-  /**
-   * 查询支付状态
-   */
   async queryPaymentStatus(tradeId: string): Promise<PaymentOrderResponse> {
     const order = await this.orderRepo.findByTradeId(tradeId)
-
     if (!order) {
       throw new Error(`订单不存在: ${tradeId}`)
     }
@@ -58,23 +84,16 @@ export class PaymentService {
       status: order.status as unknown as PaymentStatus,
       amount: order.amount,
       actual_amount: order.actual_amount,
-      payment_method: order.payment_method as any,
+      payment_method: order.payment_method,
       paid_at: order.paid_at,
       block_transaction_id: order.block_transaction_id,
     }
   }
 
-  /**
-   * 标记订单为已支付
-   */
   async markAsPaid(tradeId: string, actualAmount: number, blockTransactionId: string): Promise<void> {
-    const strategy = paymentRegistry.get('usdt') // 获取任意策略来调用markAsPaid
-    await strategy.markAsPaid(tradeId, actualAmount, blockTransactionId)
+    await this.orderRepo.markAsPaid(tradeId, actualAmount, blockTransactionId)
   }
 
-  /**
-   * 标记订单为已超时
-   */
   async markAsTimeout(tradeId: string): Promise<void> {
     await this.orderRepo.markAsTimeout(tradeId)
   }

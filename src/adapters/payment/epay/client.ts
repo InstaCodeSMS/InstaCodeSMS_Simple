@@ -15,26 +15,60 @@ export class EpayClient {
   async createPayment(request: EpayCreatePaymentRequest): Promise<EpayPaymentResponse> {
     const params = {
       pid: this.config.pid,
+      method: 'web',
+      device: 'pc',
       type: request.channel || 'alipay',
       out_trade_no: request.orderId,
       notify_url: request.notifyUrl,
       return_url: request.returnUrl,
       name: request.name,
       money: String(request.amount),
+      clientip: request.clientIp || '127.0.0.1',
+      timestamp: Math.floor(Date.now() / 1000).toString(),
     }
 
     const sign = this.generateSign(params)
-    const queryString = new URLSearchParams({
+
+    const formData = new URLSearchParams({
       ...params,
       sign,
       sign_type: this.config.signType || 'MD5',
-    }).toString()
+    })
 
-    const paymentUrl = `${this.config.apiUrl}?${queryString}`
+    const response = await fetch(`${this.config.apiUrl}/api/pay/create`, {
+      method: 'POST',
+      body: formData,
+    })
+
+    const data = await response.json() as any
+
+    // 检查易支付返回状态
+    if (data.code !== 0) {
+      throw new Error(`易支付返回错误: ${data.msg || '未知错误'}`)
+    }
+
+    // 处理 pay_info：如果是相对路径，拼接易支付域名
+    let payInfo = data.pay_info
+    if (payInfo && !payInfo.startsWith('http://') && !payInfo.startsWith('https://') && !payInfo.includes('://')) {
+      const path = payInfo.replace(/^\//, '')
+      const baseUrl = this.config.apiUrl.replace(/\/$/, '') // 移除结尾斜杠避免双斜杠
+      payInfo = `${baseUrl}/${path}`
+    }
+
+    // 将 pay_info 转换为二维码图片 URL
+    let qrCodeUrl: string | undefined
+    if (payInfo) {
+      const size = 200
+      const encodedData = encodeURIComponent(payInfo)
+      qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodedData}`
+    }
 
     return {
-      trade_no: request.orderId,
-      payment_url: paymentUrl,
+      trade_no: data.trade_no || request.orderId,
+      out_trade_no: request.orderId,
+      payment_url: payInfo,
+      qr_code: payInfo,
+      qr_code_url: qrCodeUrl,
       payment_amount: request.amount,
     }
   }

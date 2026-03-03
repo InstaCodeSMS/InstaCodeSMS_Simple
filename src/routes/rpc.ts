@@ -15,6 +15,14 @@ import { createUpstreamClient, UpstreamError } from '../adapters/upstream'
 
 const app = new Hono<{ Bindings: Env }>()
 
+// 生成二维码URL
+function generateQRCodeUrl(text: string): string {
+  if (!text) return ''
+  const size = 200
+  const encodedText = encodeURIComponent(text)
+  return `https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodedText}`
+}
+
 // ========== 支付 RPC ==========
 
 app.post('/payment/create', async (c) => {
@@ -33,25 +41,31 @@ app.post('/payment/create', async (c) => {
     const supabase = createSupabaseServiceClient(c.env)
     const paymentService = new PaymentService(supabase, c.env)
 
+    // 获取基础 URL（从请求头或环境变量）
+    const protocol = c.req.header('x-forwarded-proto') || 'https'
+    const host = c.req.header('host') || c.env.API_BASE_URL || 'localhost:8787'
+    const baseUrl = `${protocol}://${host}`
+
     const result = await paymentService.createPayment({
       order_id: orderId,
       amount: body.amount,
-      payment_method: body.payment_method as PaymentMethod,
+      payment_method: 'epay' as PaymentMethod,
       product_info: body.product_info,
       trade_type: body.trade_type,
+      base_url: baseUrl,
     })
+
+    // 如果没有二维码URL，用支付URL生成
+    const qrCodeUrl = result.qr_code_url || (result.payment_url ? generateQRCodeUrl(result.payment_url) : '')
 
     const response: CreatePaymentResponse = {
       trade_id: result.trade_id,
       order_id: orderId,
-      payment_method: body.payment_method,
+      payment_method: 'epay',
       status: PaymentStatus.PENDING,
-      expiration_time: body.payment_method === 'alipay' ? 300 : 600,
-      token: result.qr_code_url || result.qr_code,
+      expiration_time: 300,
+      qr_code_url: qrCodeUrl,
       actual_amount: result.actual_amount,
-      payment_url: result.payment_url,
-      qr_code: result.qr_code,
-      qr_code_url: result.qr_code_url,
     }
 
     return c.json<ApiResponse<CreatePaymentResponse>>({
@@ -61,8 +75,14 @@ app.post('/payment/create', async (c) => {
     })
   } catch (error) {
     console.error('Payment creation failed:', error)
+    // 返回具体错误信息便于调试
+    const errorMessage = error instanceof Error ? error.message : '创建支付订单失败'
+    console.error('[RPC /payment/create] Error details:', {
+      message: errorMessage,
+      stack: error instanceof Error ? error.stack : undefined,
+    })
     return c.json<ApiResponse>(
-      { success: false, message: '创建支付订单失败' },
+      { success: false, message: errorMessage },
       500
     )
   }
@@ -124,6 +144,50 @@ app.get('/payment/order/:trade_id', async (c) => {
     console.error('Order retrieval failed:', error)
     return c.json<ApiResponse>(
       { success: false, message: '获取订单详情失败' },
+      500
+    )
+  }
+})
+
+app.post('/payment/query', async (c) => {
+  try {
+    const body = await c.req.json<{ order_id: string }>()
+    
+    if (!body.order_id) {
+      return c.json<ApiResponse>(
+        { success: false, message: '缺少参数：order_id' },
+        400
+      )
+    }
+
+    const supabase = createSupabaseServiceClient(c.env)
+    const { data: order, error } = await supabase
+      .from('orders')
+      .select('order_id, status, paid_at')
+      .eq('order_id', body.order_id)
+      .single()
+
+    if (error || !order) {
+      return c.json<ApiResponse>(
+        { success: false, message: '订单不存在' },
+        404
+      )
+    }
+
+    return c.json<ApiResponse>({
+      success: true,
+      message: '查询成功',
+      data: {
+        order_id: order.order_id,
+        status: order.status,
+        paid: order.status === 'paid',
+        paid_at: order.paid_at,
+      },
+    })
+  } catch (error) {
+    console.error('Order query failed:', error)
+    return c.json<ApiResponse>(
+      { success: false, message: '查询订单状态失败' },
       500
     )
   }

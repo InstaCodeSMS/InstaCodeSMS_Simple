@@ -1,6 +1,5 @@
 /**
- * 支付领域 - 数据模型
- * 定义支付相关的 Zod Schema 和 TypeScript 类型
+ * 支付领域 - 数据模型 (MVP版本)
  */
 
 import { z } from 'zod'
@@ -10,12 +9,8 @@ import { z } from 'zod'
  */
 export enum PaymentMethod {
   ALIPAY = 'alipay',
+  WECHAT = 'wechat',
   USDT = 'usdt',
-  EPAY = 'epay',
-  TOKENPAY = 'tokenpay',
-  PAYPAL = 'paypal',
-  STRIPE = 'stripe',
-  WECHATPAY = 'wechatpay',
 }
 
 /**
@@ -34,7 +29,7 @@ export enum PaymentStatus {
 export const CreatePaymentSchema = z.object({
   order_id: z.string().min(1, '订单ID不能为空'),
   amount: z.number().positive('金额必须大于0'),
-  payment_method: z.enum(['alipay', 'usdt', 'epay', 'tokenpay', 'paypal', 'stripe', 'wechatpay']),
+  payment_method: z.nativeEnum(PaymentMethod),
   product_info: z.object({
     service_id: z.number().int().positive(),
     title: z.string().min(1),
@@ -44,6 +39,7 @@ export const CreatePaymentSchema = z.object({
     unit_price: z.number().positive(),
   }),
   trade_type: z.string().optional(),
+  base_url: z.string().optional(),
 })
 
 export type CreatePaymentInput = z.infer<typeof CreatePaymentSchema>
@@ -84,3 +80,4 @@ export interface PaymentOrderResponse {
   paid_at: string | null
   block_transaction_id: string | null
 }
+
