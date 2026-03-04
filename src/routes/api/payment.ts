@@ -80,8 +80,8 @@ app.get('/callback/epay', async (c) => {
     const supabase = createSupabaseServiceClient(env)
     const orderRepo = createOrderRepository(supabase)
 
-    // 查找订单
-    const order = await orderRepo.findByTradeId(params.out_trade_no)
+    // 查找订单 - 易支付 trade_no 对应数据库的 trade_id
+    const order = await orderRepo.findByTradeId(params.trade_no)
     if (!order) {
       console.warn('[E-pay Callback] 订单不存在:', params.out_trade_no)
       return c.text('success')
@@ -93,13 +93,13 @@ app.get('/callback/epay', async (c) => {
       return c.text('success')
     }
 
-    // 更新订单状态
+    // 更新订单状态 - 使用 trade_id (params.trade_no) 作为主键
     console.log('[E-pay Callback] 标记订单为已支付:', {
-      out_trade_no: params.out_trade_no,
-      trade_no: params.trade_no,
+      trade_id: params.trade_no,
+      order_id: order.order_id,
       money: params.money,
     })
-    await orderRepo.markAsPaid(params.out_trade_no, parseFloat(params.money), params.trade_no)
+    await orderRepo.markAsPaid(params.trade_no, parseFloat(params.money), params.trade_no)
 
       // 调用上游API购买商品
       try {
@@ -138,15 +138,15 @@ app.get('/callback/epay', async (c) => {
         ordernum: upstreamOrder.ordernum,
       })
 
-      // 更新订单信息
+      // 更新订单信息 - 使用 payment_orders 表和 trade_id
       const { error: updateError } = await supabase
-        .from('orders')
+        .from('payment_orders')
         .update({
           tel: upstreamOrder.tel,
           token: upstreamOrder.token,
           api_url: upstreamOrder.api,
         } as any)
-        .eq('order_id', params.out_trade_no)
+        .eq('trade_id', params.trade_no)
 
       if (updateError) {
         console.error('[E-pay Callback] 更新订单信息失败:', updateError)
