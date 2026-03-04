@@ -94,8 +94,8 @@ export class EpayClient {
       }
     }
 
-    // 根据签名类型选择验证方式
-    const signType = callback.sign_type || this.config.signType || 'MD5'
+    // 根据签名类型选择验证方式（使用配置的签名类型，忽略回调中的 sign_type）
+    const signType = this.config.signType || 'MD5'
     
     if (signType === 'RSA') {
       // RSA 签名验证
