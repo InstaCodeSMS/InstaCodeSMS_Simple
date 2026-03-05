@@ -123,30 +123,34 @@ app.get('/callback/epay', async (c) => {
         return c.text('success')
       }
 
-      // 调用上游API
-      const upstreamClient = createUpstreamClient(env)
-      const upstreamOrder = await upstreamClient.createOrder({
-        app_id: product.app_id,
-        type: product.type,
-        num: 1,
-        expiry: product.expiry,
-        prefix: '',
-      }) as any
+    // 调用上游API
+    const upstreamClient = createUpstreamClient(env)
+    const upstreamOrder = await upstreamClient.createOrder({
+      app_id: product.app_id,
+      type: product.type,
+      num: 1,
+      expiry: product.expiry,
+      prefix: '',
+    })
 
-      console.log('[E-pay Callback] 上游API调用成功:', {
-        tel: upstreamOrder.tel,
-        ordernum: upstreamOrder.ordernum,
-      })
+    // 从返回的订单列表中获取第一个订单的信息
+    const firstOrder = upstreamOrder.list[0]
+    
+    console.log('[E-pay Callback] 上游API调用成功:', {
+      tel: firstOrder?.tel,
+      ordernum: upstreamOrder.ordernum,
+    })
 
-      // 更新订单信息 - 使用 payment_orders 表和 trade_id
-      const { error: updateError } = await supabase
-        .from('payment_orders')
-        .update({
-          tel: upstreamOrder.tel,
-          token: upstreamOrder.token,
-          api_url: upstreamOrder.api,
-        } as any)
-        .eq('trade_id', params.trade_no)
+    // 更新订单信息 - 使用 payment_orders 表和 trade_id
+    const { error: updateError } = await supabase
+      .from('payment_orders')
+      .update({
+        tel: firstOrder?.tel,
+        token: firstOrder?.token,
+        api_url: firstOrder?.api,
+        upstream_order_id: upstreamOrder.ordernum,
+      } as any)
+      .eq('trade_id', params.trade_no)
 
       if (updateError) {
         console.error('[E-pay Callback] 更新订单信息失败:', updateError)
