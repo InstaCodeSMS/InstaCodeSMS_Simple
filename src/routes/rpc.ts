@@ -121,14 +121,21 @@ app.get('/payment/status', async (c) => {
   }
 })
 
-app.get('/payment/order/:trade_id', async (c) => {
+// 根据 order_id 获取订单详情（用于支付成功页面）
+app.get('/payment/order/:id', async (c) => {
   try {
-    const tradeId = c.req.param('trade_id')
+    const id = c.req.param('id')
 
     const supabase = createSupabaseServiceClient(c.env)
     const repo = new OrderRepository(supabase)
 
-    const order = await repo.findByTradeId(tradeId)
+    // 尝试通过 order_id 查询
+    let order = await repo.findByOrderId(id)
+    
+    // 如果找不到，尝试通过 trade_id 查询（向后兼容）
+    if (!order) {
+      order = await repo.findByTradeId(id)
+    }
 
     if (!order) {
       return c.json<ApiResponse>(
