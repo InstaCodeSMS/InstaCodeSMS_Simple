@@ -78,16 +78,16 @@ export default function SuccessPage(csrfToken: string = ''): string {
               </div>
             </div>
             
-            <div x-show="token" class="flex items-center justify-between p-4 rounded-2xl transition-colors"
+            <div x-show="token" class="p-4 rounded-2xl transition-colors"
                  :class="theme === 'dark' ? 'bg-[#1a1e2c]' : 'bg-slate-50'">
-              <span class="text-xs font-mono uppercase tracking-widest" style="color: var(--text-muted);">访问令牌</span>
-              <div class="flex items-center gap-2">
-                <code class="text-sm font-mono font-bold text-green-500 max-w-[200px] truncate" x-text="token"></code>
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-mono uppercase tracking-widest" style="color: var(--text-muted);">访问令牌</span>
                 <button @click="copyToClipboard(token)" 
-                        class="text-xs px-2 py-1 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors">
+                        class="text-xs px-2 py-1 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors flex-shrink-0">
                   复制
                 </button>
               </div>
+              <code class="text-sm font-mono font-bold text-green-500 break-all block" x-text="token"></code>
             </div>
             
             <div x-show="endTime" class="flex items-center justify-between p-4 rounded-2xl transition-colors"
