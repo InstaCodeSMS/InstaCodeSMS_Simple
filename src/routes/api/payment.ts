@@ -21,6 +21,10 @@ const app = new Hono<{ Bindings: Env }>()
  */
 app.get('/callback/epay', async (c) => {
   try {
+    // 获取所有查询参数，用于签名验证
+    const allParams = Object.fromEntries(new URL(c.req.url).searchParams)
+    
+    // 提取固定字段用于业务逻辑
     const params: EpayCallbackData = {
       pid: c.req.query('pid') || '',
       trade_no: c.req.query('trade_no') || '',
@@ -71,7 +75,8 @@ app.get('/callback/epay', async (c) => {
       privateKey: env.EPAY_PRIVATE_KEY,
     })
 
-    if (!(await epayClient.verifyCallback(params))) {
+    // 使用所有参数验证签名（不仅仅是固定字段）
+    if (!(await epayClient.verifyCallback(allParams))) {
       console.error('[E-pay Callback] 签名验证失败')
       return c.text('success')
     }
