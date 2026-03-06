@@ -209,10 +209,8 @@ export class OrderRepository {
       paid_at: data.paid_at || null,
       block_transaction_id: data.block_transaction_id || null,
       // 上游购买结果字段
-      tel: data.tel || null,
-      sms_token: data.sms_token || null,
+      upstream_result: data.upstream_result || null,
       upstream_order_id: data.upstream_order_id || null,
-      api_url: data.api_url || null,
     })
   }
 }

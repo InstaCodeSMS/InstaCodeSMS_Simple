@@ -39,6 +39,24 @@ export interface ProductSnapshot {
 }
 
 /**
+ * 上游 API 响应结果
+ */
+export interface UpstreamResult {
+  /** 上游订单号 */
+  ordernum?: string
+  /** 手机号码 */
+  tel?: string
+  /** API Token */
+  token?: string
+  /** API 地址 */
+  api?: string
+  /** 到期时间 */
+  end_time?: string
+  /** API 数量 */
+  api_count?: number
+}
+
+/**
  * 数据库中的支付订单记录
  */
 export interface PaymentOrderRecord {
@@ -71,14 +89,10 @@ export interface PaymentOrderRecord {
   /** 区块链交易哈希 */
   block_transaction_id: string | null
   // === 上游购买结果字段 ===
-  /** 购买后获得的手机号码 */
-  tel: string | null
-  /** 购买后获得的验证码/令牌 */
-  sms_token: string | null
+  /** 上游 API 完整响应（JSONB） */
+  upstream_result: UpstreamResult | null
   /** 上游API返回的订单号 */
   upstream_order_id: string | null
-  /** 获取验证码的API地址 */
-  api_url: string | null
 }
 
 /**
@@ -117,6 +131,15 @@ export const ProductSnapshotSchema = z.object({
   unit_price: z.number(),
 })
 
+export const UpstreamResultSchema = z.object({
+  ordernum: z.string().optional(),
+  tel: z.string().optional(),
+  token: z.string().optional(),
+  api: z.string().optional(),
+  end_time: z.string().optional(),
+  api_count: z.number().optional(),
+}).nullable()
+
 export const PaymentOrderRecordSchema = z.object({
   trade_id: z.string(),
   order_id: z.string(),
@@ -133,8 +156,6 @@ export const PaymentOrderRecordSchema = z.object({
   paid_at: z.string().nullable(),
   block_transaction_id: z.string().nullable(),
   // 上游购买结果字段
-  tel: z.string().nullable(),
-  sms_token: z.string().nullable(),
+  upstream_result: UpstreamResultSchema,
   upstream_order_id: z.string().nullable(),
-  api_url: z.string().nullable(),
 })
