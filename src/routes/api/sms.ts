@@ -73,27 +73,73 @@ app.get('/:ordernum', async (c) => {
 })
 
 /**
- * GET /api/sms/:ordernum/json
+ * GET /api/sms/:token/json
  * 获取短信验证码（JSON 格式）
+ * 
+ * 支持两种模式：
+ * 1. 直接传入上游 token（推荐）：直接请求验证码 API
+ * 2. 传入 ordernum：通过订单详情获取 token 后请求
  */
-app.get('/:ordernum/json', async (c) => {
+app.get('/:token/json', async (c) => {
   try {
-    const ordernum = c.req.param('ordernum')
+    const token = c.req.param('token')
 
-    if (!ordernum) {
+    if (!token) {
       return c.json<ApiResponse>({
         success: false,
-        message: '请输入订单号',
+        message: '请输入访问令牌',
       }, 400)
     }
 
+    // 判断是 token 还是 ordernum
+    // token 格式：bc7s2b2oxpqe0izjetb58htjq7w14gm6pfp8（约 36 字符，字母数字混合）
+    // ordernum 格式：26020108434187017（约 17 位纯数字）
+    const isToken = /[a-zA-Z]/.test(token) && token.length > 20
+
+    if (isToken) {
+      // 模式 1：直接用 token 请求验证码 API
+      // 验证码 API 域名（不同于订单 API 域名）
+      // 可选环境变量 SMS_API_URL，默认使用 https://api.smsapi.cc
+      const smsApiUrl = c.env.SMS_API_URL || 'https://api.smsapi.cc'
+      const url = `${smsApiUrl}/api/record?token=${token}&format=json3`
+
+      const response = await fetch(url)
+
+      if (!response.ok) {
+        return c.json<ApiResponse>({
+          success: false,
+          message: '网络错误',
+        }, 500)
+      }
+
+      const data = await response.json()
+
+      if (data.code === 1 && data.data && data.data.sms) {
+        return c.json<ApiResponse>({
+          success: true,
+          message: '获取成功',
+          data: {
+            tel: data.data.tel || '',
+            sms: data.data.sms || '',
+            sms_time: data.data.sms_time || '',
+            expired_date: data.data.expired_date || '',
+          },
+        })
+      }
+
+      return c.json<ApiResponse>({
+        success: false,
+        message: '暂无短信',
+      })
+    }
+
+    // 模式 2：用 ordernum 查询订单详情（向后兼容）
     const client = createUpstreamClient({
       UPSTREAM_API_URL: c.env.UPSTREAM_API_URL,
       UPSTREAM_API_TOKEN: c.env.UPSTREAM_API_TOKEN,
     })
 
-    // 获取订单详情（包含 api URL）
-    const orderDetail = await client.getOrderDetail({ ordernum })
+    const orderDetail = await client.getOrderDetail({ ordernum: token })
     
     if (!orderDetail.list || orderDetail.list.length === 0) {
       return c.json<ApiResponse>({
@@ -102,7 +148,6 @@ app.get('/:ordernum/json', async (c) => {
       }, 400)
     }
 
-    // 获取第一个订单项的 api URL
     const orderItem = orderDetail.list[0]
     
     if (!orderItem.api) {
@@ -112,7 +157,6 @@ app.get('/:ordernum/json', async (c) => {
       }, 400)
     }
 
-    // 代理请求上游 API
     const url = orderItem.api.includes('?') 
       ? `${orderItem.api}&format=json3` 
       : `${orderItem.api}?format=json3`

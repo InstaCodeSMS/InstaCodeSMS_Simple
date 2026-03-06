@@ -1,8 +1,9 @@
--- 添加订单结果字段：手机号码、验证码、上游订单号
+-- 添加订单结果字段：手机号码、验证码、上游订单号、API地址
 ALTER TABLE payment_orders
 ADD COLUMN IF NOT EXISTS tel text,
 ADD COLUMN IF NOT EXISTS sms_token text,
-ADD COLUMN IF NOT EXISTS upstream_order_id text;
+ADD COLUMN IF NOT EXISTS upstream_order_id text,
+ADD COLUMN IF NOT EXISTS api_url text;
 
 -- 添加索引以提高查询性能
 CREATE INDEX IF NOT EXISTS idx_payment_orders_upstream_order_id ON payment_orders(upstream_order_id);
@@ -11,3 +12,4 @@ CREATE INDEX IF NOT EXISTS idx_payment_orders_upstream_order_id ON payment_order
 COMMENT ON COLUMN payment_orders.tel IS '购买后获得的手机号码';
 COMMENT ON COLUMN payment_orders.sms_token IS '购买后获得的验证码/令牌';
 COMMENT ON COLUMN payment_orders.upstream_order_id IS '上游API返回的订单号';
+COMMENT ON COLUMN payment_orders.api_url IS '获取验证码的API地址';

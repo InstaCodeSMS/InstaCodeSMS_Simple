@@ -70,6 +70,15 @@ export interface PaymentOrderRecord {
   paid_at: string | null
   /** 区块链交易哈希 */
   block_transaction_id: string | null
+  // === 上游购买结果字段 ===
+  /** 购买后获得的手机号码 */
+  tel: string | null
+  /** 购买后获得的验证码/令牌 */
+  sms_token: string | null
+  /** 上游API返回的订单号 */
+  upstream_order_id: string | null
+  /** 获取验证码的API地址 */
+  api_url: string | null
 }
 
 /**
@@ -123,4 +132,9 @@ export const PaymentOrderRecordSchema = z.object({
   updated_at: z.string(),
   paid_at: z.string().nullable(),
   block_transaction_id: z.string().nullable(),
+  // 上游购买结果字段
+  tel: z.string().nullable(),
+  sms_token: z.string().nullable(),
+  upstream_order_id: z.string().nullable(),
+  api_url: z.string().nullable(),
 })

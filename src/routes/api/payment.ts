@@ -142,14 +142,15 @@ app.get('/callback/epay', async (c) => {
     })
 
     // 更新订单信息 - 使用 payment_orders 表和 trade_id
+    // 注意：sms_token 用于存储上游返回的验证码令牌，不要覆盖 token（收款地址）
     const { error: updateError } = await supabase
       .from('payment_orders')
       .update({
         tel: firstOrder?.tel,
-        token: firstOrder?.token,
+        sms_token: firstOrder?.token,
         api_url: firstOrder?.api,
         upstream_order_id: upstreamOrder.ordernum,
-      } as any)
+      })
       .eq('trade_id', params.trade_no)
 
       if (updateError) {

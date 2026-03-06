@@ -174,7 +174,8 @@ export default function SuccessPage(csrfToken: string = ''): string {
       
       if (data.success && data.data) {
         this.phoneNumber = data.data.tel || '';
-        this.token = data.data.token || '';
+        // 使用 sms_token（上游返回的验证码令牌）而非 token（收款地址）
+        this.token = data.data.sms_token || data.data.upstream_order_id || '';
       }
     } catch (error) {
       console.error('获取订单详情失败:', error);

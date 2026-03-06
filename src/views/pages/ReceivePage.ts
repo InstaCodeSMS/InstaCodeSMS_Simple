@@ -523,64 +523,128 @@ export default function ReceivePage(csrfToken: string = ''): string {
           this.showToast(this.t('receive.radar_offline'));
         },
         
+        // 已显示短信的唯一标识集合（用于去重）
+        shownSmsIds: new Set(),
+        
         fetchSms() {
           fetch('/api/sms/' + this.token.trim() + '/json')
-            .then(res => res.json())
+            .then(res => {
+              if (!res.ok) {
+                return res.json().then(data => {
+                  throw new Error(data.message || '请求失败');
+                }).catch(() => {
+                  throw new Error('请求失败');
+                });
+              }
+              return res.json();
+            })
             .then(data => {
-              if (data.success && data.data && data.data.sms) {
-                this.messages = this.messages.filter(m => m.id !== 'waiting');
-                const codes = this.extractCodes(data.data.sms);
-                const newMessage = {
-                  id: Date.now(),
-                  text: data.data.sms,
-                  tel: this.maskPhone(data.data.tel || ''),
-                  codes: codes,
-                  time: this.formatTime()
-                };
-                this.messages.unshift(newMessage);
-                if (this.messages.length > this.MAX_MESSAGES) {
-                  this.messages = this.messages.slice(0, this.MAX_MESSAGES);
+              if (data.success && data.data) {
+                if (data.data.sms && data.data.sms.trim() !== '') {
+                  // 使用 sms_time 或 sms 内容作为唯一标识
+                  const smsId = data.data.sms_time || data.data.sms;
+                  
+                  // 检查是否已显示过该短信（去重）
+                  if (!this.shownSmsIds.has(smsId)) {
+                    this.shownSmsIds.add(smsId);
+                    
+                    // 移除等待状态消息
+                    this.messages = this.messages.filter(m => m.id !== 'waiting');
+                    
+                    const codes = this.extractCodes(data.data.sms);
+                    const newMessage = {
+                      id: Date.now(),
+                      text: data.data.sms,
+                      tel: this.maskPhone(data.data.tel || ''),
+                      codes: codes,
+                      time: this.formatTime(),
+                      smsTime: data.data.sms_time || ''
+                    };
+                    this.messages.unshift(newMessage);
+                    if (this.messages.length > this.MAX_MESSAGES) {
+                      this.messages = this.messages.slice(0, this.MAX_MESSAGES);
+                    }
+                    this.saveMessages();
+                    this.playNotification(data.data.sms);
+                    this.showToast(this.t('receive.new_signal'));
+                  }
+                  // 收到短信后继续轮询，不停止（可能收到多条短信）
+                } else {
+                  if (this.messages.length === 0 || this.messages[0].id !== 'waiting') {
+                    this.messages = [{
+                      id: 'waiting',
+                      text: this.t('receive.radar_scanning'),
+                      tel: '',
+                      codes: [],
+                      time: this.formatTime()
+                    }];
+                  }
                 }
-                this.saveMessages();
-                this.playNotification(data.data.sms);
-                this.stopRadar();
-                this.showToast(this.t('receive.new_signal'));
-              } else if (this.messages.length === 0 || this.messages[0].id !== 'waiting') {
-                this.messages = [{
-                  id: 'waiting',
-                  text: this.t('receive.radar_scanning'),
-                  tel: '',
-                  codes: [],
-                  time: this.formatTime()
-                }];
+              } else {
+                // success: false - 继续轮询等待（暂无短信）
+                if (this.messages.length === 0 || this.messages[0].id !== 'waiting') {
+                  this.messages = [{
+                    id: 'waiting',
+                    text: data.message || this.t('receive.radar_scanning'),
+                    tel: '',
+                    codes: [],
+                    time: this.formatTime()
+                  }];
+                }
               }
             })
             .catch(err => {
               console.error('Fetch error:', err);
+              this.messages = [{
+                id: 'error',
+                text: err.message || '网络错误，请稍后重试',
+                tel: '',
+                codes: [],
+                time: this.formatTime()
+              }];
+              this.stopRadar();
             });
         },
         
         extractCodes(text) {
           const codes = [];
-          const patterns = [
-            /(?:验证码|验证码是|code|is|为|码)[:：\\s]*([0-9]{4,8})/gi,
-            /(?:验证码|验证码是|code|is|为|码)[:：\\s]*([A-Z0-9]{4,8})/gi,
-            /[【\\[（(]([A-Z0-9]{4,8})[】\\]）)]/gi,
-            /\\b([0-9]{4,8})\\b/g
-          ];
           const seen = new Set();
+          
+          // 验证码必须包含至少一个数字（排除纯字母如 "bilibili"）
+          const hasDigit = (s) => /\\d/.test(s);
+          
+          // 判断是否为有效验证码
+          const isValidCode = (code) => {
+            if (!code || code.length < 4 || code.length > 8) return false;
+            if (!hasDigit(code)) return false; // 必须包含数字
+            if (/^(.)\\1+$/.test(code)) return false; // 排除连续相同字符
+            return true;
+          };
+          
+          // 按优先级定义模式
+          const patterns = [
+            // 1. 最高优先：验证码/code 等关键词后跟数字
+            /(?:验证码|验证码是|验证码为|code|Code|CODE|is|为|码)[:：\\s]*([0-9]{4,8})/gi,
+            // 2. 高优先：数字嵌入格式（如 【123456】或[123456]）
+            /[【\\[（(]([0-9]{4,8})[】\\]）)]/gi,
+            // 3. 中优先：纯数字（4-8位）
+            /\\b([0-9]{4,8})\\b/g,
+            // 4. 低优先：方括号内的字母数字混合（排除纯字母）
+            /[【\\[（(]([A-Z0-9]{4,8})[】\\]）)]/gi,
+          ];
+          
           for (const pattern of patterns) {
             const matches = text.matchAll(pattern);
             for (const match of matches) {
               if (match[1] && !seen.has(match[1])) {
                 const code = match[1].toUpperCase();
-                if (!/^(.)\\1+$/.test(code) && code.length >= 4) {
+                if (isValidCode(code)) {
                   codes.push(code);
                   seen.add(code);
                 }
               }
             }
-            if (codes.length > 0) break;
+            if (codes.length > 0) break; // 找到后不再尝试更低优先级的模式
           }
           return codes;
         },

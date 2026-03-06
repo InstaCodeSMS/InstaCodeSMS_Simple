@@ -8,6 +8,8 @@ const envSchema = z.object({
   // 上游 API 配置
   UPSTREAM_API_URL: z.string().url('上游 API URL 必须是有效的 URL'),
   UPSTREAM_API_TOKEN: z.string().min(1, '上游 API Token 不能为空'),
+  // 验证码 API 域名（可选，默认使用 https://api.smsapi.cc）
+  SMS_API_URL: z.string().url().optional(),
 
   // 支付配置
   ALIPAY_APP_ID: z.string().optional(),

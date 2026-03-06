@@ -6,6 +6,7 @@ export interface Env {
   // 上游 API 配置
   UPSTREAM_API_URL: string
   UPSTREAM_API_TOKEN: string
+  SMS_API_URL?: string // 验证码 API 域名（可选）
 
   // 价格加成配置（可选，默认 1.5）
   PRICE_MARKUP?: string
