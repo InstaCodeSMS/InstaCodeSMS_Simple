@@ -94,8 +94,8 @@ export class EpayClient {
       }
     }
 
-    // 根据签名类型选择验证方式（使用配置的签名类型，忽略回调中的 sign_type）
-    const signType = this.config.signType || 'MD5'
+    // 根据签名类型选择验证方式（优先使用回调中的 sign_type，实现双签名支持）
+    const signType = (callback.sign_type as 'MD5' | 'RSA') || this.config.signType || 'MD5'
     
     if (signType === 'RSA') {
       // RSA 签名验证
@@ -165,7 +165,8 @@ export class EpayClient {
 
   private async verifyRSASign(data: string, sign: string): Promise<boolean> {
     if (!this.config.publicKey) {
-      throw new Error('RSA public key is required for RSA signature verification')
+      console.error('[E-pay] RSA 签名验证失败: 未配置 EPAY_PUBLIC_KEY')
+      return false
     }
 
     try {
