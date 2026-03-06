@@ -106,37 +106,25 @@ app.get('/callback/epay', async (c) => {
     })
     await orderRepo.markAsPaid(params.trade_no, parseFloat(params.money), params.trade_no)
 
-      // 调用上游API购买商品
-      try {
-        console.log('[E-pay Callback] 开始调用上游API购买商品')
-        
-        const productInfo = order.product_info as any
-        if (!productInfo?.service_id) {
-          console.error('[E-pay Callback] 订单缺少产品信息')
-          return c.text('success')
-        }
-
-        // 查询产品信息
-        const { data: product, error: productError } = await supabase
-          .from('products')
-          .select('*')
-          .eq('id', productInfo.service_id)
-          .single()
-
-      if (productError || !product) {
-        console.error('[E-pay Callback] 查询产品失败:', productError)
+    // 调用上游API购买商品
+    try {
+      console.log('[E-pay Callback] 开始调用上游API购买商品')
+      
+      const productInfo = order.product_info as any
+      if (!productInfo?.service_id) {
+        console.error('[E-pay Callback] 订单缺少产品信息')
         return c.text('success')
       }
 
-    // 调用上游API
-    const upstreamClient = createUpstreamClient(env)
-    const upstreamOrder = await upstreamClient.createOrder({
-      app_id: product.app_id,
-      type: product.type,
-      num: 1,
-      expiry: product.expiry,
-      prefix: '',
-    })
+      // productInfo.service_id 就是 upstream_product_id (app_id)
+      const upstreamClient = createUpstreamClient(env)
+      const upstreamOrder = await upstreamClient.createOrder({
+        app_id: productInfo.service_id,  // 使用 productInfo 中的 service_id
+        type: 1,                          // 默认类型
+        num: productInfo.quantity || 1,   // 数量
+        expiry: productInfo.expiry || 0,  // 有效期类型
+        prefix: '',
+      })
 
     // 从返回的订单列表中获取第一个订单的信息
     const firstOrder = upstreamOrder.list[0]
