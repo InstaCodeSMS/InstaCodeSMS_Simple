@@ -89,6 +89,12 @@ export default function SuccessPage(csrfToken: string = ''): string {
                 </button>
               </div>
             </div>
+            
+            <div x-show="endTime" class="flex items-center justify-between p-4 rounded-2xl transition-colors"
+                 :class="theme === 'dark' ? 'bg-[#1a1e2c]' : 'bg-slate-50'">
+              <span class="text-xs font-mono uppercase tracking-widest" style="color: var(--text-muted);">到期时间</span>
+              <span class="text-sm font-bold text-orange-500" x-text="endTime"></span>
+            </div>
           </div>
 
           <!-- 提示信息 -->
@@ -150,6 +156,8 @@ export default function SuccessPage(csrfToken: string = ''): string {
         orderId: '',
         phoneNumber: '',
         token: '',
+        endTime: '',
+        apiUrl: '',
         toastShow: false,
         toastMsg: '',
         
@@ -173,9 +181,12 @@ export default function SuccessPage(csrfToken: string = ''): string {
       const data = await response.json();
       
       if (data.success && data.data) {
-        this.phoneNumber = data.data.tel || '';
-        // 使用 sms_token（上游返回的验证码令牌）而非 token（收款地址）
-        this.token = data.data.sms_token || data.data.upstream_order_id || '';
+        // 从 upstream_result JSON 字段读取上游 API 响应数据
+        const result = data.data.upstream_result || {};
+        this.phoneNumber = result.tel || '';
+        this.token = result.token || '';
+        this.endTime = result.end_time || '';
+        this.apiUrl = result.api || '';
       }
     } catch (error) {
       console.error('获取订单详情失败:', error);
