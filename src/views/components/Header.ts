@@ -1,3 +1,10 @@
+/**
+ * Header 组件
+ * 
+ * Why: 提供统一的页面导航栏
+ * 使用全局 t() 函数实现多语言支持
+ */
+
 export default function Header() {
   return `
   <nav class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b transition-colors duration-300"
@@ -18,12 +25,12 @@ export default function Header() {
         <a href="/purchase" 
            class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300"
            style="background-color: rgba(37, 99, 235, 0.1); color: var(--accent-blue);">
-          购买服务
+          <span x-text="t('nav.purchase')"></span>
         </a>
         <a href="/receive" 
            class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:opacity-80"
            style="color: var(--text-secondary); background-color: var(--bg-tertiary);">
-          接码终端
+          <span x-text="t('nav.receive')"></span>
         </a>
       </div>
       
@@ -35,7 +42,7 @@ export default function Header() {
           @click="theme = theme === 'dark' ? 'light' : 'dark'"
           class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105"
           style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color-light);"
-          :title="theme === 'dark' ? '切换到亮色模式' : '切换到暗色模式'">
+          :title="theme === 'dark' ? t('common.theme.light') : t('common.theme.dark')">
           <i x-show="theme === 'dark'" class="fas fa-sun text-yellow-500"></i>
           <i x-show="theme === 'light'" class="fas fa-moon text-blue-500"></i>
         </button>
@@ -56,13 +63,13 @@ export default function Header() {
             x-transition
             class="absolute right-0 top-11 w-28 rounded-xl overflow-hidden shadow-lg z-50"
             style="background-color: var(--bg-secondary); border: 0.667px solid var(--border-color-light);">
-            <button @click="lang = 'zh'; langOpen = false" 
+            <button @click="lang = 'zh'; langOpen = false; setTimeout(() => location.reload(), 50);" 
                     class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors"
                     style="color: var(--text-primary);">
               <img src="https://flagcdn.com/w40/cn.png" alt="zh" class="w-5 h-5 rounded-sm" />
               中文
             </button>
-            <button @click="lang = 'en'; langOpen = false" 
+            <button @click="lang = 'en'; langOpen = false; setTimeout(() => location.reload(), 50);" 
                     class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors"
                     style="color: var(--text-primary);">
               <img src="https://flagcdn.com/w40/us.png" alt="en" class="w-5 h-5 rounded-sm" />
@@ -88,11 +95,11 @@ export default function Header() {
             style="background-color: var(--bg-secondary); border: 0.667px solid var(--border-color-light);">
             <a href="/purchase" class="block px-4 py-3 text-sm transition-colors"
                style="color: var(--accent-blue);">
-              购买服务
+              <span x-text="t('nav.purchase')"></span>
             </a>
             <a href="/receive" class="block px-4 py-3 text-sm transition-colors"
                style="color: var(--text-secondary);">
-              接码终端
+              <span x-text="t('nav.receive')"></span>
             </a>
           </div>
         </div>

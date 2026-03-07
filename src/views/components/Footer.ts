@@ -1,3 +1,10 @@
+/**
+ * Footer 组件
+ * 
+ * Why: 提供统一的页面页脚
+ * 使用全局 t() 函数实现多语言支持
+ */
+
 export default function Footer() {
   return `
   <footer class="border-t transition-colors duration-300 py-14 px-6"
@@ -11,14 +18,20 @@ export default function Footer() {
         
         <!-- 链接 -->
         <div class="flex items-center gap-6 text-sm" style="color: var(--text-secondary);">
-          <a href="#" class="hover:opacity-80 transition-opacity">联系支持</a>
-          <a href="#" class="hover:opacity-80 transition-opacity">隐私政策</a>
-          <a href="#" class="hover:opacity-80 transition-opacity">服务条款</a>
+          <a href="#" class="hover:opacity-80 transition-opacity">
+            <span x-text="t('footer.contact')"></span>
+          </a>
+          <a href="#" class="hover:opacity-80 transition-opacity">
+            <span x-text="t('footer.privacy')"></span>
+          </a>
+          <a href="#" class="hover:opacity-80 transition-opacity">
+            <span x-text="t('footer.terms')"></span>
+          </a>
         </div>
         
         <!-- 版权 -->
         <p class="text-xs" style="color: var(--text-muted);">
-          © 2026 SIMPLEFAKA PROTOCOL. 版权所有.
+          © 2026 SIMPLEFAKA PROTOCOL. <span x-text="t('footer.copyright')"></span>
         </p>
       </div>
     </div>

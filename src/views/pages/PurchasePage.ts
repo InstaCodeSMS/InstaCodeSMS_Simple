@@ -4,12 +4,14 @@
  * 
  * Why: 根据 .clinerules 规范，视图层应放在 src/views/pages/ 目录
  * 使用 Layout 组件避免重复的 HTML 结构
+ * 使用全局 t() 函数实现多语言支持
  */
 
 import Layout from '@/views/components/index.ts'
 import { raw } from 'hono/html'
+import type { Language } from '@/i18n'
 
-export default function PurchasePage(csrfToken: string = ''): string {
+export default function PurchasePage(csrfToken: string = '', lang: Language = 'zh'): string {
   const content = `
   <!-- 主内容区 -->
   <main x-data="purchaseApp()" class="min-h-screen py-24 px-4 sm:px-6 relative overflow-x-hidden">
@@ -21,17 +23,17 @@ export default function PurchasePage(csrfToken: string = ''): string {
       <div class="mb-16 flex flex-col lg:flex-row lg:items-end justify-between gap-10">
         <div>
           <h2 class="text-[10px] font-mono tracking-[0.4em] uppercase mb-4 italic" style="color: var(--accent-blue);">
-            系统协议 / 节点
+            <span x-text="t('purchase.subtitle')"></span>
           </h2>
           <h1 class="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none" style="color: var(--text-primary);">
-            部署<span style="color: var(--accent-blue);">虚拟终端</span>
+            <span x-text="t('purchase.title').split('虚拟终端')[0]"></span><span style="color: var(--accent-blue);" x-text="t('purchase.title').includes('Virtual') ? 'Virtual Terminal' : '虚拟终端'"></span>
           </h1>
         </div>
         
         <!-- 搜索和排序 -->
         <div class="flex flex-col sm:flex-row items-center gap-4 w-full lg:w-auto">
           <div class="relative w-full sm:w-80">
-            <input x-model="searchQuery" type="text" placeholder="搜索平台 (例如: Telegram)..."
+            <input x-model="searchQuery" type="text" :placeholder="t('purchase.search_placeholder')"
                    class="w-full border rounded-2xl px-6 py-4 text-xs transition-all outline-none focus:ring-4 focus:ring-blue-500/10"
                    style="background-color: var(--bg-input); border-color: var(--border-color-light); color: var(--text-primary);" />
             <span class="absolute right-4 top-1/2 -translate-y-1/2 text-lg">🔍</span>
@@ -41,7 +43,7 @@ export default function PurchasePage(csrfToken: string = ''): string {
             <button @click="showSortMenu = !showSortMenu"
                     class="border rounded-2xl px-6 py-4 text-xs transition-all whitespace-nowrap flex items-center gap-2"
                     style="background-color: var(--bg-input); border-color: var(--border-color-light); color: var(--text-primary);">
-              <span x-text="sortOption === 'default' ? '默认推荐排序' : (sortOption === 'priceLow' ? '价格从低到高' : '价格从高到低')"></span>
+              <span x-text="getSortLabel()"></span>
               <span class="text-[8px] opacity-50">▼</span>
             </button>
             <div x-show="showSortMenu" x-cloak @click.away="showSortMenu = false" x-transition
@@ -50,15 +52,15 @@ export default function PurchasePage(csrfToken: string = ''): string {
               <button @click="sortOption = 'default'; showSortMenu = false"
                       class="block w-full text-left px-5 py-3 text-xs transition-colors"
                       :class="sortOption === 'default' ? 'bg-blue-600 text-white' : 'hover:bg-blue-500/5 hover:text-blue-500'"
-                      style="color: var(--text-secondary);">默认推荐排序</button>
+                      style="color: var(--text-secondary);" x-text="t('purchase.sort_default')"></button>
               <button @click="sortOption = 'priceLow'; showSortMenu = false"
                       class="block w-full text-left px-5 py-3 text-xs transition-colors"
                       :class="sortOption === 'priceLow' ? 'bg-blue-600 text-white' : 'hover:bg-blue-500/5 hover:text-blue-500'"
-                      style="color: var(--text-secondary);">价格从低到高</button>
+                      style="color: var(--text-secondary);" x-text="t('purchase.sort_price_low')"></button>
               <button @click="sortOption = 'priceHigh'; showSortMenu = false"
                       class="block w-full text-left px-5 py-3 text-xs transition-colors"
                       :class="sortOption === 'priceHigh' ? 'bg-blue-600 text-white' : 'hover:bg-blue-500/5 hover:text-blue-500'"
-                      style="color: var(--text-secondary);">价格从高到低</button>
+                      style="color: var(--text-secondary);" x-text="t('purchase.sort_price_high')"></button>
             </div>
           </div>
         </div>
@@ -74,9 +76,8 @@ export default function PurchasePage(csrfToken: string = ''): string {
             
             <div x-show="service.num === 0" 
                  class="absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
-                 :class="theme === 'dark' ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600'">
-              暂无库存
-            </div>
+                 :class="theme === 'dark' ? 'bg-red-500/20 text-red-400' : 'bg-red-100 text-red-600'"
+                 x-text="t('purchase.out_of_stock')"></div>
             
             <div class="flex items-start justify-between mb-10">
               <div class="w-16 h-16 shrink-0 rounded-[1.5rem] flex items-center justify-center text-3xl transition-all duration-500 border"
@@ -85,7 +86,7 @@ export default function PurchasePage(csrfToken: string = ''): string {
                 <span x-text="getServiceIcon(service.id)"></span>
               </div>
               <div class="text-right">
-                <div class="text-[9px] font-mono uppercase tracking-widest mb-1 italic" style="color: var(--text-muted);">起步价</div>
+                <div class="text-[9px] font-mono uppercase tracking-widest mb-1 italic" style="color: var(--text-muted);" x-text="t('purchase.starting_price')"></div>
                 <div class="text-3xl font-black font-mono tracking-tighter italic" style="color: var(--text-primary);">
                   <span class="text-sm font-normal not-italic opacity-40 mr-1">¥</span>
                   <span x-text="(service.sales_price || 0).toFixed(2)"></span>
@@ -99,15 +100,15 @@ export default function PurchasePage(csrfToken: string = ''): string {
                   style="color: var(--text-primary);"
                   x-text="service.title"></h3>
               <p class="text-[11px] leading-relaxed line-clamp-2 min-h-[2.5rem]" style="color: var(--text-muted);">
-                <span x-text="service.description || '提供5天稳定使用保障'"></span>
+                <span x-text="service.description || (this.lang === 'zh' ? '提供5天稳定使用保障' : '5-day stable usage guaranteed')"></span>
               </p>
             </div>
             
             <div class="mt-4 pt-4 border-t" style="border-color: var(--border-color);">
               <div class="flex items-center justify-between text-[10px]">
-                <span class="uppercase tracking-wider" style="color: var(--text-muted);">库存</span>
+                <span class="uppercase tracking-wider" style="color: var(--text-muted);" x-text="t('purchase.stock')"></span>
                 <span :class="service.num > 0 ? 'text-green-500 font-bold' : 'text-red-500 font-bold'"
-                      x-text="service.num > 0 ? service.num : '无'"></span>
+                      x-text="service.num > 0 ? service.num : t('purchase.no_stock')"></span>
               </div>
             </div>
           </div>
@@ -116,12 +117,12 @@ export default function PurchasePage(csrfToken: string = ''): string {
       
       <div x-show="loading" class="text-center py-20">
         <i class="fas fa-spinner fa-spin text-4xl" style="color: var(--accent-blue);"></i>
-        <p class="mt-4 text-sm" style="color: var(--text-muted);">加载中...</p>
+        <p class="mt-4 text-sm" style="color: var(--text-muted);" x-text="t('common.loading')"></p>
       </div>
       
       <div x-show="!loading && filteredServices.length === 0" class="text-center py-20">
         <i class="fas fa-search text-4xl" style="color: var(--text-muted);"></i>
-        <p class="mt-4 text-sm" style="color: var(--text-muted);">未找到匹配的服务</p>
+        <p class="mt-4 text-sm" style="color: var(--text-muted);" x-text="t('purchase.not_found')"></p>
       </div>
     </div>
 
@@ -146,13 +147,11 @@ export default function PurchasePage(csrfToken: string = ''): string {
               </div>
               <div class="min-w-0">
                 <h2 class="text-xl font-black uppercase tracking-tighter truncate" x-text="activeService?.title"></h2>
-                <p class="text-[9px] font-bold text-blue-100 uppercase opacity-60 tracking-widest italic">
-                  Configure Node Deployment
-                </p>
+                <p class="text-[9px] font-bold text-blue-100 uppercase opacity-60 tracking-widest italic" x-text="t('purchase.configure_node')"></p>
               </div>
             </div>
             <div class="text-right shrink-0">
-              <div class="text-[10px] font-mono uppercase opacity-60 mb-1 tracking-widest">Total Cost</div>
+              <div class="text-[10px] font-mono uppercase opacity-60 mb-1 tracking-widest" x-text="t('purchase.total_cost')"></div>
               <div class="text-3xl font-black font-mono tracking-tighter">
                 <span x-text="calculateTotal()"></span>
                 <span class="text-xs uppercase opacity-70">CNY</span>
@@ -165,7 +164,9 @@ export default function PurchasePage(csrfToken: string = ''): string {
           
           <!-- Step 1: 选择区域 -->
           <div class="space-y-4">
-            <p class="text-[9px] font-black uppercase tracking-widest" style="color: var(--text-muted);">Step 1 / 选择区域</p>
+            <p class="text-[9px] font-black uppercase tracking-widest" style="color: var(--text-muted);">
+              Step 1 / <span x-text="t('purchase.step_region')"></span>
+            </p>
             <div class="flex gap-3">
               <div class="flex items-center gap-3 px-6 py-4 rounded-2xl border-2 border-blue-500 bg-blue-600/10">
                 <img src="https://flagcdn.com/w40/us.png" alt="US" class="w-6 h-4 rounded-sm shadow-sm" />
@@ -173,12 +174,14 @@ export default function PurchasePage(csrfToken: string = ''): string {
                 <i class="fas fa-check-circle text-blue-500 text-sm"></i>
               </div>
             </div>
-            <p class="text-xs" style="color: var(--text-muted);">当前仅支持美国区域</p>
+            <p class="text-xs" style="color: var(--text-muted);" x-text="t('purchase.current_region_only')"></p>
           </div>
 
           <!-- Step 2: 选择有效期 -->
           <div class="space-y-4">
-            <p class="text-[9px] font-black uppercase tracking-widest" style="color: var(--text-muted);">Step 2 / 选择有效期</p>
+            <p class="text-[9px] font-black uppercase tracking-widest" style="color: var(--text-muted);">
+              Step 2 / <span x-text="t('purchase.step_duration')"></span>
+            </p>
             <div x-show="currentExpiryOptions.length > 0" class="grid grid-cols-2 sm:grid-cols-3 gap-3">
               <template x-for="(exp, idx) in currentExpiryOptions" :key="idx">
                 <button @click="form.selectedExpiry = exp.expiry"
@@ -196,14 +199,14 @@ export default function PurchasePage(csrfToken: string = ''): string {
                 </button>
               </template>
             </div>
-            <div x-show="currentExpiryOptions.length === 0" class="text-sm" style="color: var(--text-muted);">
-              该产品暂无有效期选项
-            </div>
+            <div x-show="currentExpiryOptions.length === 0" class="text-sm" style="color: var(--text-muted);" x-text="t('purchase.no_duration_options')"></div>
           </div>
 
           <!-- Step 3: 选择数量 -->
           <div class="space-y-4">
-            <p class="text-[9px] font-black uppercase tracking-widest" style="color: var(--text-muted);">Step 3 / 选择数量</p>
+            <p class="text-[9px] font-black uppercase tracking-widest" style="color: var(--text-muted);">
+              Step 3 / <span x-text="t('purchase.step_quantity')"></span>
+            </p>
             <div class="flex items-center gap-4 p-2 rounded-2xl border w-fit"
                  style="background-color: var(--bg-tertiary); border-color: var(--border-color-light);">
               <button @click="form.quantity > 1 && form.quantity--"
@@ -211,7 +214,7 @@ export default function PurchasePage(csrfToken: string = ''): string {
                       style="background-color: var(--bg-secondary); color: var(--text-primary);">−</button>
               <div class="px-6 text-center">
                 <span class="text-xl font-black font-mono" style="color: var(--text-primary);" x-text="form.quantity"></span>
-                <p class="text-[8px] uppercase font-black tracking-tighter" style="color: var(--text-muted);">单位</p>
+                <p class="text-[8px] uppercase font-black tracking-tighter" style="color: var(--text-muted);" x-text="t('purchase.unit')"></p>
               </div>
               <button @click="form.quantity < (activeService?.num || 100) && form.quantity++"
                       class="w-10 h-10 flex items-center justify-center rounded-xl hover:bg-blue-600 hover:text-white transition-colors"
@@ -221,13 +224,15 @@ export default function PurchasePage(csrfToken: string = ''): string {
 
           <!-- Step 4: 支付方式 (固定为支付宝) -->
           <div class="space-y-4">
-            <p class="text-[9px] font-black uppercase tracking-widest" style="color: var(--text-muted);">Step 4 / 支付方式</p>
+            <p class="text-[9px] font-black uppercase tracking-widest" style="color: var(--text-muted);">
+              Step 4 / <span x-text="t('purchase.step_payment')"></span>
+            </p>
             <div class="flex items-center gap-4 p-5 rounded-[1.5rem] border border-blue-500 bg-blue-600/10"
                  style="background-color: var(--bg-tertiary); border-color: var(--border-color-light);">
               <span class="text-3xl">💳</span>
               <div>
-                <span class="text-base font-bold block" style="color: var(--text-primary);">支付宝</span>
-                <span class="text-[10px]" style="color: var(--text-muted);">支付宝扫码支付</span>
+                <span class="text-base font-bold block" style="color: var(--text-primary);" x-text="t('purchase.alipay')"></span>
+                <span class="text-[10px]" style="color: var(--text-muted);" x-text="t('purchase.alipay_scan')"></span>
               </div>
               <i class="fas fa-check-circle text-blue-500 ml-auto"></i>
             </div>
@@ -244,13 +249,13 @@ export default function PurchasePage(csrfToken: string = ''): string {
             <button @click="closeModal()" 
                     class="flex-1 py-5 border rounded-2xl text-[10px] font-black uppercase tracking-widest transition-colors hover:opacity-80"
                     :class="theme === 'dark' ? 'border-[rgba(200,210,240,0.08)]' : 'border-slate-200'"
-                    style="color: var(--text-muted);">取消</button>
+                    style="color: var(--text-muted);" x-text="t('purchase.cancel')"></button>
             <button @click="submitOrder()"
                     :disabled="isProcessing"
                     class="flex-1 py-5 bg-blue-600 text-white rounded-2xl font-black uppercase tracking-[0.2em] text-[11px] hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/20 disabled:opacity-50">
               <i x-show="!isProcessing" class="fas fa-shopping-cart mr-2"></i>
               <i x-show="isProcessing" class="fas fa-spinner fa-spin mr-2"></i>
-              <span x-text="isProcessing ? '处理中...' : '确认购买'"></span>
+              <span x-text="isProcessing ? t('purchase.processing') : t('purchase.confirm_purchase')"></span>
             </button>
           </div>
         </div>
@@ -262,12 +267,17 @@ export default function PurchasePage(csrfToken: string = ''): string {
          style="background-color: var(--bg-secondary);">
       <div class="flex items-center gap-2 text-green-500 mb-2">
         <i class="fas fa-check-circle"></i>
-        <span class="font-medium">购买成功！</span>
+        <span class="font-medium" x-text="lang === 'zh' ? '购买成功！' : 'Purchase Successful!'"></span>
       </div>
       <div class="text-sm" style="color: var(--text-primary);">
-        <p>订单号: <span class="font-mono" x-text="orderResult?.ordernum"></span></p>
+        <p x-text="lang === 'zh' ? '订单号: ' : 'Order ID: ' + (orderResult?.ordernum || '')" x-show="orderResult?.ordernum">
+          <span x-text="lang === 'zh' ? '订单号: ' : 'Order ID: '"></span>
+          <span class="font-mono" x-text="orderResult?.ordernum"></span>
+        </p>
         <p class="mt-1" style="color: var(--text-muted);">
-          请前往 <a href="/receive" class="text-blue-500 hover:underline">接码终端</a> 查看验证码
+          <span x-text="lang === 'zh' ? '请前往' : 'Please go to'"></span>
+          <a :href="'/' + this.lang + '/receive'" class="text-blue-500 hover:underline" x-text="t('nav.receive')"></a>
+          <span x-text="lang === 'zh' ? '查看验证码' : 'to view codes'"></span>
         </p>
       </div>
       <button @click="orderResult = null" class="absolute top-2 right-2 text-xs opacity-50 hover:opacity-100">
@@ -307,6 +317,9 @@ export default function PurchasePage(csrfToken: string = ''): string {
           { value: 5, days: '60-80', multiplier: 1, discount: 0 },
           { value: 6, days: '80+', multiplier: 1.1, discount: 0 }
         ],
+        t(key) {
+          return window.t ? window.t(key) : key;
+        },
         
         get filteredServices() {
           let result = this.services.filter(s => 
@@ -352,6 +365,12 @@ export default function PurchasePage(csrfToken: string = ''): string {
         getServiceIcon(id) {
           const emojis = ['📱', '⚡', '🛡️', '🔑', '🚀', '🤖', '💬', '🌌', '📡', '🌐', '📧', '🎮', '🎬', '🎵', '📚'];
           return emojis[id % emojis.length];
+        },
+        
+        getSortLabel() {
+          if (this.sortOption === 'priceLow') return this.t('purchase.sort_price_low');
+          if (this.sortOption === 'priceHigh') return this.t('purchase.sort_price_high');
+          return this.t('purchase.sort_default');
         },
         
         calculateTotal() {
@@ -424,11 +443,11 @@ export default function PurchasePage(csrfToken: string = ''): string {
               // 直接跳转到易支付页面
               window.location.href = data.data.payment_url;
             } else {
-              this.errorMessage = data.message || '创建订单失败';
+              this.errorMessage = data.message || (this.lang === 'zh' ? '创建订单失败' : 'Failed to create order');
               this.isProcessing = false;
             }
           } catch (error) {
-            this.errorMessage = '网络错误，请重试';
+            this.errorMessage = this.lang === 'zh' ? '网络错误，请重试' : 'Network error, please try again';
             this.isProcessing = false;
           }
         }
@@ -439,6 +458,7 @@ export default function PurchasePage(csrfToken: string = ''): string {
   const result = Layout({
     title: '购买服务',
     children: raw(content),
+    lang,
     csrfToken
   })
   return result.toString()

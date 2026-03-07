@@ -4,9 +4,13 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 
 // 导入页面路由
-import ReceivePage from '../src/routes/page/receive'
-import PurchasePage from '../src/routes/page/purchase'
-import CheckoutPage from '../src/routes/page/checkout'
+import PurchasePage from '../src/views/pages/PurchasePage'
+import ReceivePage from '../src/views/pages/ReceivePage'
+import CheckoutPage from '../src/views/pages/CheckoutPage'
+import SuccessPage from '../src/views/pages/SuccessPage'
+
+// 导入 i18n
+import { detectLanguage } from '../src/i18n'
 
 // 导入 API 路由
 import servicesApi from '../src/routes/api/services'
@@ -56,17 +60,26 @@ app.get('/', (c) => {
 
 // 购买服务页面
 app.get('/purchase', (c) => {
-  return c.html(PurchasePage())
+  const lang = detectLanguage(c.req.query('lang'), null)
+  return c.html(PurchasePage('', lang))
 })
 
 // 结算支付页面
 app.get('/checkout', (c) => {
-  return c.html(CheckoutPage())
+  const lang = detectLanguage(c.req.query('lang'), null)
+  return c.html(CheckoutPage('', lang))
 })
 
 // 接码终端页面
 app.get('/receive', (c) => {
-  return c.html(ReceivePage())
+  const lang = detectLanguage(c.req.query('lang'), null)
+  return c.html(ReceivePage('', lang))
+})
+
+// 成功页面
+app.get('/success', (c) => {
+  const lang = detectLanguage(c.req.query('lang'), null)
+  return c.html(SuccessPage('', lang))
 })
 
 // ========== API 路由 ==========

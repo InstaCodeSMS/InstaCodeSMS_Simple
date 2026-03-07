@@ -4,12 +4,14 @@
  * 
  * Why: 根据 .clinerules 规范，视图层应放在 src/views/pages/ 目录
  * 使用 Layout 组件避免重复的 HTML 结构
+ * 使用全局 t() 函数实现多语言支持
  */
 
 import Layout from '@/views/components/index.ts'
 import { raw } from 'hono/html'
+import type { Language } from '@/i18n'
 
-export default function SuccessPage(csrfToken: string = ''): string {
+export default function SuccessPage(csrfToken: string = '', lang: Language = 'zh'): string {
   const content = `
   <style>
     @keyframes bounce {
@@ -51,7 +53,7 @@ export default function SuccessPage(csrfToken: string = ''): string {
                 </svg>
               </div>
             </div>
-            <h1 class="text-3xl font-black uppercase tracking-tighter mb-2">支付成功</h1>
+            <h1 class="text-3xl font-black uppercase tracking-tighter mb-2" x-text="this.t('success.payment_successful')"></h1>
             <p class="text-sm opacity-80">Payment Successful</p>
           </div>
         </div>
@@ -62,37 +64,35 @@ export default function SuccessPage(csrfToken: string = ''): string {
           <div class="space-y-3">
             <div class="flex items-center justify-between p-4 rounded-2xl transition-colors"
                  :class="theme === 'dark' ? 'bg-[#1a1e2c]' : 'bg-slate-50'">
-              <span class="text-xs font-mono uppercase tracking-widest" style="color: var(--text-muted);">订单编号</span>
+              <span class="text-xs font-mono uppercase tracking-widest" style="color: var(--text-muted);" x-text="this.t('success.order_id')"></span>
               <code class="text-sm font-mono font-bold text-blue-500" x-text="orderId"></code>
             </div>
             
             <div x-show="phoneNumber" class="flex items-center justify-between p-4 rounded-2xl transition-colors"
                  :class="theme === 'dark' ? 'bg-[#1a1e2c]' : 'bg-slate-50'">
-              <span class="text-xs font-mono uppercase tracking-widest" style="color: var(--text-muted);">手机号码</span>
+              <span class="text-xs font-mono uppercase tracking-widest" style="color: var(--text-muted);" x-text="this.t('success.phone_number')"></span>
               <div class="flex items-center gap-2">
                 <span class="text-sm font-bold" style="color: var(--text-primary);" x-text="phoneNumber"></span>
                 <button @click="copyToClipboard(phoneNumber)" 
-                        class="text-xs px-2 py-1 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20 transition-colors">
-                  复制
-                </button>
+                        class="text-xs px-2 py-1 bg-blue-500/10 text-blue-500 rounded-lg hover:bg-blue-500/20 transition-colors"
+                        x-text="this.t('success.copy')"></button>
               </div>
             </div>
             
             <div x-show="token" class="p-4 rounded-2xl transition-colors"
                  :class="theme === 'dark' ? 'bg-[#1a1e2c]' : 'bg-slate-50'">
               <div class="flex items-center justify-between mb-2">
-                <span class="text-xs font-mono uppercase tracking-widest" style="color: var(--text-muted);">访问令牌</span>
+                <span class="text-xs font-mono uppercase tracking-widest" style="color: var(--text-muted);" x-text="this.t('success.access_token')"></span>
                 <button @click="copyToClipboard(token)" 
-                        class="text-xs px-2 py-1 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors flex-shrink-0">
-                  复制
-                </button>
+                        class="text-xs px-2 py-1 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500/20 transition-colors flex-shrink-0"
+                        x-text="this.t('success.copy')"></button>
               </div>
               <code class="text-sm font-mono font-bold text-green-500 break-all block" x-text="token"></code>
             </div>
             
             <div x-show="endTime" class="flex items-center justify-between p-4 rounded-2xl transition-colors"
                  :class="theme === 'dark' ? 'bg-[#1a1e2c]' : 'bg-slate-50'">
-              <span class="text-xs font-mono uppercase tracking-widest" style="color: var(--text-muted);">到期时间</span>
+              <span class="text-xs font-mono uppercase tracking-widest" style="color: var(--text-muted);" x-text="this.t('success.expires_at')"></span>
               <span class="text-sm font-bold text-orange-500" x-text="endTime"></span>
             </div>
           </div>
@@ -103,24 +103,20 @@ export default function SuccessPage(csrfToken: string = ''): string {
                  ? 'bg-blue-600/5 border border-blue-600/10' 
                  : 'bg-blue-50 border border-blue-100'">
             <p class="text-xs leading-relaxed" style="color: var(--text-secondary);">
-              <span class="font-bold text-blue-500">💡 温馨提示：</span><br/>
-              请妥善保管您的访问令牌，用于在接码终端接收验证码。<br/>
-              手机号码将用于接收短信验证码。
+              <span class="font-bold text-blue-500">💡 <span x-text="this.t('success.tips')"></span>：</span><br/>
+              <span x-text="this.t('success.tips_content')"></span>
             </p>
           </div>
 
           <!-- 操作按钮 -->
           <div class="flex flex-col sm:flex-row gap-3">
-            <a href="/purchase" 
+            <a :href="'/' + this.lang + '/purchase'"
                class="flex-1 py-4 border rounded-2xl text-center text-[10px] font-black uppercase tracking-widest transition-colors hover:opacity-80"
                :class="theme === 'dark' ? 'border-[rgba(200,210,240,0.08)]' : 'border-slate-200'"
-               style="color: var(--text-muted);">
-              继续购买
-            </a>
-            <a :href="'/receive?token=' + (token || '')" 
-               class="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-center text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-colors">
-              前往接码终端
-            </a>
+               style="color: var(--text-muted);" x-text="this.t('success.continue_shopping')"></a>
+            <a :href="'/' + this.lang + '/receive?token=' + (token || '')"
+               class="flex-1 py-4 bg-blue-600 text-white rounded-2xl text-center text-[10px] font-black uppercase tracking-widest shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-colors"
+               x-text="this.t('success.go_to_terminal')"></a>
           </div>
         </div>
 
@@ -129,9 +125,7 @@ export default function SuccessPage(csrfToken: string = ''): string {
              :class="theme === 'dark' 
                ? 'bg-[#0f1219] border-[rgba(200,210,240,0.06)]' 
                : 'bg-slate-50 border-slate-100'">
-          <p class="text-[10px] font-mono uppercase tracking-widest" style="color: var(--text-muted);">
-            感谢您的信任，祝您使用愉快 🎉
-          </p>
+          <p class="text-[10px] font-mono uppercase tracking-widest" style="color: var(--text-muted);" x-text="this.t('success.thank_you')"></p>
         </div>
       </div>
     </div>
@@ -151,8 +145,12 @@ export default function SuccessPage(csrfToken: string = ''): string {
 
   <script>
     function successApp() {
-      return {
+      return {t(key) {
+          return window.t ? window.t(key) : key;
+        },
+        
         theme: localStorage.getItem('theme') || 'dark',
+        lang: localStorage.getItem('lang') || 'zh',
         orderId: '',
         phoneNumber: '',
         token: '',
@@ -161,42 +159,42 @@ export default function SuccessPage(csrfToken: string = ''): string {
         toastShow: false,
         toastMsg: '',
         
-  init() {
-    this.$watch('theme', val => localStorage.setItem('theme', val));
-    
-    const params = new URLSearchParams(window.location.search);
-    this.orderId = params.get('order_id') || params.get('out_trade_no') || '未知';
-    
-    if (this.orderId && this.orderId !== '未知') {
-      this.fetchOrderDetails();
-    } else {
-      this.phoneNumber = params.get('tel') || '';
-      this.token = params.get('token') || '';
-    }
-  },
-  
-  async fetchOrderDetails() {
-    try {
-      const response = await fetch('/rpc/payment/order/' + this.orderId);
-      const data = await response.json();
-      
-      if (data.success && data.data) {
-        // 从 upstream_result JSON 字段读取上游 API 响应数据
-        const result = data.data.upstream_result || {};
-        this.phoneNumber = result.tel || '';
-        this.token = result.token || '';
-        this.endTime = result.end_time || '';
-        this.apiUrl = result.api || '';
-      }
-    } catch (error) {
-      console.error('获取订单详情失败:', error);
-    }
-  },
+        init() {
+          this.$watch('theme', val => localStorage.setItem('theme', val));
+          this.$watch('lang', val => localStorage.setItem('lang', val));
+
+          const params = new URLSearchParams(window.location.search);
+          this.orderId = params.get('order_id') || params.get('out_trade_no') || (this.lang === 'zh' ? '未知' : 'Unknown');
+
+          if (this.orderId && this.orderId !== (this.lang === 'zh' ? '未知' : 'Unknown')) {
+            this.fetchOrderDetails();
+          } else {
+            this.phoneNumber = params.get('tel') || '';
+            this.token = params.get('token') || '';
+          }
+        },
+        
+        async fetchOrderDetails() {
+          try {
+            const response = await fetch('/rpc/payment/order/' + this.orderId);
+            const data = await response.json();
+            
+            if (data.success && data.data) {
+              const result = data.data.upstream_result || {};
+              this.phoneNumber = result.tel || '';
+              this.token = result.token || '';
+              this.endTime = result.end_time || '';
+              this.apiUrl = result.api || '';
+            }
+          } catch (error) {
+            console.error(this.lang === 'zh' ? '获取订单详情失败:' : 'Failed to fetch order details:', error);
+          }
+        },
         
         copyToClipboard(text) {
           if (!text) return;
           navigator.clipboard.writeText(text).then(() => {
-            this.showToast('已复制到剪贴板');
+            this.showToast(this.t('common.copied'));
           }).catch(() => {
             this.fallbackCopy(text);
           });
@@ -211,9 +209,9 @@ export default function SuccessPage(csrfToken: string = ''): string {
           textarea.select();
           try {
             document.execCommand('copy');
-            this.showToast('已复制到剪贴板');
+            this.showToast(this.t('common.copied'));
           } catch (e) {
-            this.showToast('复制失败，请手动复制');
+            this.showToast(this.t('success.copy_failed'));
           }
           document.body.removeChild(textarea);
         },

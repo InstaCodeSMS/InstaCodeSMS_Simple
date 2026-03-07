@@ -4,12 +4,14 @@
  * 
  * Why: 根据 .clinerules 规范，视图层应放在 src/views/pages/ 目录
  * 使用 Layout 组件避免重复的 HTML 结构
+ * 使用全局 t() 函数实现多语言支持
  */
 
 import Layout from '@/views/components/index.ts'
 import { raw } from 'hono/html'
+import type { Language } from '@/i18n'
 
-export default function CheckoutPage(csrfToken: string = ''): string {
+export default function CheckoutPage(csrfToken: string = '', lang: Language = 'zh'): string {
   const content = `
   <style>
     @keyframes spin {
@@ -43,14 +45,14 @@ export default function CheckoutPage(csrfToken: string = ''): string {
           <div class="flex justify-between items-start mb-6">
             <div>
               <h2 class="text-[10px] font-mono tracking-[0.3em] uppercase opacity-70 mb-1">
-                <span x-text="tradeId ? '等待支付' : '正在初始化'"></span>
+                <span x-text="tradeId ? this.t('checkout.waiting_payment') : this.t('checkout.initializing')"></span>
               </h2>
               <h1 class="text-2xl font-black uppercase tracking-tighter italic">
-                <span x-text="tradeId ? '请确认支付' : '正在准备订单'"></span>
+                <span x-text="tradeId ? this.t('checkout.please_confirm') : this.t('checkout.preparing_order')"></span>
               </h1>
             </div>
             <div x-show="tradeId" class="text-right">
-              <div class="text-[10px] font-mono opacity-70 mb-1 uppercase">剩余时间</div>
+              <div class="text-[10px] font-mono opacity-70 mb-1 uppercase" x-text="this.t('checkout.time_left')"></div>
               <div class="text-2xl font-black font-mono tracking-tighter text-yellow-300" x-text="formatTime(timeLeft)"></div>
             </div>
           </div>
@@ -59,31 +61,31 @@ export default function CheckoutPage(csrfToken: string = ''): string {
             <div class="flex items-center gap-4 p-4 bg-black/20 rounded-2xl border border-white/10">
               <div class="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center text-xl">📦</div>
               <div class="flex-1">
-                <div class="text-[9px] font-bold uppercase opacity-60">产品</div>
+                <div class="text-[9px] font-bold uppercase opacity-60" x-text="this.t('checkout.product')"></div>
                 <div class="text-sm font-black uppercase tracking-tight" x-text="productName || 'Loading...'"></div>
               </div>
             </div>
             
             <div class="grid grid-cols-3 gap-3">
               <div class="p-3 bg-black/20 rounded-xl border border-white/10">
-                <div class="text-[8px] font-bold uppercase opacity-60 mb-1">区域</div>
+                <div class="text-[8px] font-bold uppercase opacity-60 mb-1" x-text="this.t('checkout.region')"></div>
                 <div class="text-xs font-black flex items-center gap-1">
                   <img src="https://flagcdn.com/w20/us.png" alt="US" class="w-4 h-3 rounded-sm" />
                   <span x-text="region"></span>
                 </div>
               </div>
               <div class="p-3 bg-black/20 rounded-xl border border-white/10">
-                <div class="text-[8px] font-bold uppercase opacity-60 mb-1">有效期</div>
-                <div class="text-xs font-black" x-text="duration + ' 天'"></div>
+                <div class="text-[8px] font-bold uppercase opacity-60 mb-1" x-text="this.t('checkout.quantity')"></div>
+                <div class="text-xs font-black" x-text="'x' + quantity"></div>
               </div>
               <div class="p-3 bg-black/20 rounded-xl border border-white/10">
-                <div class="text-[8px] font-bold uppercase opacity-60 mb-1">数量</div>
-                <div class="text-xs font-black" x-text="'x' + quantity"></div>
+                <div class="text-[8px] font-bold uppercase opacity-60 mb-1" x-text="lang === 'zh' ? '有效期' : 'Duration'"></div>
+                <div class="text-xs font-black" x-text="duration + (lang === 'zh' ? ' ' + this.t('checkout.days') : ' ' + this.t('checkout.days'))"></div>
               </div>
             </div>
             
             <div class="flex items-center justify-between p-4 bg-black/20 rounded-2xl border border-white/10">
-              <div class="text-[9px] font-bold uppercase opacity-60">应付金额</div>
+              <div class="text-[9px] font-bold uppercase opacity-60" x-text="this.t('checkout.amount_due')"></div>
               <div class="text-2xl font-black font-mono tracking-tighter">
                 <span x-text="actualAmount || totalAmount"></span>
                 <span class="text-xs">USDT</span>
@@ -98,15 +100,13 @@ export default function CheckoutPage(csrfToken: string = ''): string {
           <div x-show="error" x-cloak class="flex flex-col items-center py-10 space-y-4">
             <div class="w-16 h-16 bg-red-500/10 rounded-2xl flex items-center justify-center text-3xl">❌</div>
             <p class="text-sm text-center" style="color: var(--text-secondary);" x-text="error"></p>
-            <button @click="goBack()" class="px-6 py-3 bg-blue-600 text-white rounded-xl text-xs font-bold uppercase">
-              返回重试
-            </button>
+            <button @click="goBack()" class="px-6 py-3 bg-blue-600 text-white rounded-xl text-xs font-bold uppercase" x-text="this.t('checkout.return_retry')"></button>
           </div>
 
           <!-- 加载状态 -->
           <div x-show="!tradeId && !error" class="flex flex-col items-center py-10 space-y-4">
             <div class="w-10 h-10 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-            <p class="text-[10px] font-mono uppercase tracking-widest animate-pulse" style="color: var(--text-muted);">正在生成支付通道...</p>
+            <p class="text-[10px] font-mono uppercase tracking-widest animate-pulse" style="color: var(--text-muted);" x-text="lang === 'zh' ? '正在生成支付通道...' : 'Generating payment channel...'"></p>
           </div>
 
           <!-- 支付内容 -->
@@ -117,13 +117,12 @@ export default function CheckoutPage(csrfToken: string = ''): string {
                  :class="theme === 'dark'
                    ? 'bg-[#1a1e2c] border-[rgba(200,210,240,0.08)]'
                    : 'bg-slate-50 border-slate-200'">
-              <span class="text-[10px]" style="color: var(--text-secondary);">支付金额：</span>
+              <span class="text-[10px]" style="color: var(--text-secondary);" x-text="lang === 'zh' ? '支付金额：' : 'Amount: '"></span>
               <span class="text-xl font-black text-blue-500">¥<span x-text="actualAmount"></span></span>
             </div>
             <button @click="redirectToPayment()"
-              class="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/40 transition-all">
-              立即跳转支付
-            </button>
+              class="w-full py-4 bg-gradient-to-r from-blue-600 to-blue-500 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-600/20 hover:shadow-lg hover:shadow-blue-600/40 transition-all"
+              x-text="this.t('checkout.proceed_payment')"></button>
           </div>
 
           <!-- 支付宝二维码 -->
@@ -136,12 +135,12 @@ export default function CheckoutPage(csrfToken: string = ''): string {
             </div>
 
             <div class="w-full space-y-2">
-              <p class="text-[9px] font-black uppercase text-center tracking-widest" style="color: var(--text-muted);">请使用支付宝扫码支付</p>
+              <p class="text-[9px] font-black uppercase text-center tracking-widest" style="color: var(--text-muted);" x-text="this.t('checkout.scan_alipay')"></p>
               <div class="flex items-center justify-center gap-2 border p-4 rounded-2xl transition-colors"
                    :class="theme === 'dark'
                      ? 'bg-[#1a1e2c] border-[rgba(200,210,240,0.08)]'
                      : 'bg-slate-50 border-slate-200'">
-                <span class="text-[10px]" style="color: var(--text-secondary);">支付金额：</span>
+                <span class="text-[10px]" style="color: var(--text-secondary);" x-text="lang === 'zh' ? '支付金额：' : 'Amount: '"></span>
                 <span class="text-xl font-black text-blue-500">¥<span x-text="actualAmount"></span></span>
               </div>
             </div>
@@ -151,15 +150,15 @@ export default function CheckoutPage(csrfToken: string = ''): string {
                    ? 'bg-amber-600/5 border border-amber-600/10'
                    : 'bg-amber-50 border border-amber-100'">
               <p class="text-[10px] leading-relaxed" style="color: var(--text-secondary);">
-                <span class="text-amber-500 font-bold">重要提示：</span><br/>
-                请务必支付准确金额：<span class="font-bold text-amber-600">¥<span x-text="actualAmount"></span></span><br/>
-                请在 5 分钟内完成支付，超时订单将被自动删除
+                <span class="text-amber-500 font-bold" x-text="this.t('checkout.important_notice') + '：'"></span><br/>
+                <span x-text="this.t('checkout.exact_amount')"></span>：<span class="font-bold text-amber-600">¥<span x-text="actualAmount"></span></span><br/>
+                <span x-text="this.t('checkout.timeout_notice')"></span>
               </p>
             </div>
 
             <div x-show="isChecking" class="flex items-center justify-center gap-2 text-[10px]" style="color: var(--text-muted);">
               <div class="w-3 h-3 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-              <span>正在等待支付确认...</span>
+              <span x-text="this.t('checkout.waiting_confirmation')"></span>
             </div>
           </div>
             
@@ -167,13 +166,11 @@ export default function CheckoutPage(csrfToken: string = ''): string {
               <button @click="goBack()" 
                 class="flex-1 py-4 border rounded-2xl text-[10px] font-black uppercase transition-all"
                 :class="theme === 'dark' ? 'border-[rgba(200,210,240,0.08)]' : 'border-slate-200'"
-                style="color: var(--text-muted);">
-                取消订单
-              </button>
+                style="color: var(--text-muted);" x-text="this.t('checkout.cancel_order')"></button>
               <button @click="checkPaymentNow()" 
                 :disabled="isProcessing"
                 class="flex-1 sm:flex-[2] py-4 bg-blue-600 text-white rounded-2xl text-[10px] font-black uppercase tracking-[0.2em] shadow-lg shadow-blue-600/20 hover:bg-blue-700 transition-all disabled:opacity-50">
-                <span x-text="isProcessing ? '处理中...' : '我已支付，查询结果'"></span>
+                <span x-text="isProcessing ? this.t('purchase.processing') : this.t('checkout.paid_check')"></span>
               </button>
             </div>
           </div>
@@ -185,8 +182,8 @@ export default function CheckoutPage(csrfToken: string = ''): string {
                ? 'bg-[#0f1219] border-[rgba(200,210,240,0.06)]' 
                : 'bg-slate-50 border-slate-100'"
              style="color: var(--text-muted);">
-          <span>Method: <span x-text="paymentMethod?.toUpperCase()"></span></span>
-          <span>Trade: <span x-text="tradeId ? tradeId.substring(0, 8) + '...' : '---'"></span></span>
+          <span x-text="this.t('checkout.method') + ': ' + (paymentMethod?.toUpperCase() || '---')"></span>
+          <span x-text="this.t('checkout.trade') + ': ' + (tradeId ? tradeId.substring(0, 8) + '...' : '---')"></span>
         </div>
       </div>
     </div>
@@ -206,8 +203,12 @@ export default function CheckoutPage(csrfToken: string = ''): string {
 
   <script>
     function checkoutApp() {
-      return {
+      return {t(key) {
+          return window.t ? window.t(key) : key;
+        },
+        
         theme: localStorage.getItem('theme') || 'dark',
+        lang: localStorage.getItem('lang') || 'zh',
         orderId: '',
         tradeId: '',
         productName: '',
@@ -234,21 +235,22 @@ export default function CheckoutPage(csrfToken: string = ''): string {
         
         init() {
           this.$watch('theme', val => localStorage.setItem('theme', val));
-          
+          this.$watch('lang', val => localStorage.setItem('lang', val));
+
           const params = new URLSearchParams(window.location.search);
-          this.productName = params.get('title') || '未知产品';
+          this.productName = params.get('title') || (this.lang === 'zh' ? '未知产品' : 'Unknown Product');
           this.region = params.get('region') || 'US';
           this.duration = params.get('duration') || '5-30';
           this.quantity = parseInt(params.get('quantity') || '1');
           this.totalAmount = params.get('amount') || '0.00';
           this.paymentMethod = params.get('method') || 'usdt';
-          
+
           const serviceId = params.get('id');
           if (!serviceId) {
-            this.error = '缺少产品信息，请重新选择';
+            this.error = this.lang === 'zh' ? '缺少产品信息，请重新选择' : 'Missing product info, please select again';
             return;
           }
-          
+
           const expiryValue = parseInt(params.get('expiry') || '0');
           
           if (!this.isCreating) {
@@ -287,11 +289,11 @@ export default function CheckoutPage(csrfToken: string = ''): string {
             console.log('[Checkout] API Response:', data);
 
             if (!data.success) {
-              throw new Error(data.message || '创建支付订单失败');
+              throw new Error(data.message || (this.lang === 'zh' ? '创建支付订单失败' : 'Failed to create payment order'));
             }
 
             if (!data.data || !data.data.trade_id || !data.data.order_id) {
-              throw new Error('支付平台返回数据异常，请稍后重试');
+              throw new Error(this.lang === 'zh' ? '支付平台返回数据异常，请稍后重试' : 'Payment platform returned invalid data');
             }
 
             this.orderId = data.data.order_id;
@@ -307,7 +309,7 @@ export default function CheckoutPage(csrfToken: string = ''): string {
 
           } catch (err) {
             console.error('创建支付订单失败:', err);
-            this.error = err.message || '创建支付订单失败，请稍后重试';
+            this.error = err.message || (this.lang === 'zh' ? '创建支付订单失败，请稍后重试' : 'Failed to create payment order');
           }
         },
         
@@ -327,7 +329,7 @@ export default function CheckoutPage(csrfToken: string = ''): string {
             } else {
               clearInterval(this.timer);
               clearInterval(this.pollTimer);
-              this.error = '支付超时，请重新下单';
+              this.error = this.t('checkout.payment_timeout');
             }
           }, 1000);
         },
@@ -351,7 +353,7 @@ export default function CheckoutPage(csrfToken: string = ''): string {
               this.isProcessing = true;
               clearInterval(this.timer);
               clearInterval(this.pollTimer);
-              this.showToast('支付成功，正在创建订单...');
+              this.showToast(this.t('checkout.creating_order'));
               await this.createUpstreamOrder();
             }
           } catch (err) {
@@ -365,7 +367,7 @@ export default function CheckoutPage(csrfToken: string = ''): string {
           this.isProcessing = true;
           await this.checkPaymentStatus();
           if (!this.isProcessing) {
-            this.showToast('尚未检测到支付，请稍后重试');
+            this.showToast(this.lang === 'zh' ? '尚未检测到支付，请稍后重试' : 'Payment not detected, please try again');
           }
         },
         
@@ -375,7 +377,7 @@ export default function CheckoutPage(csrfToken: string = ''): string {
             const orderData = await orderResponse.json();
 
             if (!orderData.success) {
-              throw new Error('获取订单信息失败');
+              throw new Error(this.lang === 'zh' ? '获取订单信息失败' : 'Failed to get order info');
             }
 
             const productInfo = orderData.data.product_info;
@@ -397,14 +399,14 @@ export default function CheckoutPage(csrfToken: string = ''): string {
               const tel = data.data.items?.[0]?.tel || '';
               const token = data.data.items?.[0]?.token || '';
               const ordernum = data.data.ordernum || this.orderId;
-              
-              window.location.href = '/success?order_id=' + ordernum + '&tel=' + encodeURIComponent(tel) + '&token=' + encodeURIComponent(token);
+
+              window.location.href = '/' + this.lang + '/success?order_id=' + ordernum + '&tel=' + encodeURIComponent(tel) + '&token=' + encodeURIComponent(token);
             } else {
-              throw new Error(data.message || '创建订单失败');
+              throw new Error(data.message || this.t('checkout.order_failed'));
             }
           } catch (err) {
             console.error('创建上游订单失败:', err);
-            this.error = '支付成功但创建订单失败，请联系客服';
+            this.error = this.t('checkout.contact_support');
             this.isProcessing = false;
           }
         },
@@ -418,7 +420,7 @@ export default function CheckoutPage(csrfToken: string = ''): string {
         copyAddress() {
           if (!this.walletAddress) return;
           navigator.clipboard.writeText(this.walletAddress);
-          this.showToast('地址已复制到剪贴板');
+          this.showToast(this.t('common.copied'));
         },
 
         redirectToPayment() {
@@ -438,7 +440,7 @@ export default function CheckoutPage(csrfToken: string = ''): string {
         goBack() {
           clearInterval(this.timer);
           clearInterval(this.pollTimer);
-          window.location.href = '/purchase';
+          window.location.href = '/' + this.lang + '/purchase';
         }
       }
     }

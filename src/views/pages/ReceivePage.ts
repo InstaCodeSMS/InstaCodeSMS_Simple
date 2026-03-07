@@ -4,12 +4,14 @@
  * 
  * Why: 根据 .clinerules 规范，视图层应放在 src/views/pages/ 目录
  * 使用 Layout 组件避免重复的 HTML 结构
+ * 使用全局 t() 函数实现多语言支持
  */
 
 import Layout from '@/views/components/index.ts'
 import { raw } from 'hono/html'
+import type { Language } from '@/i18n'
 
-export default function ReceivePage(csrfToken: string = ''): string {
+export default function ReceivePage(csrfToken: string = '', lang: Language = 'zh'): string {
   const content = `
   <style>
     /* 页面特定样式 */
@@ -119,10 +121,10 @@ export default function ReceivePage(csrfToken: string = ''): string {
           
           <div class="order-1 lg:order-2 text-center lg:text-right">
             <h2 class="text-[10px] font-mono tracking-[0.4em] text-blue-600 uppercase mb-3 italic leading-none">
-              <span x-text="t('receive.terminal_receiver')"></span>
+              <span x-text="this.t('receive.terminal_receiver')"></span>
             </h2>
             <h1 class="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none mb-4">
-              <span x-html="t('receive.info_receiver_terminal_html')"></span>
+              <span x-html="this.t('receive.info_receiver_terminal_html')"></span>
             </h1>
           </div>
         </div>
@@ -133,7 +135,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
         <div class="card-bg border rounded-[2rem] p-6 sm:p-8 shadow-lg transition-all duration-300"
              :class="theme === 'dark' ? 'shadow-black/20' : 'shadow-slate-200/40'">
           <label class="block text-xs font-mono text-muted uppercase tracking-widest mb-3">
-            <span x-text="t('receive.access_token')"></span>
+            <span x-text="this.t('receive.access_token')"></span>
           </label>
           
           <div class="flex flex-col sm:flex-row gap-4">
@@ -141,7 +143,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
               <input 
                 :type="showToken ? 'text' : 'password'" 
                 x-model="token"
-                :placeholder="t('receive.token_placeholder')"
+                :placeholder="this.t('receive.token_placeholder')"
                 class="w-full border rounded-2xl px-6 py-4 pr-14 font-mono focus:border-blue-500 focus:ring-4 focus:ring-blue-500/10 outline-none transition-all h-[60px] text-base tracking-wider input-bg"
                 :disabled="isPolling"
                 @input="sanitizeToken($event)"
@@ -150,7 +152,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
                 type="button"
                 @click="showToken = !showToken"
                 class="absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 flex items-center justify-center rounded-xl hover:bg-blue-500/10 text-muted hover:text-blue-500 transition-all z-20"
-                :title="showToken ? t('receive.hide_token') : t('receive.show_token')"
+                :title="showToken ? this.t('receive.hide_token') : this.t('receive.show_token')"
               >
                 <i :class="showToken ? 'fas fa-eye-slash' : 'fas fa-eye'" class="text-lg"></i>
               </button>
@@ -165,13 +167,13 @@ export default function ReceivePage(csrfToken: string = ''): string {
                 : 'bg-blue-600 text-white border-blue-600 shadow-lg shadow-blue-600/25 hover:bg-blue-700'"
             >
               <i :class="isPolling ? 'fas fa-stop' : 'fas fa-satellite-dish'" class="mr-2"></i>
-              <span x-text="isPolling ? t('receive.btn_stop') : t('receive.btn_start')"></span>
+              <span x-text="isPolling ? this.t('receive.btn_stop') : this.t('receive.btn_start')"></span>
             </button>
           </div>
           
           <p class="text-xs text-muted mt-2">
             <i class="fas fa-info-circle mr-1"></i>
-            <span x-text="t('receive.token_hint')"></span>
+            <span x-text="this.t('receive.token_hint')"></span>
           </p>
         </div>
       </section>
@@ -181,7 +183,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 px-2">
           <div class="flex items-center gap-3">
             <span class="text-xs text-muted uppercase tracking-[0.3em] font-mono italic">
-              <span x-text="t('receive.incoming_stream')"></span>
+              <span x-text="this.t('receive.incoming_stream')"></span>
             </span>
             <div class="h-px flex-1 border-t border-theme min-w-[80px] hidden sm:block"></div>
           </div>
@@ -209,7 +211,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
               :disabled="messages.length === 0"
             >
               <i class="fas fa-trash-alt mr-1.5"></i>
-              <span x-text="t('receive.clear_history')"></span>
+              <span x-text="this.t('receive.clear_history')"></span>
             </button>
             
             <button 
@@ -222,7 +224,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
               :disabled="messages.length === 0"
             >
               <i class="fas fa-download mr-1.5"></i>
-              <span x-text="t('receive.export')"></span>
+              <span x-text="this.t('receive.export')"></span>
             </button>
           </div>
         </div>
@@ -242,7 +244,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
                   <div class="flex items-center gap-2 mb-3 font-mono text-[10px] text-muted uppercase tracking-widest">
                     <div class="w-1.5 h-1.5 rounded-full"
                          :class="msg.id === 'waiting' ? 'bg-yellow-500 animate-pulse' : (msg.id === 'err' ? 'bg-red-500' : 'bg-emerald-500')"></div>
-                    <span x-text="t('receive.system_time') + ': ' + msg.time"></span>
+                    <span x-text="this.t('receive.system_time') + ': ' + msg.time"></span>
                     <span x-show="msg.tel" class="text-blue-500" x-text="'[' + msg.tel + ']'"></span>
                   </div>
                   
@@ -253,7 +255,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
                       <div class="flex items-center gap-2">
                         <div class="px-4 py-2 bg-blue-500/10 border border-blue-500/30 rounded-xl">
                           <span class="text-[10px] font-mono text-blue-500 block mb-0.5 uppercase tracking-tighter italic">
-                            <span x-text="t('receive.verification_code')"></span>
+                            <span x-text="this.t('receive.verification_code')"></span>
                             <span x-show="msg.codes.length > 1" x-text="' #' + (idx + 1)"></span>
                           </span>
                           <span class="text-xl font-black text-blue-500 tracking-[0.15em]" x-text="code"></span>
@@ -262,7 +264,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
                           @click="copyText(code)"
                           class="h-11 px-5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-[10px] font-mono uppercase transition-all shadow-lg shadow-blue-600/20"
                         >
-                          <span x-text="t('receive.copy_code')"></span>
+                          <span x-text="this.t('receive.copy_code')"></span>
                         </button>
                       </div>
                     </template>
@@ -277,7 +279,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
                     ? 'bg-[var(--bg-tertiary)] border-[var(--border-subtle)] text-muted hover:border-blue-600' 
                     : 'bg-slate-50 border-slate-200 text-slate-600 hover:border-blue-600'"
                 >
-                  <span x-text="t('receive.copy')"></span>
+                  <span x-text="this.t('receive.copy')"></span>
                 </button>
               </div>
             </div>
@@ -285,7 +287,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
           
           <div x-show="messages.length === 0" class="py-20 text-center border rounded-[2.5rem] border-theme">
             <p class="text-muted font-mono text-sm tracking-[0.2em] uppercase opacity-50 italic">
-              <span x-text="t('receive.awaiting_input')"></span>
+              <span x-text="this.t('receive.awaiting_input')"></span>
             </p>
           </div>
         </div>
@@ -308,117 +310,14 @@ export default function ReceivePage(csrfToken: string = ''): string {
   </div>
 
   <script>
-    // ===== 国际化语言包 =====
-    const i18n = {
-      zh: {
-        nav: {
-          purchase: '购买服务',
-          receive: '接码终端',
-          dark_mode: '切换到暗色模式',
-          light_mode: '切换到亮色模式'
-        },
-        receive: {
-          terminal_receiver: '终端 / 信息接收器',
-          info_receiver_terminal_html: '<span class="text-blue-600 italic">信息</span>接收终端',
-          access_token: '访问令牌',
-          token_placeholder: '请输入访问令牌...',
-          token_hint: '购买服务后，系统会提供 Token 令牌，将其粘贴到此处即可接收验证码',
-          show_token: '显示令牌',
-          hide_token: '隐藏令牌',
-          btn_start: '启动雷达',
-          btn_stop: '停止雷达',
-          incoming_stream: '实时数据流',
-          notification_on: '通知已开启',
-          notification_off: '通知已关闭',
-          clear_history: '清空历史',
-          export: '导出',
-          system_time: '系统时间',
-          verification_code: '验证码',
-          copy_code: '复制',
-          copy: '复制全文',
-          awaiting_input: '等待终端输入...',
-          token_required: '请输入访问令牌',
-          token_invalid_char: '令牌只能包含字母和数字',
-          radar_active: '雷达已启动',
-          radar_offline: '雷达已关闭',
-          radar_scanning: '雷达扫描中，等待信号...',
-          new_signal: '收到新信号！',
-          copied: '已复制到剪贴板',
-          copy_failed: '复制失败',
-          confirm_clear: '确定要清空所有历史记录吗？',
-          history_cleared: '历史记录已清空',
-          no_messages_export: '暂无消息可导出',
-          export_success: '导出成功',
-          notification_enabled: '通知已启用',
-          notification_disabled: '通知已禁用',
-          connection_failed: '连接失败，请稍后重试',
-          shield_denied: '访问被拒绝'
-        },
-        footer: {
-          contact: '联系支持',
-          privacy: '隐私政策',
-          terms: '服务条款',
-          copyright: '版权所有'
-        }
-      },
-      en: {
-        nav: {
-          purchase: 'Purchase',
-          receive: 'Terminal',
-          dark_mode: 'Switch to Dark Mode',
-          light_mode: 'Switch to Light Mode'
-        },
-        receive: {
-          terminal_receiver: 'Terminal / Inbound Receiver',
-          info_receiver_terminal_html: 'Inbound <span class="text-blue-600 italic">Terminal</span>',
-          access_token: 'Access Token',
-          token_placeholder: 'Enter your access token...',
-          token_hint: 'After purchasing, you will receive a token. Paste it here to receive verification codes.',
-          show_token: 'Show Token',
-          hide_token: 'Hide Token',
-          btn_start: 'Start Radar',
-          btn_stop: 'Stop Radar',
-          incoming_stream: 'Incoming Stream',
-          notification_on: 'Notification On',
-          notification_off: 'Notification Off',
-          clear_history: 'Clear',
-          export: 'Export',
-          system_time: 'System Time',
-          verification_code: 'Code',
-          copy_code: 'Copy',
-          copy: 'Copy All',
-          awaiting_input: 'Awaiting terminal input...',
-          token_required: 'Please enter access token',
-          token_invalid_char: 'Token can only contain letters and numbers',
-          radar_active: 'Radar activated',
-          radar_offline: 'Radar offline',
-          radar_scanning: 'Radar scanning, awaiting signal...',
-          new_signal: 'New signal received!',
-          copied: 'Copied to clipboard',
-          copy_failed: 'Copy failed',
-          confirm_clear: 'Are you sure to clear all history?',
-          history_cleared: 'History cleared',
-          no_messages_export: 'No messages to export',
-          export_success: 'Export successful',
-          notification_enabled: 'Notification enabled',
-          notification_disabled: 'Notification disabled',
-          connection_failed: 'Connection failed, please try again',
-          shield_denied: 'Access denied'
-        },
-        footer: {
-          contact: 'Contact',
-          privacy: 'Privacy Policy',
-          terms: 'Terms of Service',
-          copyright: 'All rights reserved'
-        }
-      }
-    };
-
     // ===== Alpine.js 应用 =====
     function receiveApp() {
-      return {
+      return {t(key) {
+          return window.t ? window.t(key) : key;
+        },
+        
         theme: localStorage.getItem('theme') || 'dark',
-        lang: localStorage.getItem('receive_language') || 'zh',
+        lang: localStorage.getItem('lang') || 'zh',
         token: '',
         showToken: false,
         isPolling: false,
@@ -429,14 +328,13 @@ export default function ReceivePage(csrfToken: string = ''): string {
         pollInterval: null,
         STORAGE_KEY: 'receive_messages_history',
         NOTIFICATION_KEY: 'receive_notification_enabled',
-        LANGUAGE_KEY: 'receive_language',
         MAX_MESSAGES: 50,
         POLL_INTERVAL: 5000,
         TOAST_DURATION: 3000,
         
         init() {
           this.theme = localStorage.getItem('theme') || 'dark';
-          this.lang = localStorage.getItem(this.LANGUAGE_KEY) || 'zh';
+          this.lang = localStorage.getItem('lang') || 'zh';
           this.notificationEnabled = localStorage.getItem(this.NOTIFICATION_KEY) === 'true';
           this.loadMessages();
           
@@ -446,11 +344,12 @@ export default function ReceivePage(csrfToken: string = ''): string {
           });
           
           this.$watch('lang', (val) => {
-            localStorage.setItem(this.LANGUAGE_KEY, val);
+            localStorage.setItem('lang', val);
+            document.documentElement.lang = val === 'zh' ? 'zh-CN' : 'en';
           });
           
           const urlParams = new URLSearchParams(window.location.search);
-          const tokenParam = urlParams.get('token');
+          const tokenParam = urlParams.gethis.t('token');
           if (tokenParam) {
             this.token = tokenParam.replace(/[^a-zA-Z0-9]/g, '');
             this.$nextTick(() => this.startRadar());
@@ -459,25 +358,6 @@ export default function ReceivePage(csrfToken: string = ''): string {
           if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
           }
-        },
-        
-        t(key) {
-          const keys = key.split('.');
-          let value = i18n[this.lang];
-          for (const k of keys) {
-            value = value?.[k];
-          }
-          return value || key;
-        },
-        
-        toggleTheme() {
-          this.theme = this.theme === 'dark' ? 'light' : 'dark';
-          this.showToast(this.theme === 'dark' ? this.t('nav.dark_mode') : this.t('nav.light_mode'));
-        },
-        
-        toggleLanguage() {
-          this.lang = this.lang === 'zh' ? 'en' : 'zh';
-          document.documentElement.lang = this.lang === 'zh' ? 'zh-CN' : 'en';
         },
         
         sanitizeToken(e) {
@@ -531,9 +411,9 @@ export default function ReceivePage(csrfToken: string = ''): string {
             .then(res => {
               if (!res.ok) {
                 return res.json().then(data => {
-                  throw new Error(data.message || '请求失败');
+                  throw new Error(data.message || (this.lang === 'zh' ? '请求失败' : 'Request failed'));
                 }).catch(() => {
-                  throw new Error('请求失败');
+                  throw new Error(this.lang === 'zh' ? '请求失败' : 'Request failed');
                 });
               }
               return res.json();
@@ -541,14 +421,10 @@ export default function ReceivePage(csrfToken: string = ''): string {
             .then(data => {
               if (data.success && data.data) {
                 if (data.data.sms && data.data.sms.trim() !== '') {
-                  // 使用 sms_time 或 sms 内容作为唯一标识
                   const smsId = data.data.sms_time || data.data.sms;
                   
-                  // 检查是否已显示过该短信（去重）
                   if (!this.shownSmsIds.has(smsId)) {
                     this.shownSmsIds.add(smsId);
-                    
-                    // 移除等待状态消息
                     this.messages = this.messages.filter(m => m.id !== 'waiting');
                     
                     const codes = this.extractCodes(data.data.sms);
@@ -568,7 +444,6 @@ export default function ReceivePage(csrfToken: string = ''): string {
                     this.playNotification(data.data.sms);
                     this.showToast(this.t('receive.new_signal'));
                   }
-                  // 收到短信后继续轮询，不停止（可能收到多条短信）
                 } else {
                   if (this.messages.length === 0 || this.messages[0].id !== 'waiting') {
                     this.messages = [{
@@ -581,7 +456,6 @@ export default function ReceivePage(csrfToken: string = ''): string {
                   }
                 }
               } else {
-                // success: false - 继续轮询等待（暂无短信）
                 if (this.messages.length === 0 || this.messages[0].id !== 'waiting') {
                   this.messages = [{
                     id: 'waiting',
@@ -597,7 +471,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
               console.error('Fetch error:', err);
               this.messages = [{
                 id: 'error',
-                text: err.message || '网络错误，请稍后重试',
+                text: err.message || this.t('receive.connection_failed'),
                 tel: '',
                 codes: [],
                 time: this.formatTime()
@@ -610,26 +484,19 @@ export default function ReceivePage(csrfToken: string = ''): string {
           const codes = [];
           const seen = new Set();
           
-          // 验证码必须包含至少一个数字（排除纯字母如 "bilibili"）
           const hasDigit = (s) => /\\d/.test(s);
           
-          // 判断是否为有效验证码
           const isValidCode = (code) => {
             if (!code || code.length < 4 || code.length > 8) return false;
-            if (!hasDigit(code)) return false; // 必须包含数字
-            if (/^(.)\\1+$/.test(code)) return false; // 排除连续相同字符
+            if (!hasDigit(code)) return false;
+            if (/^(.)\\1+$/.test(code)) return false;
             return true;
           };
           
-          // 按优先级定义模式
           const patterns = [
-            // 1. 最高优先：验证码/code 等关键词后跟数字
             /(?:验证码|验证码是|验证码为|code|Code|CODE|is|为|码)[:：\\s]*([0-9]{4,8})/gi,
-            // 2. 高优先：数字嵌入格式（如 【123456】或[123456]）
             /[【\\[（(]([0-9]{4,8})[】\\]）)]/gi,
-            // 3. 中优先：纯数字（4-8位）
             /\\b([0-9]{4,8})\\b/g,
-            // 4. 低优先：方括号内的字母数字混合（排除纯字母）
             /[【\\[（(]([A-Z0-9]{4,8})[】\\]）)]/gi,
           ];
           
@@ -644,7 +511,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
                 }
               }
             }
-            if (codes.length > 0) break; // 找到后不再尝试更低优先级的模式
+            if (codes.length > 0) break;
           }
           return codes;
         },
@@ -742,14 +609,14 @@ export default function ReceivePage(csrfToken: string = ''): string {
             this.showToast(this.t('receive.no_messages_export'));
             return;
           }
-          let content = '=== SimpleFaka 消息记录导出 ===\\n';
-          content += '导出时间: ' + new Date().toLocaleString('zh-CN') + '\\n';
-          content += '消息总数: ' + validMessages.length + '\\n\\n';
+          let content = '=== SimpleFaka ' + (this.lang === 'zh' ? '消息记录导出' : 'Message Export') + ' ===\\n';
+          content += (this.lang === 'zh' ? '导出时间' : 'Export Time') + ': ' + new Date().toLocaleString('zh-CN') + '\\n';
+          content += (this.lang === 'zh' ? '消息总数' : 'Total Messages') + ': ' + validMessages.length + '\\n\\n';
           validMessages.forEach((msg) => {
             content += '[' + msg.time + '] ' + (msg.tel || '') + '\\n';
-            content += '内容: ' + msg.text + '\\n';
+            content += (this.lang === 'zh' ? '内容' : 'Content') + ': ' + msg.text + '\\n';
             if (msg.codes && msg.codes.length > 0) {
-              content += '验证码: ' + msg.codes.join(', ') + '\\n';
+              content += (this.lang === 'zh' ? '验证码' : 'Codes') + ': ' + msg.codes.join(', ') + '\\n';
             }
             content += '\\n';
           });
@@ -805,6 +672,7 @@ export default function ReceivePage(csrfToken: string = ''): string {
   const result = Layout({
     title: '接码终端',
     children: raw(content),
+    lang,
     csrfToken
   })
   return result.toString()

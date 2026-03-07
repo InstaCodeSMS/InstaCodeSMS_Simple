@@ -1,20 +1,21 @@
 /**
  * 视图组件统一导出
  * 
- * Why: 将所有组件内联到一个文件中，避免 ESBuild 模块解析问题
+ * Why: 将所有组件内联到一个文件中，避免ESBuild 模块解析问题
  */
 
 import { html, raw } from 'hono/html'
 import type { Child } from 'hono/jsx'
+import { getI18nScript, getHtmlLang, type Language } from '@/i18n'
 
 // ===== Header 组件 =====
-function Header(): string {
+function Header(lang: Language): string {
   return `
   <nav class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b transition-colors duration-300"
        style="background-color: var(--bg-nav); border-color: var(--border-color);">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
       <!-- Logo -->
-      <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
+      <a href="/${lang}" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
         <div class="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
           <i class="fas fa-bolt text-white text-sm"></i>
         </div>
@@ -23,16 +24,18 @@ function Header(): string {
         </span>
       </a>
       
-      <!-- 导航链接 - 桌面端 -->
+      <!-- 导航链接 -桌面端 -->
       <div class="hidden sm:flex items-center gap-2">
-        <a href="/purchase" 
+        <a href="/${lang}/purchase" 
            class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300"
-           style="background-color: rgba(37, 99, 235, 0.1); color: var(--accent-blue);">
+           style="background-color: rgba(37, 99, 235, 0.1); color: var(--accent-blue);"
+           x-text="t('nav.purchase')">
           购买服务
         </a>
-        <a href="/receive" 
+        <a href="/${lang}/receive" 
            class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:opacity-80"
-           style="color: var(--text-secondary); background-color: var(--bg-tertiary);">
+           style="color: var(--text-secondary); background-color: var(--bg-tertiary);"
+           x-text="t('nav.receive')">
           接码终端
         </a>
       </div>
@@ -66,18 +69,20 @@ function Header(): string {
             x-transition
             class="absolute right-0 top-11 w-28 rounded-xl overflow-hidden shadow-lg z-50"
             style="background-color: var(--bg-secondary); border: 0.667px solid var(--border-color-light);">
-            <button @click="lang = 'zh'; langOpen = false" 
-                    class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors"
-                    style="color: var(--text-primary);">
+            <a href="/zh/purchase" 
+               @click="lang = 'zh'; langOpen = false; localStorage.setItem('lang', 'zh');"
+               class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors"
+               style="color: var(--text-primary);">
               <img src="https://flagcdn.com/w40/cn.png" alt="zh" class="w-5 h-5 rounded-sm" />
               中文
-            </button>
-            <button @click="lang = 'en'; langOpen = false" 
-                    class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors"
-                    style="color: var(--text-primary);">
+            </a>
+            <a href="/en/purchase" 
+               @click="lang = 'en'; langOpen = false; localStorage.setItem('lang', 'en');"
+               class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors"
+               style="color: var(--text-primary);">
               <img src="https://flagcdn.com/w40/us.png" alt="en" class="w-5 h-5 rounded-sm" />
               English
-            </button>
+            </a>
           </div>
         </div>
         
@@ -96,12 +101,14 @@ function Header(): string {
             x-transition
             class="absolute right-0 top-11 w-40 rounded-xl overflow-hidden shadow-lg z-50"
             style="background-color: var(--bg-secondary); border: 0.667px solid var(--border-color-light);">
-            <a href="/purchase" class="block px-4 py-3 text-sm transition-colors"
-               style="color: var(--accent-blue);">
+            <a href="/${lang}/purchase" class="block px-4 py-3 text-sm transition-colors"
+               style="color: var(--accent-blue);"
+               x-text="t('nav.purchase')">
               购买服务
             </a>
-            <a href="/receive" class="block px-4 py-3 text-sm transition-colors"
-               style="color: var(--text-secondary);">
+            <a href="/${lang}/receive" class="block px-4 py-3 text-sm transition-colors"
+               style="color: var(--text-secondary);"
+               x-text="t('nav.receive')">
               接码终端
             </a>
           </div>
@@ -114,8 +121,7 @@ function Header(): string {
 // ===== Footer 组件 =====
 function Footer(): string {
   return `
-  <footer class="border-t transition-colors duration-300 py-14 px-6"
-          style="background-color: var(--bg-primary); border-color: var(--border-color);">
+  <footer class="border-t transition-colors duration-300 py-14 px-6" style="background-color: var(--bg-primary); border-color: var(--border-color);">
     <div class="max-w-7xl mx-auto">
       <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
         <!-- 品牌名 -->
@@ -144,7 +150,7 @@ function Footer(): string {
 interface LayoutProps {
   title: string
   children: Child
-  lang?: string
+  lang?: Language
   showHeader?: boolean
   showFooter?: boolean
   csrfToken?: string
@@ -159,17 +165,19 @@ interface LayoutProps {
 export default function Layout({ 
   title, 
   children, 
-  lang = 'zh-CN',
+  lang = 'zh',
   showHeader = true,
   showFooter = true,
   csrfToken = ''
 }: LayoutProps) {
-  const headerHtml = showHeader ? Header() : ''
+  const headerHtml = showHeader ? Header(lang) : ''
   const footerHtml = showFooter ? Footer() : ''
   const hxHeaders = csrfToken ? `hx-headers='{"X-CSRF-Token": "${csrfToken}"}'` : ''
+  const i18nScript = getI18nScript(lang)
+  const htmlLang = getHtmlLang(lang)
   
   return html`<!DOCTYPE html>
-<html lang="${lang}">
+<html lang="${htmlLang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -179,6 +187,10 @@ export default function Layout({
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://unpkg.com/htmx.org@2.0.8"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- 全局 i18n 脚本 - 必须在 Alpine.js 之前加载 -->
+  <script>
+${raw(i18nScript)}
+  </script>
   <style>
     [x-cloak] { display: none !important; }
     
@@ -255,16 +267,23 @@ export default function Layout({
     }
   </style>
 </head>
-<body class="min-h-screen transition-colors duration-300" 
+<body class="min-h-screen transition-colors duration-300"
       x-data="{ 
         theme: localStorage.getItem('theme') || 'dark',
-        lang: localStorage.getItem('lang') || 'zh'
-      }"
+        lang: localStorage.getItem('lang') || '${lang}'}"
       :class="theme"
       ${raw(hxHeaders)}
       x-init="
         $watch('theme', val => localStorage.setItem('theme', val));
-        $watch('lang', val => localStorage.setItem('lang', val));
+        $watch('lang', val => { 
+          localStorage.setItem('lang', val);
+          if (window.setLang) {
+            window.setLang(val);
+          } else {
+            window.__LANG__ = val;
+            window.__I18N__ = val === 'en' ? window.__I18N_EN__ : window.__I18N_ZH__;
+          }
+        });
       ">
   ${raw(headerHtml)}
   ${children}

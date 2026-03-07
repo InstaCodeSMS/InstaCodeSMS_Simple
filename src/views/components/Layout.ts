@@ -2,11 +2,12 @@ import { html, raw } from 'hono/html'
 import type { Child } from 'hono/jsx'
 import Header from './Header'
 import Footer from './Footer'
+import { getI18nScript, getHtmlLang, type Language } from '@/i18n'
 
 interface LayoutProps {
   title: string
   children: Child
-  lang?: string
+  lang?: Language
   showHeader?: boolean
   showFooter?: boolean
   csrfToken?: string
@@ -20,14 +21,15 @@ interface LayoutProps {
  * 
  * @param title - 页面标题
  * @param children - 页面主体内容
- * @param lang - 语言设置，默认 zh-CN
+ * @param lang - 语言设置，默认 'zh'
  * @param showHeader - 是否显示导航栏，默认 true
  * @param showFooter - 是否显示页脚，默认 true
+ * @param csrfToken - CSRF 令牌
  */
 export default function Layout({ 
   title, 
   children, 
-  lang = 'zh-CN',
+  lang = 'zh',
   showHeader = true,
   showFooter = true,
   csrfToken = ''
@@ -36,9 +38,13 @@ export default function Layout({
   const footerHtml = showFooter ? Footer() : ''
   // 构建 hx-headers 属性
   const hxHeaders = csrfToken ? `hx-headers='{"X-CSRF-Token": "${csrfToken}"}'` : ''
+  // 生成 i18n 脚本
+  const i18nScript = getI18nScript(lang)
+  // 获取 HTML lang 属性
+  const htmlLang = getHtmlLang(lang)
   
   return html`<!DOCTYPE html>
-<html lang="${lang}">
+<html lang="${htmlLang}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -49,6 +55,10 @@ export default function Layout({
   <script src="https://unpkg.com/htmx.org@2.0.8"></script>
   <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <!-- 全局 i18n 脚本 - 必须在 Alpine.js 之前加载 -->
+  <script>
+${i18nScript}
+  </script>
   <style>
     [x-cloak] { display: none !important; }
     
@@ -128,13 +138,21 @@ export default function Layout({
 <body class="min-h-screen transition-colors duration-300" 
       x-data="{ 
         theme: localStorage.getItem('theme') || 'dark',
-        lang: localStorage.getItem('lang') || 'zh'
+        lang: localStorage.getItem('lang') || '${lang}'
       }"
       :class="theme"
       ${raw(hxHeaders)}
       x-init="
         $watch('theme', val => localStorage.setItem('theme', val));
-        $watch('lang', val => localStorage.setItem('lang', val));
+        $watch('lang', val => { 
+          localStorage.setItem('lang', val);
+          if (window.setLang) {
+            window.setLang(val);
+          } else {
+            window.__LANG__ = val;
+            window.__I18N__ = val === 'en' ? window.__I18N_EN__ : window.__I18N_ZH__;
+          }
+        });
       ">
   ${raw(headerHtml)}
   ${children}

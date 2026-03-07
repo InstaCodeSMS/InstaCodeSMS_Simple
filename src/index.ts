@@ -1,5 +1,6 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { languageDetector } from 'hono/language'
 
 // 导入 CSRF 中间件
 import { csrfProtection } from './middleware/csrf'
@@ -31,6 +32,7 @@ import { createUpstreamClient } from './adapters/upstream'
 
 // 导入类型
 import type { Env } from './types/env'
+import type { Language } from './i18n'
 
 // 创建应用
 const app = new Hono<{ Bindings: Env }>()
@@ -39,68 +41,98 @@ const app = new Hono<{ Bindings: Env }>()
 app.use('*', paymentStrategyInitializer)  // 初始化支付策略
 app.use('*', requestLogger)  // 请求日志 + request-id
 app.use('*', cors())
+app.use('*', languageDetector({
+  supportedLanguages: ['zh', 'en'],
+  fallbackLanguage: 'en'
+}))
 
 // CSRF 保护
 app.use('*', csrfProtection)
 
 // ========== 页面路由 ==========
 
-// 首页
+// 首页 - 重定向到对应语言版本
 app.get('/', (c) => {
-  const csrfToken = c.var.csrfToken || ''
-  const html = `<!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+  const lang = c.get('language') as Language
+  return c.redirect(`/${lang}`)
+})
+
+// 重定向：无语言前缀 → 带语言前缀
+app.get('/purchase', (c) => {
+  const lang = c.get('language') as Language
+  return c.redirect(`/${lang}/purchase`, 302)
+})
+
+app.get('/receive', (c) => {
+  const lang = c.get('language') as Language
+  return c.redirect(`/${lang}/receive`, 302)
+})
+
+app.get('/checkout', (c) => {
+  const lang = c.get('language') as Language
+  return c.redirect(`/${lang}/checkout`, 302)
+})
+
+app.get('/success', (c) => {
+  const lang = c.get('language') as Language
+  return c.redirect(`/${lang}/success`, 302)
+})
+
+// 语言首页
+app.get('/:lang', (c) => {
+  const lang = c.req.param('lang') as Language
+  return c.html(`<!DOCTYPE html>
+<html lang="${lang}" data-theme="light">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SimpleFaka - 虚拟手机号码接码平台</title>
+  <title>SimpleFaka</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://cdn.jsdelivr.net/npm/daisyui@5/dist/full.min.css" rel="stylesheet" type="text/css" />
-  <script src="https://unpkg.com/htmx.org@2.0.8"></script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="min-h-screen bg-base-200 flex flex-col items-center justify-center" hx-headers='{"X-CSRF-Token": "${csrfToken}"}'>
+<body class="min-h-screen bg-base-200 flex flex-col items-center justify-center">
   <div class="text-center">
     <h1 class="text-4xl font-bold mb-4">
       <span class="text-primary">SIMPLE</span><span class="text-secondary">FAKA</span>
     </h1>
-    <p class="text-lg opacity-70 mb-8">虚拟手机号码接码平台</p>
     <div class="flex gap-4 justify-center">
-      <a href="/purchase" class="btn btn-primary">购买服务</a>
-      <a href="/receive" class="btn btn-secondary">接码终端</a>
+      <a href="/${lang}/purchase" class="btn btn-primary">购买服务</a>
+      <a href="/${lang}/receive" class="btn btn-secondary">接码终端</a>
     </div>
   </div>
 </body>
-</html>`
-  return c.html(html)
+</html>`)
 })
 
 // 购买服务页面
-app.get('/purchase', (c) => {
+app.get('/:lang/purchase', (c) => {
   const csrfToken = c.var.csrfToken || ''
-  // 直接调用 PurchasePage 并传入 csrfToken
-  const html = PurchasePage(csrfToken)
+  const lang = c.req.param('lang') as Language
+  const html = PurchasePage(csrfToken, lang)
   return c.html(html)
 })
 
 // 接码终端页面
-app.get('/receive', (c) => {
+app.get('/:lang/receive', (c) => {
   const csrfToken = c.var.csrfToken || ''
-  const html = ReceivePage(csrfToken)
+  const lang = c.req.param('lang') as Language
+  const html = ReceivePage(csrfToken, lang)
   return c.html(html)
 })
 
 // 结算页面
-app.get('/checkout', (c) => {
+app.get('/:lang/checkout', (c) => {
   const csrfToken = c.var.csrfToken || ''
-  const html = CheckoutPage(csrfToken)
+  const lang = c.req.param('lang') as Language
+  const html = CheckoutPage(csrfToken, lang)
   return c.html(html)
 })
 
 // 支付成功页面
-app.get('/success', (c) => {
+app.get('/:lang/success', (c) => {
   const csrfToken = c.var.csrfToken || ''
-  const html = SuccessPage(csrfToken)
+  const lang = c.req.param('lang') as Language
+  const html = SuccessPage(csrfToken, lang)
   return c.html(html)
 })
 
