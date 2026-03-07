@@ -143,9 +143,34 @@ export interface Translations {
     copy_failed: string
   }
   footer: {
-    contact: string
+    brand: {
+      slogan: string
+      features: string
+    }
+    products: {
+      title: string
+      smsCode: string
+      virtualNumber: string
+      bulkPurchase: string
+      pricing: string
+    }
+    support: {
+      title: string
+      guide: string
+      apiDocs: string
+      faq: string
+      status: string
+    }
+    contact: {
+      title: string
+      telegram: string
+      facebook: string
+      twitter: string
+      youtube: string
+    }
+    copyright: string
     privacy: string
     terms: string
-    copyright: string
+    status: string
   }
 }

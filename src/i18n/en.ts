@@ -145,9 +145,34 @@ export const en: Translations = {
   },
   
   footer: {
-    contact: 'Contact',
+    brand: {
+      slogan: 'Professional SMS Verification Platform',
+      features: 'Secure · Fast · Reliable'
+    },
+    products: {
+      title: 'Products',
+      smsCode: 'SMS Verification',
+      virtualNumber: 'Virtual Numbers',
+      bulkPurchase: 'Bulk Purchase',
+      pricing: 'Pricing'
+    },
+    support: {
+      title: 'Support',
+      guide: 'User Guide',
+      apiDocs: 'API Docs',
+      faq: 'FAQ',
+      status: 'Service Status'
+    },
+    contact: {
+      title: 'Follow Us',
+      telegram: 'Telegram',
+      facebook: 'Facebook',
+      twitter: 'Twitter',
+      youtube: 'YouTube'
+    },
+    copyright: '© 2026 SIMPLEFAKA',
     privacy: 'Privacy Policy',
     terms: 'Terms of Service',
-    copyright: 'All rights reserved'
+    status: 'Service Status'
   }
 }

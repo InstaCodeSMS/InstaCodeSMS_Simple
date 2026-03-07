@@ -145,9 +145,34 @@ export const zh: Translations = {
   },
   
   footer: {
-    contact: '联系支持',
+    brand: {
+      slogan: '专业的接码平台',
+      features: '安全 · 快速 · 稳定'
+    },
+    products: {
+      title: '产品服务',
+      smsCode: '短信接码',
+      virtualNumber: '虚拟号码',
+      bulkPurchase: '批量购买',
+      pricing: '价格方案'
+    },
+    support: {
+      title: '帮助支持',
+      guide: '使用指南',
+      apiDocs: 'API文档',
+      faq: '常见问题',
+      status: '服务状态'
+    },
+    contact: {
+      title: '联系我们',
+      telegram: 'Telegram',
+      facebook: 'Facebook',
+      twitter: 'Twitter',
+      youtube: 'YouTube'
+    },
+    copyright: '© 2026 SIMPLEFAKA',
     privacy: '隐私政策',
     terms: '服务条款',
-    copyright: '版权所有'
+    status: '服务状态'
   }
 }
