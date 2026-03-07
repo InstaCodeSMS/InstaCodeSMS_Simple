@@ -8,16 +8,17 @@ import type { Translations } from './types'
 
 export const en: Translations = {
   common: {
+    brand_name: 'InstaCodeSMS',
     loading: 'Loading...',
-    error: 'An error occurred',
+    error: 'Error occurred',
     confirm: 'Confirm',
     cancel: 'Cancel',
     copy: 'Copy',
     copied: 'Copied to clipboard',
     search: 'Search',
     theme: {
-      dark: 'Switch to Dark Mode',
-      light: 'Switch to Light Mode'
+      dark: 'Switch to dark mode',
+      light: 'Switch to light mode'
     }
   },
   

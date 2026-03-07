@@ -12,6 +12,7 @@ export interface TranslationMessages {
 
 export interface Translations {
   common: {
+    brand_name: string
     loading: string
     error: string
     confirm: string

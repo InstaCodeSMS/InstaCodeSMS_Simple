@@ -19,8 +19,8 @@ function Header(lang: Language): string {
         <div class="w-9 h-9 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
           <i class="fas fa-bolt text-white text-sm"></i>
         </div>
-        <span class="text-xl font-black tracking-tight">
-          <span style="color: var(--accent-blue)">SIMPLE</span><span class="text-purple-500">FAKA</span>
+        <span class="text-xl font-black tracking-tight" style="color: var(--accent-blue)" x-text="t('common.brand_name')">
+          InstaCodeSMS
         </span>
       </a>
       
@@ -125,20 +125,20 @@ function Footer(): string {
     <div class="max-w-7xl mx-auto">
       <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
         <!-- 品牌名 -->
-        <span class="text-xl font-black tracking-tight">
-          <span style="color: var(--accent-blue)">SIMPLE</span><span class="text-purple-500">FAKA</span>
+        <span class="text-xl font-black tracking-tight" style="color: var(--accent-blue)" x-text="t('common.brand_name')">
+          InstaCodeSMS
         </span>
         
         <!-- 链接 -->
-        <div class="flex items-center gap-6 text-sm" style="color: var(--text-secondary);">
-          <a href="#" class="hover:opacity-80 transition-opacity">联系支持</a>
-          <a href="#" class="hover:opacity-80 transition-opacity">隐私政策</a>
-          <a href="#" class="hover:opacity-80 transition-opacity">服务条款</a>
+        <div class="flex items-center gap-6text-sm" style="color: var(--text-secondary);">
+          <a href="#" class="hover:opacity-80 transition-opacity" x-text="t('footer.contact')">联系支持</a>
+          <a href="#" class="hover:opacity-80 transition-opacity" x-text="t('footer.privacy')">隐私政策</a>
+          <a href="#" class="hover:opacity-80 transition-opacity" x-text="t('footer.terms')">服务条款</a>
         </div>
         
         <!-- 版权 -->
         <p class="text-xs" style="color: var(--text-muted);">
-          © 2026 SIMPLEFAKA PROTOCOL. 版权所有.
+          © 2026 <span x-text="t('common.brand_name')">InstaCodeSMS</span>. <span x-text="t('footer.copyright')">版权所有</span>.
         </p>
       </div>
     </div>
@@ -193,7 +193,6 @@ ${raw(i18nScript)}
   </script>
   <style>
     [x-cloak] { display: none !important; }
-    
     /* ===== 主题变量系统 ===== */
     .dark {
       --bg-primary: rgb(12, 15, 22);
@@ -212,10 +211,8 @@ ${raw(i18nScript)}
       
       --accent-blue: rgb(37, 99, 235);
       --accent-blue-hover: rgb(59, 130, 246);
-      
       --shadow-card: rgba(0, 0, 0, 0.2) 0px 10px 15px -3px;
-      --shadow-modal: rgba(0, 0, 0, 0.4) 0px 25px 50px -12px;
-    }
+      --shadow-modal: rgba(0, 0, 0, 0.4) 0px 25px 50px -12px;}
     
     .light {
       --bg-primary: rgb(248, 250, 252);
@@ -245,7 +242,7 @@ ${raw(i18nScript)}
       transition: background-color 0.3s ease, color 0.3s ease;
     }
     
-    /* 自定义滚动条 */
+    /*自定义滚动条 */
     .custom-scrollbar::-webkit-scrollbar {
       width: 4px;
     }
@@ -257,7 +254,7 @@ ${raw(i18nScript)}
       border-radius: 10px;
     }
     
-    /* 弹窗动画 */
+    /*弹窗动画 */
     .modal-enter-active, .modal-leave-active {
       transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     }

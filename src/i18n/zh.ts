@@ -8,6 +8,7 @@ import type { Translations } from './types'
 
 export const zh: Translations = {
   common: {
+    brand_name: '即刻接码',
     loading: '加载中...',
     error: '发生错误',
     confirm: '确认',
