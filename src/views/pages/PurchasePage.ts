@@ -267,17 +267,17 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
          style="background-color: var(--bg-secondary);">
       <div class="flex items-center gap-2 text-green-500 mb-2">
         <i class="fas fa-check-circle"></i>
-        <span class="font-medium" x-text="lang === 'zh' ? '购买成功！' : 'Purchase Successful!'"></span>
+        <span class="font-medium" x-text="$root.lang === 'zh' ? '购买成功！' : 'Purchase Successful!'"></span>
       </div>
       <div class="text-sm" style="color: var(--text-primary);">
-        <p x-text="lang === 'zh' ? '订单号: ' : 'Order ID: ' + (orderResult?.ordernum || '')" x-show="orderResult?.ordernum">
-          <span x-text="lang === 'zh' ? '订单号: ' : 'Order ID: '"></span>
+        <p x-show="orderResult?.ordernum">
+          <span x-text="$root.lang === 'zh' ? '订单号: ' : 'Order ID: '"></span>
           <span class="font-mono" x-text="orderResult?.ordernum"></span>
         </p>
         <p class="mt-1" style="color: var(--text-muted);">
-          <span x-text="lang === 'zh' ? '请前往' : 'Please go to'"></span>
-          <a :href="'/' + this.lang + '/receive'" class="text-blue-500 hover:underline" x-text="t('nav.receive')"></a>
-          <span x-text="lang === 'zh' ? '查看验证码' : 'to view codes'"></span>
+          <span x-text="$root.lang === 'zh' ? '请前往' : 'Please go to'"></span>
+          <a :href="'/' + $root.lang + '/receive'" class="text-blue-500 hover:underline" x-text="t('nav.receive')"></a>
+          <span x-text="$root.lang === 'zh' ? '查看验证码' : 'to view codes'"></span>
         </p>
       </div>
       <button @click="orderResult = null" class="absolute top-2 right-2 text-xs opacity-50 hover:opacity-100">
@@ -364,7 +364,9 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
         
         getServiceIcon(id) {
           const emojis = ['📱', '⚡', '🛡️', '🔑', '🚀', '🤖', '💬', '🌌', '📡', '🌐', '📧', '🎮', '🎬', '🎵', '📚'];
-          return emojis[id % emojis.length];
+          // id 现在是 UUID 字符串，使用字符串的字符码求和来选择图标
+          const hash = String(id).split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+          return emojis[hash % emojis.length];
         },
         
         getSortLabel() {
@@ -393,13 +395,16 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
           this.errorMessage = null;
           this.isModalOpen = true;
           this.prefixes = [];
-          fetch('/api/services/' + service.id + '/prefixes')
-            .then(res => res.json())
-            .then(data => {
-              if (data.success) {
-                this.prefixes = data.data.list || [];
-              }
-            });
+          // 使用 upstream_id 调用 prefixes API（上游 API 需要 upstream_id）
+          if (service.upstream_id) {
+            fetch('/api/services/' + service.upstream_id + '/prefixes')
+              .then(res => res.json())
+              .then(data => {
+                if (data.success) {
+                  this.prefixes = data.data.list || [];
+                }
+              });
+          }
         },
         
         closeModal() {

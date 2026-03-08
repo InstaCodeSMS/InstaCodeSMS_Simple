@@ -31,7 +31,7 @@ export const CreatePaymentSchema = z.object({
   amount: z.number().positive('金额必须大于0'),
   payment_method: z.nativeEnum(PaymentMethod),
   product_info: z.object({
-    service_id: z.number().int().positive(),
+    service_id: z.string().min(1, '产品ID不能为空'),  // UUID 字符串
     title: z.string().min(1),
     quantity: z.number().int().positive(),
     expiry: z.number().int().nonnegative(),

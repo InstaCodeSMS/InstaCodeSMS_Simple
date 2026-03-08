@@ -22,8 +22,10 @@ app.get('/', async (c) => {
     const result = await service.getProductList()
 
     // 转换为前端兼容的 ServiceItem 格式
+    // 使用 product.id (UUID) 作为唯一标识，避免 upstream_id 重复
     const list: ServiceItem[] = result.list.map((item) => ({
-      id: item.upstream_id ?? 0,           // 前端使用 upstream_id 作为产品标识
+      id: item.id,                         // 使用 products.id (UUID) 作为唯一标识
+      upstream_id: item.upstream_id ?? 0,  // 上游产品 ID，用于 API 调用
       cate_id: item.cate_id ?? 0,          // 分类 ID
       title: item.title,                   // 产品名称
       description: item.description,       // 产品描述
@@ -81,7 +83,8 @@ app.get('/:id', async (c) => {
       success: true,
       message: '获取服务详情成功',
       data: {
-        id: product.upstream_id ?? 0,
+        id: product.id,
+        upstream_id: product.upstream_id ?? 0,
         cate_id: product.cate_id ?? 0,
         title: product.title,
         description: product.description,

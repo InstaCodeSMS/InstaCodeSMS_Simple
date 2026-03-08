@@ -26,8 +26,8 @@ export enum PaymentStatus {
  * 产品信息快照（用于创建订单时保存）
  */
 export interface ProductSnapshot {
-  /** 服务 ID */
-  service_id: number
+  /** 服务 ID (UUID) */
+  service_id: string
   /** 服务标题 */
   title: string
   /** 数量 */

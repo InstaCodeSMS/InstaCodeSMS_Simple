@@ -171,7 +171,8 @@ export interface ExpiryOption {
 
 // 服务列表响应
 export interface ServiceItem {
-  id: number
+  id: string            // products.id (UUID)，唯一标识
+  upstream_id: number   // 上游产品 ID，用于 API 调用
   cate_id: number
   title: string
   description?: string | null

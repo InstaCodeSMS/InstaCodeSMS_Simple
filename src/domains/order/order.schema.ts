@@ -24,8 +24,8 @@ export enum PaymentOrderStatus {
  * 产品信息快照
  */
 export interface ProductSnapshot {
-  /** 服务 ID */
-  service_id: number
+  /** 服务 ID (UUID) */
+  service_id: string
   /** 服务标题 */
   title: string
   /** 数量 */
@@ -123,7 +123,7 @@ export interface UpdatePaymentOrderParams {
 
 // Zod 验证 schema
 export const ProductSnapshotSchema = z.object({
-  service_id: z.number(),
+  service_id: z.string(),  // UUID 字符串
   title: z.string(),
   quantity: z.number(),
   expiry: z.number(),
