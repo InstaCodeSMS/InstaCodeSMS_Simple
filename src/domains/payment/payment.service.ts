@@ -40,6 +40,14 @@ export class PaymentService {
       signType: (this.env.EPAY_SIGN_TYPE as 'MD5' | 'RSA') || 'MD5',
     })
 
+    // 支付方式映射到易支付 channel
+    const channelMap: Record<string, 'alipay' | 'wxpay' | 'qqpay' | 'usdt.trc20'> = {
+      'alipay': 'alipay',
+      'epay': 'alipay',
+      'usdt': 'usdt.trc20',
+    }
+    const channel = channelMap[input.payment_method] || 'alipay'
+
     const baseUrl = this.env.API_BASE_URL
     const payment = await epayClient.createPayment({
       orderId: input.order_id,
@@ -47,7 +55,7 @@ export class PaymentService {
       name: input.product_info.title,
       notifyUrl: `${baseUrl}/api/payment/callback/epay`,
       returnUrl: `${baseUrl}/success?order_id=${input.order_id}`,
-      channel: 'alipay',
+      channel,
       clientIp: '127.0.0.1',
     })
 

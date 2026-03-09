@@ -222,19 +222,32 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
             </div>
           </div>
 
-          <!-- Step 4: 支付方式 (固定为支付宝) -->
+          <!-- Step 4: 选择支付方式 -->
           <div class="space-y-4">
             <p class="text-[9px] font-black uppercase tracking-widest" style="color: var(--text-muted);">
               Step 4 / <span x-text="t('purchase.step_payment')"></span>
             </p>
-            <div class="flex items-center gap-4 p-5 rounded-[1.5rem] border border-blue-500 bg-blue-600/10"
-                 style="background-color: var(--bg-tertiary); border-color: var(--border-color-light);">
-              <span class="text-3xl">💳</span>
-              <div>
-                <span class="text-base font-bold block" style="color: var(--text-primary);" x-text="t('purchase.alipay')"></span>
-                <span class="text-[10px]" style="color: var(--text-muted);" x-text="t('purchase.alipay_scan')"></span>
-              </div>
-              <i class="fas fa-check-circle text-blue-500 ml-auto"></i>
+            <div class="grid grid-cols-2 gap-4">
+              <!-- 支付宝 -->
+              <button @click="form.paymentMethod = 'alipay'"
+                      :class="form.paymentMethod === 'alipay' ? 'border-blue-500 bg-blue-600/10 ring-1 ring-blue-500/30' : 'border-[rgba(200,210,240,0.08)]'"
+                      class="relative flex flex-col items-center p-5 rounded-[1.5rem] border transition-all text-left group"
+                      :style="theme === 'light' && form.paymentMethod !== 'alipay' ? 'background-color: var(--bg-tertiary); border-color: var(--border-color-light);' : ''">
+                <span class="text-3xl mb-2">💳</span>
+                <span class="text-sm font-bold" style="color: var(--text-primary);" x-text="t('purchase.alipay')"></span>
+                <span class="text-[10px]" style="color: var(--text-muted);">CNY</span>
+                <i x-show="form.paymentMethod === 'alipay'" class="fas fa-check-circle text-blue-500 absolute top-3 right-3"></i>
+              </button>
+              <!-- USDT TRC20 -->
+              <button @click="form.paymentMethod = 'usdt'"
+                      :class="form.paymentMethod === 'usdt' ? 'border-blue-500 bg-blue-600/10 ring-1 ring-blue-500/30' : 'border-[rgba(200,210,240,0.08)]'"
+                      class="relative flex flex-col items-center p-5 rounded-[1.5rem] border transition-all text-left group"
+                      :style="theme === 'light' && form.paymentMethod !== 'usdt' ? 'background-color: var(--bg-tertiary); border-color: var(--border-color-light);' : ''">
+                <span class="text-3xl mb-2">₮</span>
+                <span class="text-sm font-bold" style="color: var(--text-primary);">USDT</span>
+                <span class="text-[10px]" style="color: var(--text-muted);">TRC20</span>
+                <i x-show="form.paymentMethod === 'usdt'" class="fas fa-check-circle text-blue-500 absolute top-3 right-3"></i>
+              </button>
             </div>
           </div>
 
@@ -429,7 +442,7 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
               },
               body: JSON.stringify({
                 amount: totalAmount,
-                payment_method: 'epay',
+                payment_method: this.form.paymentMethod,
                 product_info: {
                   service_id: this.activeService.id,
                   title: this.activeService.title,
@@ -438,7 +451,7 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
                   expiry_days: selectedOption?.label || '未知',
                   unit_price: unitPrice
                 },
-                trade_type: 'alipay'
+                trade_type: this.form.paymentMethod === 'usdt' ? 'usdt.trc20' : 'alipay'
               })
             });
             

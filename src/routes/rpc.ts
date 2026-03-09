@@ -49,7 +49,7 @@ app.post('/payment/create', async (c) => {
     const result = await paymentService.createPayment({
       order_id: orderId,
       amount: body.amount,
-      payment_method: 'epay' as PaymentMethod,
+      payment_method: body.payment_method as PaymentMethod,
       product_info: body.product_info,
       trade_type: body.trade_type,
       base_url: baseUrl,

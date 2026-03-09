@@ -17,7 +17,7 @@ export interface EpayCreatePaymentRequest {
   name: string
   notifyUrl: string
   returnUrl: string
-  channel?: 'wechat' | 'alipay' | 'qq' | 'usdt'
+  channel?: 'alipay' | 'wxpay' | 'qqpay' | 'usdt.trc20'
   clientIp?: string
 }
 
