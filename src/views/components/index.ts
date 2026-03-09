@@ -69,20 +69,22 @@ function Header(lang: Language): string {
             x-transition
             class="absolute right-0 top-11 w-28 rounded-xl overflow-hidden shadow-lg z-50"
             style="background-color: var(--bg-secondary); border: 0.667px solid var(--border-color-light);">
-            <a href="/zh/purchase" 
-               @click="lang = 'zh'; langOpen = false; localStorage.setItem('lang', 'zh');"
-               class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors"
+            <button 
+               type="button"
+               @click="langOpen = false; window.location.href = window.location.pathname.replace(/^\\/(zh|en)/, '/zh')"
+               class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors cursor-pointer"
                style="color: var(--text-primary);">
               <img src="https://flagcdn.com/w40/cn.png" alt="zh" class="w-5 h-5 rounded-sm" />
               中文
-            </a>
-            <a href="/en/purchase" 
-               @click="lang = 'en'; langOpen = false; localStorage.setItem('lang', 'en');"
-               class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors"
+            </button>
+            <button 
+               type="button"
+               @click="langOpen = false; window.location.href = window.location.pathname.replace(/^\\/(zh|en)/, '/en')"
+               class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors cursor-pointer"
                style="color: var(--text-primary);">
               <img src="https://flagcdn.com/w40/us.png" alt="en" class="w-5 h-5 rounded-sm" />
               English
-            </a>
+            </button>
           </div>
         </div>
         
