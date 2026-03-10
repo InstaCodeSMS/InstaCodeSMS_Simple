@@ -641,19 +641,61 @@ export default function ReceivePage(csrfToken: string = '', lang: Language = 'zh
         playNotification(text) {
           if (!this.notificationEnabled) return;
           
+          console.log('[Audio] Notification triggered, text length:', text.length);
+          
           // 优先使用预录制音频
           const audioFile = this.lang === 'zh' ? '/audio/zh_notify.mp3' : '/audio/en_notify.mp3';
+          console.log('[Audio] Selected audio file:', audioFile);
+          
           const audio = new Audio(audioFile);
           
-          audio.oncanplaythrough = () => {
-            audio.play().catch(() => {
-              // 回退到原有方案
-              this.playFallbackAudio();
+          // 添加调试日志
+          console.log('[Audio] Creating new Audio object for:', audioFile);
+          
+          // 主动加载音频
+          audio.load();
+          console.log('[Audio] Audio load() called');
+          
+          // 更全面的事件监听
+          audio.onloadeddata = () => {
+            console.log('[Audio] Audio loaded successfully, attempting to play');
+            audio.play().then(() => {
+              console.log('[Audio] Audio playback started successfully');
+            }).catch((error) => {
+              console.log('[Audio] Audio play failed:', error);
+              this.playFallbackAudio('play_failed');
             });
           };
           
-          audio.onerror = () => {
-            this.playFallbackAudio();
+          audio.onerror = (error) => {
+            console.log('[Audio] Audio load error:', error);
+            this.playFallbackAudio('load_error');
+          };
+          
+          audio.onstalled = () => {
+            console.log('[Audio] Audio stalled, falling back');
+            this.playFallbackAudio('stalled');
+          };
+          
+          audio.onabort = () => {
+            console.log('[Audio] Audio aborted, falling back');
+            this.playFallbackAudio('aborted');
+          };
+          
+          // 设置超时，如果3秒内没有播放成功就回退
+          const timeoutId = setTimeout(() => {
+            if (!audio.paused && audio.currentTime > 0) {
+              console.log('[Audio] Audio is playing after timeout check');
+            } else {
+              console.log('[Audio] Audio timeout (3s), falling back');
+              this.playFallbackAudio('timeout');
+            }
+          }, 3000);
+          
+          // 清理超时定时器
+          audio.onplay = () => {
+            clearTimeout(timeoutId);
+            console.log('[Audio] Audio started playing, cleared timeout');
           };
           
           // 保持原有的通知和震动功能
@@ -669,21 +711,65 @@ export default function ReceivePage(csrfToken: string = '', lang: Language = 'zh
           }
         },
         
-        playFallbackAudio() {
+        playFallbackAudio(reason = 'unknown') {
+          console.log('[Audio] Fallback triggered, reason:', reason);
           try {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            
+            // 根据不同情况生成不同的音效
+            let baseFreq = 700;
+            let duration = 0.4;
+            let waveType = 'sine';
+            
+            if (reason === 'play_failed') {
+              // 成功提示音：上升音调
+              baseFreq = 600;
+              duration = 0.5;
+              waveType = 'triangle'; // 更柔和
+            } else if (reason === 'load_error') {
+              // 错误提示音：下降音调
+              baseFreq = 800;
+              duration = 0.3;
+              waveType = 'sawtooth'; // 更明显
+            } else {
+              // 通用提示音
+              baseFreq = 700;
+              duration = 0.4;
+              waveType = 'sine';
+            }
+            
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
+            
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
-            oscillator.frequency.value = 800;
-            oscillator.type = 'sine';
-            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+            
+            // 设置振荡器
+            oscillator.type = waveType;
+            oscillator.frequency.setValueAtTime(baseFreq, audioContext.currentTime);
+            
+            // 添加音调变化
+            if (reason === 'play_failed') {
+              // 上升音调
+              oscillator.frequency.exponentialRampToValueAtTime(baseFreq + 200, audioContext.currentTime + duration * 0.7);
+            } else if (reason === 'load_error') {
+              // 下降音调
+              oscillator.frequency.exponentialRampToValueAtTime(baseFreq - 200, audioContext.currentTime + duration * 0.7);
+            }
+            
+            // 更自然的音量包络
+            gainNode.gain.setValueAtTime(0.0, audioContext.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+            gainNode.gain.linearRampToValueAtTime(0.1, audioContext.currentTime + duration * 0.8);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            // 启动和停止
             oscillator.start(audioContext.currentTime);
-            oscillator.stop(audioContext.currentTime + 0.3);
+            oscillator.stop(audioContext.currentTime + duration);
+            
+            console.log('[Audio] Improved audio played successfully, type:', waveType, 'duration:', duration);
           } catch (e) {
-            console.log('Audio notification failed:', e);
+            console.log('[Audio] Audio failed:', e);
           }
         }
       };
