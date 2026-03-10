@@ -349,7 +349,7 @@ export default function ReceivePage(csrfToken: string = '', lang: Language = 'zh
           });
           
           const urlParams = new URLSearchParams(window.location.search);
-          const tokenParam = urlParams.gethis.t('token');
+          const tokenParam = urlParams.get('token');
           if (tokenParam) {
             this.token = tokenParam.replace(/[^a-zA-Z0-9]/g, '');
             this.$nextTick(() => this.startRadar());
