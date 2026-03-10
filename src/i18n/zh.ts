@@ -58,6 +58,8 @@ export const zh: Translations = {
     not_found: '未找到匹配的服务',
     alipay: '支付宝',
     alipay_scan: '支付宝扫码支付',
+    test_mode_notice: '本页面目前处于测试阶段，暂不支持真实下单购买，请勿进行实际支付操作。',
+    test_mode_warning: '测试模式'
   },
   
   receive: {

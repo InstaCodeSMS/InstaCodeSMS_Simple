@@ -60,6 +60,8 @@ export interface Translations {
     not_found: string
     alipay: string
     alipay_scan: string
+    test_mode_notice: string
+    test_mode_warning: string
   }
   receive: {
     terminal_receiver: string

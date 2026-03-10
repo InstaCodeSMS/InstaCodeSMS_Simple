@@ -19,6 +19,22 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
          :class="theme === 'dark' ? 'bg-blue-600/5 blur-[120px]' : 'bg-blue-400/10 blur-[150px]'"></div>
     
     <div class="max-w-7xl mx-auto relative z-10">
+      <!-- 测试提示栏 -->
+      <div class="mb-8 p-4 rounded-2xl border-2 border-yellow-500/30 bg-yellow-500/5 backdrop-blur-sm"
+           x-show="!hideTestNotice"
+           style="border-color: var(--border-color); background-color: var(--bg-tertiary);">
+        <div class="flex items-center gap-3">
+          <span class="text-yellow-500 text-lg">⚠️</span>
+          <div class="flex-1">
+            <div class="text-sm font-bold text-yellow-500 uppercase tracking-wider" x-text="t('purchase.test_mode_warning')"></div>
+            <div class="text-xs mt-1" style="color: var(--text-muted);" x-text="t('purchase.test_mode_notice')"></div>
+          </div>
+          <button @click="hideTestNotice = true"
+                  class="text-xs opacity-50 hover:opacity-100 transition-colors"
+                  style="color: var(--text-muted);">不再显示</button>
+        </div>
+      </div>
+
       <!-- 标题区域 -->
       <div class="mb-16 flex flex-col lg:flex-row lg:items-end justify-between gap-10">
         <div>
@@ -330,6 +346,7 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
           { value: 5, days: '60-80', multiplier: 1, discount: 0 },
           { value: 6, days: '80+', multiplier: 1.1, discount: 0 }
         ],
+        hideTestNotice: localStorage.getItem('hideTestNotice') === 'true',
         t(key) {
           return window.t ? window.t(key) : key;
         },
@@ -363,6 +380,7 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
         init() {
           this.$watch('theme', val => localStorage.setItem('theme', val));
           this.$watch('lang', val => localStorage.setItem('lang', val));
+          this.$watch('hideTestNotice', val => localStorage.setItem('hideTestNotice', val ? 'true' : 'false'));
           this.loading = true;
           fetch('/api/services')
             .then(res => res.json())

@@ -58,6 +58,8 @@ export const en: Translations = {
     not_found: 'No matching services found',
     alipay: 'Alipay',
     alipay_scan: 'Alipay Scan to Pay',
+    test_mode_notice: 'This page is currently in testing phase. Real orders are not supported. Please do not make actual payments.',
+    test_mode_warning: 'Test Mode'
   },
   
   receive: {
