@@ -640,12 +640,36 @@ export default function ReceivePage(csrfToken: string = '', lang: Language = 'zh
         
         playNotification(text) {
           if (!this.notificationEnabled) return;
+          
+          // 优先使用预录制音频
+          const audioFile = this.lang === 'zh' ? '/audio/zh_notify.mp3' : '/audio/en_notify.mp3';
+          const audio = new Audio(audioFile);
+          
+          audio.oncanplaythrough = () => {
+            audio.play().catch(() => {
+              // 回退到原有方案
+              this.playFallbackAudio();
+            });
+          };
+          
+          audio.onerror = () => {
+            this.playFallbackAudio();
+          };
+          
+          // 保持原有的通知和震动功能
           if ('Notification' in window && Notification.permission === 'granted') {
             new Notification('SimpleFaka - ' + this.t('receive.new_signal'), {
               body: text.substring(0, 100),
               icon: '/logo.png'
             });
           }
+          
+          if (navigator.vibrate) {
+            navigator.vibrate([200, 100, 200]);
+          }
+        },
+        
+        playFallbackAudio() {
           try {
             const audioContext = new (window.AudioContext || window.webkitAudioContext)();
             const oscillator = audioContext.createOscillator();
@@ -660,9 +684,6 @@ export default function ReceivePage(csrfToken: string = '', lang: Language = 'zh
             oscillator.stop(audioContext.currentTime + 0.3);
           } catch (e) {
             console.log('Audio notification failed:', e);
-          }
-          if (navigator.vibrate) {
-            navigator.vibrate([200, 100, 200]);
           }
         }
       };
