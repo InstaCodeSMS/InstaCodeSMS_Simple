@@ -7,7 +7,7 @@
  * 使用全局 t() 函数实现多语言支持
  */
 
-import Layout from '@/views/components/index.ts'
+import Layout from '@/views/components/Layout'
 import { raw } from 'hono/html'
 import type { Language } from '@/i18n'
 

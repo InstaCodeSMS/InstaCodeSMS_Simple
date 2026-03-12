@@ -4,6 +4,10 @@
  */
 
 import { Hono } from 'hono'
+import { RegisterPage } from '../../views/pages/RegisterPage'
+import { LoginPage } from '../../views/pages/LoginPage'
+import { DashboardPage } from '../../views/pages/DashboardPage'
+import { requireAuth } from '../../middleware/auth'
 import type { Env } from '../../types/env'
 
 const app = new Hono<{ Bindings: Env }>()
@@ -39,6 +43,18 @@ app.get('/', (c) => {
 </body>
 </html>`
   return c.html(html)
+})
+
+app.get('/register', (c) => {
+  return c.html(RegisterPage())
+})
+
+app.get('/login', (c) => {
+  return c.html(LoginPage())
+})
+
+app.get('/dashboard', requireAuth, (c) => {
+  return c.html(DashboardPage())
 })
 
 export default app

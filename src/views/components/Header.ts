@@ -8,7 +8,8 @@
 export default function Header() {
   return `
   <nav class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b transition-colors duration-300"
-       style="background-color: var(--bg-nav); border-color: var(--border-color);">
+       style="background-color: var(--bg-nav); border-color: var(--border-color);"
+       x-data="headerAuth()">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
       <!-- Logo -->
       <a href="/" class="flex items-center gap-3 hover:opacity-80 transition-opacity">
@@ -36,6 +37,74 @@ export default function Header() {
       
       <!-- 右侧操作区 -->
       <div class="flex items-center gap-2">
+        <!-- 用户按钮 -->
+        <div class="relative">
+          <button 
+            @click="userOpen = !userOpen"
+            class="h-9 px-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105"
+            style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color-light);">
+            <!-- 未登录状态 -->
+            <template x-if="!isLoggedIn">
+              <div class="flex items-center gap-2">
+                <i class="fas fa-user-circle text-lg" style="color: var(--text-muted);"></i>
+                <span class="text-sm hidden sm:inline" style="color: var(--text-secondary);" x-text="t('auth.login')"></span>
+              </div>
+            </template>
+            <!-- 已登录状态 -->
+            <template x-if="isLoggedIn">
+              <div class="flex items-center gap-2">
+                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
+                  <span class="text-white text-xs font-bold" x-text="userEmail ? userEmail.charAt(0).toUpperCase() : 'U'"></span>
+                </div>
+                <span class="text-sm hidden sm:inline max-w-[100px] truncate" style="color: var(--text-primary);" x-text="userEmail"></span>
+              </div>
+            </template>
+          </button>
+          <!-- 下拉菜单 -->
+          <div 
+            x-show="userOpen" 
+            x-cloak
+            @click.away="userOpen = false"
+            x-transition
+            class="absolute right-0 top-11 w-40 rounded-xl overflow-hidden shadow-lg z-50"
+            style="background-color: var(--bg-secondary); border: 0.667px solid var(--border-color-light);">
+            <!-- 未登录菜单 -->
+            <template x-if="!isLoggedIn">
+              <div>
+                <a :href="'/' + lang + '/login'" 
+                   class="block px-4 py-3 text-sm transition-colors hover:opacity-80"
+                   style="color: var(--text-primary);">
+                  <i class="fas fa-sign-in-alt mr-2" style="color: var(--accent-blue);"></i>
+                  <span x-text="t('auth.login')"></span>
+                </a>
+                <a :href="'/' + lang + '/register'" 
+                   class="block px-4 py-3 text-sm transition-colors hover:opacity-80"
+                   style="color: var(--text-primary);">
+                  <i class="fas fa-user-plus mr-2" style="color: var(--accent-blue);"></i>
+                  <span x-text="t('auth.register')"></span>
+                </a>
+              </div>
+            </template>
+            <!-- 已登录菜单 -->
+            <template x-if="isLoggedIn">
+              <div>
+                <a :href="'/' + lang + '/dashboard'" 
+                   class="block px-4 py-3 text-sm transition-colors hover:opacity-80"
+                   style="color: var(--text-primary);">
+                  <i class="fas fa-tachometer-alt mr-2" style="color: var(--accent-blue);"></i>
+                  <span x-text="t('dashboard.title')"></span>
+                </a>
+                <button @click="logout(); userOpen = false;" 
+                   class="w-full text-left px-4 py-3 text-sm transition-colors hover:opacity-80"
+                   style="color: var(--text-primary);">
+                  <i class="fas fa-sign-out-alt mr-2 text-red-500"></i>
+                  <span x-text="t('auth.logout')"></span>
+                </button>
+              </div>
+            </template>
+          </div>
+        </div>
+        
         <!-- 主题切换按钮 -->
         <button 
           type="button"
@@ -105,5 +174,49 @@ export default function Header() {
         </div>
       </div>
     </div>
-  </nav>`
+  </nav>
+
+  <script>
+    function headerAuth() {
+      return {
+        isLoggedIn: false,
+        userEmail: '',
+        lang: localStorage.getItem('lang') || 'zh',
+        userOpen: false,
+        
+        init() {
+          this.checkAuth();
+        },
+        
+        t(key) {
+          return window.t ? window.t(key) : key;
+        },
+        
+        async checkAuth() {
+          try {
+            const response = await fetch('/api/user/profile');
+            const data = await response.json();
+            if (data.success && data.data) {
+              this.isLoggedIn = true;
+              this.userEmail = data.data.email;
+            }
+          } catch (error) {
+            this.isLoggedIn = false;
+            this.userEmail = '';
+          }
+        },
+        
+        async logout() {
+          try {
+            await fetch('/api/auth/logout', { method: 'POST' });
+            this.isLoggedIn = false;
+            this.userEmail = '';
+            window.location.href = '/' + this.lang;
+          } catch (error) {
+            console.error('Logout failed:', error);
+          }
+        }
+      }
+    }
+  </script>`
 }

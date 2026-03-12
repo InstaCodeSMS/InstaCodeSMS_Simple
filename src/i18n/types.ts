@@ -175,4 +175,45 @@ export interface Translations {
     terms: string
     status: string
   }
+  auth: {
+    register: string
+    login: string
+    logout: string
+    email: string
+    password: string
+    confirm_password: string
+    password_min_length: string
+    email_invalid: string
+    password_mismatch: string
+    register_success: string
+    register_failed: string
+    login_success: string
+    login_failed: string
+    email_required: string
+    password_required: string
+    email_placeholder: string
+    password_placeholder: string
+    confirm_password_placeholder: string
+    have_account: string
+    no_account: string
+    login_now: string
+    register_now: string
+  }
+  dashboard: {
+    title: string
+    account_info: string
+    balance: string
+    current_balance: string
+    order_stats: string
+    total_orders: string
+    recent_orders: string
+    no_orders: string
+    order_id: string
+    unknown_product: string
+    paid: string
+    pending: string
+    cancelled: string
+    role: string
+    email_label: string
+  }
 }

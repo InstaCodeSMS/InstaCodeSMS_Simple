@@ -57,7 +57,7 @@ export default function Layout({
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <!-- 全局 i18n 脚本 - 必须在 Alpine.js 之前加载 -->
   <script>
-${i18nScript}
+${raw(i18nScript)}
   </script>
   <style>
     [x-cloak] { display: none !important; }

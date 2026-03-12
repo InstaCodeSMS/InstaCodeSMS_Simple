@@ -176,5 +176,48 @@ export const en: Translations = {
     privacy: 'Privacy Policy',
     terms: 'Terms of Service',
     status: 'Service Status'
+  },
+
+  auth: {
+    register: 'Register',
+    login: 'Login',
+    logout: 'Logout',
+    email: 'Email Address',
+    password: 'Password',
+    confirm_password: 'Confirm Password',
+    password_min_length: 'Password must be at least 6 characters',
+    email_invalid: 'Please enter a valid email address',
+    password_mismatch: 'Passwords do not match',
+    register_success: 'Registration successful',
+    register_failed: 'Registration failed',
+    login_success: 'Login successful',
+    login_failed: 'Login failed',
+    email_required: 'Email address is required',
+    password_required: 'Password is required',
+    email_placeholder: 'Enter your email address',
+    password_placeholder: 'Enter your password',
+    confirm_password_placeholder: 'Confirm your password',
+    have_account: 'Already have an account?',
+    no_account: 'Don\'t have an account?',
+    login_now: 'Login now',
+    register_now: 'Register now'
+  },
+
+  dashboard: {
+    title: 'Dashboard',
+    account_info: 'Account Information',
+    balance: 'Account Balance',
+    current_balance: 'Current Balance',
+    order_stats: 'Order Statistics',
+    total_orders: 'Total Orders',
+    recent_orders: 'Recent Orders',
+    no_orders: 'No orders yet',
+    order_id: 'Order ID',
+    unknown_product: 'Unknown Product',
+    paid: 'Paid',
+    pending: 'Pending',
+    cancelled: 'Cancelled',
+    role: 'Role',
+    email_label: 'Email'
   }
 }

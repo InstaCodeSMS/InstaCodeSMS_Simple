@@ -4,6 +4,7 @@
  */
 
 import { Context, Next } from 'hono'
+import { getCookie } from 'hono/cookie'
 import { logUserId } from './logger'
 
 /**
@@ -115,4 +116,50 @@ export function getAuth(c: Context): AuthContext {
 export function isAuthenticated(c: Context): boolean {
   const auth = getAuth(c)
   return auth.isAuthenticated
+}
+
+/**
+ * 用户会话认证中间件
+ * 验证用户登录会话
+ */
+export async function requireAuth(c: Context, next: Next) {
+  const sessionId = getCookie(c, 'auth_session')
+
+  if (!sessionId) {
+    return c.redirect('/login')
+  }
+
+  const { UserService } = await import('../domains/user/user.service')
+  const userService = new UserService(c.env)
+
+  const result = await userService.validateSession(sessionId)
+  if (!result) {
+    return c.redirect('/login')
+  }
+
+  c.set('user', result.user)
+  c.set('sessionId', sessionId)
+
+  await next()
+}
+
+/**
+ * 可选用户认证中间件
+ * 如果有会话则验证，否则继续
+ */
+export async function optionalUserAuth(c: Context, next: Next) {
+  const sessionId = getCookie(c, 'auth_session')
+
+  if (sessionId) {
+    const { UserService } = await import('../domains/user/user.service')
+    const userService = new UserService(c.env)
+
+    const result = await userService.validateSession(sessionId)
+    if (result) {
+      c.set('user', result.user)
+      c.set('sessionId', sessionId)
+    }
+  }
+
+  await next()
 }

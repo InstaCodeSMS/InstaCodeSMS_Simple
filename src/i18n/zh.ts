@@ -176,5 +176,48 @@ export const zh: Translations = {
     privacy: '隐私政策',
     terms: '服务条款',
     status: '服务状态'
+  },
+
+  auth: {
+    register: '注册',
+    login: '登录',
+    logout: '退出登录',
+    email: '邮箱地址',
+    password: '密码',
+    confirm_password: '确认密码',
+    password_min_length: '密码至少6位',
+    email_invalid: '请输入有效的邮箱地址',
+    password_mismatch: '两次输入的密码不一致',
+    register_success: '注册成功',
+    register_failed: '注册失败',
+    login_success: '登录成功',
+    login_failed: '登录失败',
+    email_required: '请输入邮箱地址',
+    password_required: '请输入密码',
+    email_placeholder: '请输入邮箱地址',
+    password_placeholder: '请输入密码',
+    confirm_password_placeholder: '请再次输入密码',
+    have_account: '已有账号？',
+    no_account: '没有账号？',
+    login_now: '立即登录',
+    register_now: '立即注册'
+  },
+
+  dashboard: {
+    title: '用户中心',
+    account_info: '账户信息',
+    balance: '账户余额',
+    current_balance: '当前余额',
+    order_stats: '订单统计',
+    total_orders: '总订单数',
+    recent_orders: '最近订单',
+    no_orders: '暂无订单记录',
+    order_id: '订单号',
+    unknown_product: '未知产品',
+    paid: '已支付',
+    pending: '待支付',
+    cancelled: '已取消',
+    role: '角色',
+    email_label: '邮箱'
   }
 }
