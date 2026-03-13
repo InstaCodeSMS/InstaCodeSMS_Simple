@@ -113,15 +113,15 @@ export default function Footer() {
       </div>
     </div>
     
-    <!-- 底部版权栏 -->
+        <!-- 底部版权栏 -->
     <div class="border-t" style="border-color: var(--border-color);">
       <div class="container mx-auto px-4 py-6">
         <div class="text-center text-sm opacity-60 space-x-4">
           <span x-text="t('footer.copyright')"></span>
           <span class="opacity-40">|</span>
-          <a href="#" class="hover:opacity-100 transition-opacity" x-text="t('footer.privacy')"></a>
+          <a href="/privacy" class="hover:opacity-100 transition-opacity" x-text="t('footer.privacy')" onclick="event.preventDefault(); window.location.href = (window.location.pathname.startsWith('/en') ? '/en/privacy' : '/zh/privacy')"></a>
           <span class="opacity-40">|</span>
-          <a href="#" class="hover:opacity-100 transition-opacity" x-text="t('footer.terms')"></a>
+          <a href="/terms" class="hover:opacity-100 transition-opacity" x-text="t('footer.terms')" onclick="event.preventDefault(); window.location.href = (window.location.pathname.startsWith('/en') ? '/en/terms' : '/zh/terms')"></a>
           <span class="opacity-40">|</span>
           <a href="#" class="hover:opacity-100 transition-opacity" x-text="t('footer.status')"></a>
         </div>

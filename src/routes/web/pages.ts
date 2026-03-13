@@ -7,6 +7,8 @@ import { Hono } from 'hono'
 import { RegisterPage } from '../../views/pages/RegisterPage'
 import { LoginPage } from '../../views/pages/LoginPage'
 import { DashboardPage } from '../../views/pages/DashboardPage'
+import PrivacyPolicyPage from '../../views/pages/PrivacyPolicyPage'
+import TermsPage from '../../views/pages/TermsPage'
 import { requireAuth } from '../../middleware/auth'
 import type { Env } from '../../types/env'
 
@@ -55,6 +57,31 @@ app.get('/login', (c) => {
 
 app.get('/dashboard', requireAuth, (c) => {
   return c.html(DashboardPage())
+})
+
+// 支持语言前缀的隐私政策页面
+app.get('/:lang/privacy', (c) => {
+  const csrfToken = c.var.csrfToken || ''
+  const lang = c.req.param('lang') as 'zh' | 'en'
+  return c.html(PrivacyPolicyPage(csrfToken, lang))
+})
+
+// 支持语言前缀的服务条款页面
+app.get('/:lang/terms', (c) => {
+  const csrfToken = c.var.csrfToken || ''
+  const lang = c.req.param('lang') as 'zh' | 'en'
+  return c.html(TermsPage(csrfToken, lang))
+})
+
+// 重定向：无语言前缀 → 带语言前缀
+app.get('/privacy', (c) => {
+  const lang = c.get('language') as 'zh' | 'en' || 'zh'
+  return c.redirect(`/${lang}/privacy`, 302)
+})
+
+app.get('/terms', (c) => {
+  const lang = c.get('language') as 'zh' | 'en' || 'zh'
+  return c.redirect(`/${lang}/terms`, 302)
 })
 
 export default app

@@ -19,6 +19,9 @@ import { RegisterPage } from './views/pages/RegisterPage'
 import { LoginPage } from './views/pages/LoginPage'
 import { DashboardPage } from './views/pages/DashboardPage'
 
+// 导入页面路由
+import pagesRoutes from './routes/web/pages'
+
 // 导入中间件
 import { requireAuth } from './middleware/auth'
 import authRoutes from './routes/api/auth'
@@ -151,6 +154,9 @@ app.get('/:lang/dashboard', requireAuth, (c) => {
   const lang = c.req.param('lang') as Language
   return c.html(DashboardPage(csrfToken, lang))
 })
+
+// ========== 页面路由（隐私政策和服务条款）==========
+app.route('/', pagesRoutes)
 
 // ========== API 路由 ==========
 app.route('/api/auth', authRoutes)

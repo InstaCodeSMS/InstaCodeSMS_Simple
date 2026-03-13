@@ -153,6 +153,13 @@ ${raw(i18nScript)}
             window.__I18N__ = val === 'en' ? window.__I18N_EN__ : window.__I18N_ZH__;
           }
         });
+        
+        // 监听语言变更事件
+        window.addEventListener('langchange', (e) => {
+          if (e.detail && e.detail.lang) {
+            lang = e.detail.lang;
+          }
+        });
       ">
   ${raw(headerHtml)}
   ${children}

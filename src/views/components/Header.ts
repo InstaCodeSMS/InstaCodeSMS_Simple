@@ -23,12 +23,12 @@ export default function Header() {
       
       <!-- 导航链接 - 桌面端 -->
       <div class="hidden sm:flex items-center gap-2">
-        <a href="/purchase" 
+        <a :href="'/' + lang + '/purchase'" 
            class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300"
            style="background-color: rgba(37, 99, 235, 0.1); color: var(--accent-blue);">
           <span x-text="t('nav.purchase')"></span>
         </a>
-        <a href="/receive" 
+        <a :href="'/' + lang + '/receive'" 
            class="px-4 py-2 rounded-xl text-sm font-medium transition-all duration-300 hover:opacity-80"
            style="color: var(--text-secondary); background-color: var(--bg-tertiary);">
           <span x-text="t('nav.receive')"></span>
@@ -132,13 +132,13 @@ export default function Header() {
             x-transition
             class="absolute right-0 top-11 w-28 rounded-xl overflow-hidden shadow-lg z-50"
             style="background-color: var(--bg-secondary); border: 0.667px solid var(--border-color-light);">
-            <button @click="lang = 'zh'; langOpen = false; setTimeout(() => location.reload(), 50);" 
+            <button @click="switchToLanguage('zh')" 
                     class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors"
                     style="color: var(--text-primary);">
               <img src="https://flagcdn.com/w40/cn.png" alt="zh" class="w-5 h-5 rounded-sm" />
               中文
             </button>
-            <button @click="lang = 'en'; langOpen = false; setTimeout(() => location.reload(), 50);" 
+            <button @click="switchToLanguage('en')" 
                     class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors"
                     style="color: var(--text-primary);">
               <img src="https://flagcdn.com/w40/us.png" alt="en" class="w-5 h-5 rounded-sm" />
@@ -162,11 +162,11 @@ export default function Header() {
             x-transition
             class="absolute right-0 top-11 w-40 rounded-xl overflow-hidden shadow-lg z-50"
             style="background-color: var(--bg-secondary); border: 0.667px solid var(--border-color-light);">
-            <a href="/purchase" class="block px-4 py-3 text-sm transition-colors"
+            <a :href="'/' + lang + '/purchase'" class="block px-4 py-3 text-sm transition-colors"
                style="color: var(--accent-blue);">
               <span x-text="t('nav.purchase')"></span>
             </a>
-            <a href="/receive" class="block px-4 py-3 text-sm transition-colors"
+            <a :href="'/' + lang + '/receive'" class="block px-4 py-3 text-sm transition-colors"
                style="color: var(--text-secondary);">
               <span x-text="t('nav.receive')"></span>
             </a>
@@ -215,6 +215,22 @@ export default function Header() {
           } catch (error) {
             console.error('Logout failed:', error);
           }
+        },
+        
+        switchToLanguage(newLang) {
+          localStorage.setItem('lang', newLang);
+          const currentPath = window.location.pathname;
+          let newPath;
+          if (currentPath.startsWith('/zh/')) {
+            newPath = '/' + newLang + currentPath.substring(3);
+          } else if (currentPath.startsWith('/en/')) {
+            newPath = '/' + newLang + currentPath.substring(3);
+          } else if (currentPath === '/zh' || currentPath === '/en') {
+            newPath = '/' + newLang;
+          } else {
+            newPath = '/' + newLang + currentPath;
+          }
+          window.location.href = newPath;
         }
       }
     }
