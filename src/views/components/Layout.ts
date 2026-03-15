@@ -11,6 +11,8 @@ interface LayoutProps {
   showHeader?: boolean
   showFooter?: boolean
   csrfToken?: string
+  headerType?: 'default' | 'dashboard'
+  showSidebar?: boolean
 }
 
 /**
@@ -26,15 +28,29 @@ interface LayoutProps {
  * @param showFooter - 是否显示页脚，默认 true
  * @param csrfToken - CSRF 令牌
  */
+// 导入 DashboardHeader
+import DashboardHeader from './DashboardHeader'
+
 export default function Layout({ 
   title, 
   children, 
   lang = 'zh',
   showHeader = true,
   showFooter = true,
-  csrfToken = ''
+  csrfToken = '',
+  headerType = 'default',
+  showSidebar = false
 }: LayoutProps) {
-  const headerHtml = showHeader ? Header() : ''
+  // 根据 headerType 选择不同的头部组件
+  let headerHtml = ''
+  if (showHeader) {
+    if (headerType === 'dashboard') {
+      headerHtml = DashboardHeader()
+    } else {
+      headerHtml = Header()
+    }
+  }
+  
   const footerHtml = showFooter ? Footer() : ''
   // 构建 hx-headers 属性
   const hxHeaders = csrfToken ? `hx-headers='{"X-CSRF-Token": "${csrfToken}"}'` : ''
@@ -42,6 +58,17 @@ export default function Layout({
   const i18nScript = getI18nScript(lang)
   // 获取 HTML lang 属性
   const htmlLang = getHtmlLang(lang)
+  
+  // 构建 body 类名，支持侧边栏模式
+  const bodyClasses = [
+    'min-h-screen',
+    'transition-colors',
+    'duration-300'
+  ]
+  
+  if (showSidebar) {
+    bodyClasses.push('pl-0', 'sm:pl-16', 'lg:pl-64')
+  }
   
   return html`<!DOCTYPE html>
 <html lang="${htmlLang}">
@@ -133,9 +160,25 @@ ${raw(i18nScript)}
       opacity: 0;
       transform: scale(0.95);
     }
+    
+    /* 侧边栏模式样式 */
+    body.pl-16 {
+      padding-left: 4rem;
+    }
+    
+    body.pl-64 {
+      padding-left: 16rem;
+    }
+    
+    @media (max-width: 640px) {
+      body.pl-16,
+      body.pl-64 {
+        padding-left: 0;
+      }
+    }
   </style>
 </head>
-<body class="min-h-screen transition-colors duration-300" 
+<body class="${bodyClasses.join(' ')}" 
       x-data="{ 
         theme: localStorage.getItem('theme') || 'dark',
         lang: localStorage.getItem('lang') || '${lang}'
