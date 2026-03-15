@@ -16,6 +16,8 @@ export const en: Translations = {
     copy: 'Copy',
     copied: 'Copied to clipboard',
     search: 'Search',
+    save: 'Save',
+    version: 'Version',
     theme: {
       dark: 'Switch to dark mode',
       light: 'Switch to light mode'
@@ -25,7 +27,11 @@ export const en: Translations = {
   nav: {
     purchase: 'Purchase',
     receive: 'Terminal',
-    home: 'Home'
+    home: 'Home',
+    profile: 'Profile',
+    orders: 'Orders',
+    settings: 'Settings',
+    help: 'Help'
   },
   
   purchase: {
@@ -211,7 +217,7 @@ export const en: Translations = {
     order_stats: 'Order Statistics',
     total_orders: 'Total Orders',
     recent_orders: 'Recent Orders',
-    no_orders: 'No orders yet',
+    no_orders: 'No order records',
     order_id: 'Order ID',
     unknown_product: 'Unknown Product',
     paid: 'Paid',
@@ -219,6 +225,24 @@ export const en: Translations = {
     cancelled: 'Cancelled',
     role: 'Role',
     email_label: 'Email'
+  },
+
+  profile: {
+    title: 'Profile',
+    subtitle: 'Manage your account information',
+    username_section: 'Username Settings',
+    username_label: 'Username',
+    username_placeholder: 'Set your username',
+    username_hint: 'Username can only contain letters, numbers, underscores, 3-50 characters',
+    username_available: 'Username is available',
+    username_taken: 'This username is already taken',
+    username_too_short: 'Username must be at least 3 characters',
+    account_section: 'Account Information',
+    email_label: 'Email Address',
+    role_label: 'Account Role',
+    created_at_label: 'Registered At',
+    save_success: 'Saved successfully',
+    save_failed: 'Failed to save'
   },
 
   privacy: {

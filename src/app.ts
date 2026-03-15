@@ -19,6 +19,7 @@ import SuccessPage from './views/pages/SuccessPage'
 import { RegisterPage } from './views/pages/RegisterPage'
 import { LoginPage } from './views/pages/LoginPage'
 import { DashboardPage } from './views/pages/DashboardPage'
+import { ProfilePage } from './views/pages/ProfilePage'
 
 // 导入页面路由
 import pagesRoutes from './routes/web/pages'
@@ -169,6 +170,19 @@ app.get('/:lang/dashboard', requireAuth, (c) => {
   const csrfToken = c.var.csrfToken || ''
   const lang = c.req.param('lang') as Language
   return c.html(DashboardPage(csrfToken, lang))
+})
+
+// 个人资料页面（需要登录）
+app.get('/:lang/profile', requireAuth, (c) => {
+  const csrfToken = c.var.csrfToken || ''
+  const lang = c.req.param('lang') as Language
+  return c.html(ProfilePage(csrfToken, lang))
+})
+
+// Profile 路由（无语言前缀）
+app.get('/profile', requireAuth, (c) => {
+  const lang = c.get('language') as Language
+  return c.redirect(`/${lang}/profile`, 302)
 })
 
 // ========== 页面路由（隐私政策和服务条款）==========

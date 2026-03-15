@@ -94,7 +94,8 @@ export class UserService {
         email: user.email,
         role: user.role,
         tenantId: user.tenant_id,
-        telegramId: user.telegram_id
+        telegramId: user.telegram_id,
+        created_at: user.created_at
       },
       session
     }

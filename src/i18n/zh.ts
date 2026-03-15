@@ -16,6 +16,8 @@ export const zh: Translations = {
     copy: '复制',
     copied: '已复制到剪贴板',
     search: '搜索',
+    save: '保存',
+    version: '版本',
     theme: {
       dark: '切换到暗色模式',
       light: '切换到亮色模式'
@@ -25,7 +27,11 @@ export const zh: Translations = {
   nav: {
     purchase: '购买服务',
     receive: '接码终端',
-    home: '首页'
+    home: '首页',
+    profile: '个人资料',
+    orders: '订单管理',
+    settings: '账户设置',
+    help: '帮助中心'
   },
   
   purchase: {
@@ -219,6 +225,24 @@ export const zh: Translations = {
     cancelled: '已取消',
     role: '角色',
     email_label: '邮箱'
+  },
+
+  profile: {
+    title: '个人资料',
+    subtitle: '管理您的账户信息',
+    username_section: '用户名设置',
+    username_label: '用户名',
+    username_placeholder: '设置您的用户名',
+    username_hint: '用户名只能包含字母、数字、下划线，长度3-50个字符',
+    username_available: '用户名可用',
+    username_taken: '该用户名已被使用',
+    username_too_short: '用户名至少需要3个字符',
+    account_section: '账户信息',
+    email_label: '邮箱地址',
+    role_label: '账户角色',
+    created_at_label: '注册时间',
+    save_success: '保存成功',
+    save_failed: '保存失败'
   },
 
   privacy: {

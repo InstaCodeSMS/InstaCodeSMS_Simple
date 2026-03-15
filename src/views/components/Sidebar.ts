@@ -16,7 +16,7 @@ export default function Sidebar() {
     <!-- 导航菜单 -->
     <nav class="p-2 space-y-1">
       <!-- 仪表盘 -->
-      <a href="/dashboard" 
+      <a :href="'/' + lang + '/dashboard'" 
          class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group active:scale-95"
          style="color: var(--text-primary);"
          :class="{
@@ -101,26 +101,19 @@ export default function Sidebar() {
         </span>
       </a>
 
-      <!--账户设置 -->
-      <a href="/settings" 
+      <!-- 个人资料 -->
+      <a :href="'/' + lang + '/profile'" 
          class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group active:scale-95"
          style="color: var(--text-primary);"
          :class="{
-           'bg-gradient-to-r from-gray-500/20 to-blue-500/20 border border-gray-500/30': isActive('/settings'),
-           'hover:bg-[var(--bg-tertiary)]': !isActive('/settings'),
-           'opacity-50 cursor-not-allowed': true
-         }"
-         disabled>
-        <i data-lucide="settings" class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 transition-colors"></i>
+           'bg-gradient-to-r from-blue-500/20 to-cyan-500/20 border border-blue-500/30': isActive('/profile'),
+           'hover:bg-[var(--bg-tertiary)]': !isActive('/profile')
+         }">
+        <i data-lucide="user" class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 transition-colors"></i>
         <span 
           class="font-medium transition-all duration-300"
           :class="{ 'opacity-0 w-0': !sidebarOpen, 'opacity-100': sidebarOpen }">
-          <span x-text="t('nav.settings')"></span>
-        </span>
-        <span 
-          class="ml-auto px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-500"
-          :class="{ 'opacity-0 w-0': !sidebarOpen, 'opacity-100': sidebarOpen }">
-          Coming Soon
+          <span x-text="t('nav.profile')"></span>
         </span>
       </a>
 

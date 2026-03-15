@@ -20,6 +20,8 @@ export interface Translations {
     copy: string
     copied: string
     search: string
+    save: string
+    version: string
     theme: {
       dark: string
       light: string
@@ -29,6 +31,10 @@ export interface Translations {
     purchase: string
     receive: string
     home: string
+    profile: string
+    orders: string
+    settings: string
+    help: string
   }
   purchase: {
     title: string
@@ -215,6 +221,23 @@ export interface Translations {
     cancelled: string
     role: string
     email_label: string
+  }
+  profile: {
+    title: string
+    subtitle: string
+    username_section: string
+    username_label: string
+    username_placeholder: string
+    username_hint: string
+    username_available: string
+    username_taken: string
+    username_too_short: string
+    account_section: string
+    email_label: string
+    role_label: string
+    created_at_label: string
+    save_success: string
+    save_failed: string
   }
   privacy: {
     security_protocol: string
