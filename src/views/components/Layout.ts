@@ -13,6 +13,7 @@ interface LayoutProps {
   csrfToken?: string
   headerType?: 'default' | 'dashboard'
   showSidebar?: boolean
+  extraStyles?: string  // 新增：额外样式注入
 }
 
 /**
@@ -39,7 +40,8 @@ export default function Layout({
   showFooter = true,
   csrfToken = '',
   headerType = 'default',
-  showSidebar = false
+  showSidebar = false,
+  extraStyles = ''
 }: LayoutProps) {
   // 根据 headerType 选择不同的头部组件
   let headerHtml = ''
@@ -203,6 +205,7 @@ ${raw(i18nScript)}
       }
     }
   </style>
+  ${extraStyles ? html`<style>${raw(extraStyles)}</style>` : ''}
 </head>
 <body class="${bodyClasses.join(' ')}" 
       x-data="{ 

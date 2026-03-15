@@ -6,10 +6,11 @@
 import Layout from '../components/Layout'
 import { raw } from 'hono/html'
 import type { Language } from '../../i18n'
+import { getAuthBackgroundStyle, authBackgroundClass } from '../components/AuthBackground'
 
 export function RegisterPage(csrfToken: string = '', lang: Language = 'zh'): string {
   const content = `
-  <main x-data="registerApp('${lang}')" class="min-h-screen py-24 px-4 sm:px-6 relative overflow-x-hidden">
+  <main x-data="registerApp('${lang}')" class="min-h-screen py-24 px-4 sm:px-6 relative overflow-x-hidden ${authBackgroundClass}">
     <div class="max-w-md mx-auto mt-8 px-4">
       <div class="bg-[var(--bg-primary)] rounded-lg p-6 border border-[var(--border)]">
         <h1 class="text-2xl font-bold mb-6 text-center" x-text="t('auth.register')"></h1>
@@ -145,6 +146,7 @@ export function RegisterPage(csrfToken: string = '', lang: Language = 'zh'): str
     title: 'Register',
     children: raw(content),
     lang,
-    csrfToken
+    csrfToken,
+    extraStyles: getAuthBackgroundStyle()
   }).toString()
 }
