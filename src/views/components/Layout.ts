@@ -229,6 +229,13 @@ ${raw(i18nScript)}
             lang = e.detail.lang;
           }
         });
+        
+        // 监听主题变更事件，同步全局 theme 变量
+        window.addEventListener('themechange', (e) => {
+          if (e.detail && e.detail.theme) {
+            theme = e.detail.theme;
+          }
+        });
       ">
   ${raw(headerHtml)}
   ${children}

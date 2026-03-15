@@ -1,9 +1,12 @@
+import UserDropdown from '../../components/UserDropdown'
+
 /**
  * Dashboard 专用顶部状态栏组件
  * 
  * Why: 为 Dashboard 页面提供简洁的状态栏，包含用户信息、余额、快速操作
  * 与侧边栏配合使用，提供完整的 Dashboard 体验
  */
+
 
 export default function DashboardHeader() {
   return `
@@ -86,57 +89,8 @@ export default function DashboardHeader() {
         </button>
         
         <!-- 用户下拉菜单 -->
-        <div class="relative" x-data="{ userOpen: false }">
-          <button 
-            @click="userOpen = !userOpen"
-            class="h-9 px-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105"
-            style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color-light);">
-            <div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-              <span class="text-white text-xs font-bold" x-text="userInitial"></span>
-            </div>
-            <span class="text-sm hidden md:inline max-w-[120px] truncate" style="color: var(--text-primary);" x-text="userEmail"></span>
-            <i class="fas fa-chevron-down text-xs" style="color: var(--text-muted); font-weight: 900;"></i>
-          </button>
-          <div 
-            x-show="userOpen" 
-            x-cloak
-            @click.away="userOpen = false"
-            x-transition
-            class="absolute right-0 top-11 w-48 rounded-xl overflow-hidden shadow-lg z-50"
-            style="background-color: var(--bg-secondary); border: 0.667px solid var(--border-color-light);">
-            <div class="px-4 py-3 border-b border-[var(--border-color)]">
-              <p class="font-medium" x-text="userEmail"></p>
-              <p class="text-sm text-muted" x-text="userRole"></p>
-            </div>
-            <div class="py-2">
-              <a href="/dashboard" 
-                 class="flex items-center gap-2 px-4 py-2 text-sm transition-colors hover:opacity-80"
-                 style="color: var(--text-primary);">
-                <i class="fas fa-tachometer-alt text-blue-500" style="font-weight: 900;"></i>
-                <span x-text="t('dashboard.title')"></span>
-              </a>
-              <a href="/orders" 
-                 class="flex items-center gap-2 px-4 py-2 text-sm transition-colors hover:opacity-80 opacity-50 cursor-not-allowed"
-                 disabled>
-                <i class="fas fa-box text-green-500" style="font-weight: 900;"></i>
-                <span x-text="t('nav.orders')"></span>
-              </a>
-              <a href="/settings" 
-                 class="flex items-center gap-2 px-4 py-2 text-sm transition-colors hover:opacity-80 opacity-50 cursor-not-allowed"
-                 disabled>
-                <i class="fas fa-cog text-gray-500" style="font-weight: 900;"></i>
-                <span x-text="t('nav.settings')"></span>
-              </a>
-            </div>
-            <div class="px-4 py-3 border-t border-[var(--border-color)]">
-              <button @click="logout(); userOpen = false;" 
-                     class="w-full flex items-center gap-2 px-2 py-2 text-sm transition-colors hover:opacity-80 text-left"
-                     style="color: var(--text-primary);">
-                <i class="fas fa-sign-out-alt text-red-500" style="font-weight: 900;"></i>
-                <span x-text="t('auth.logout')"></span>
-              </button>
-            </div>
-          </div>
+        <div x-data="userDropdown()" x-init="init()">
+          ${UserDropdown({})}
         </div>
       </div>
     </div>
@@ -151,6 +105,33 @@ export default function DashboardHeader() {
         lucide.createIcons();
       }
     });
+
+    function userDropdown() {
+      return {
+        userOpen: false,
+        userInitial: 'U',
+        userEmail: '',
+        userRole: '',
+        
+        init() {
+          this.checkAuth()
+        },
+        
+        async checkAuth() {
+          try {
+            const response = await fetch('/api/user/profile')
+            const data = await response.json()
+            if (data.success && data.data) {
+              this.userEmail = data.data.email
+              this.userInitial = this.userEmail.charAt(0).toUpperCase()
+              this.userRole = data.data.role || 'User'
+            }
+          } catch (error) {
+            console.error('Auth check failed:', error)
+          }
+        }
+      }
+    }
 
     function dashboardHeader() {
       return {

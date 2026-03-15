@@ -1,9 +1,12 @@
+import UserDropdown from '../../components/UserDropdown'
+
 /**
  * Header 组件
  * 
  * Why: 提供统一的页面导航栏
  * 使用全局 t() 函数实现多语言支持
  */
+
 
 export default function Header() {
   return `
@@ -37,85 +40,6 @@ export default function Header() {
       
       <!-- 右侧操作区 -->
       <div class="flex items-center gap-2">
-        <!-- 用户按钮 -->
-        <div class="relative">
-          <button 
-            @click="userOpen = !userOpen"
-            class="h-9 px-3 rounded-xl flex items-center justify-center gap-2 transition-all duration-300 hover:scale-105"
-            style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color-light);">
-            <!-- 未登录状态 -->
-            <template x-if="!isLoggedIn">
-              <div class="flex items-center gap-2">
-                <i class="fas fa-user-circle text-lg" style="color: var(--text-muted);"></i>
-                <span class="text-sm hidden sm:inline" style="color: var(--text-secondary);" x-text="t('auth.login')"></span>
-              </div>
-            </template>
-            <!-- 已登录状态 -->
-            <template x-if="isLoggedIn">
-              <div class="flex items-center gap-2">
-                <div class="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                  <span class="text-white text-xs font-bold" x-text="userEmail ? userEmail.charAt(0).toUpperCase() : 'U'"></span>
-                </div>
-                <span class="text-sm hidden sm:inline max-w-[100px] truncate" style="color: var(--text-primary);" x-text="userEmail"></span>
-              </div>
-            </template>
-          </button>
-          <!-- 下拉菜单 -->
-          <div 
-            x-show="userOpen" 
-            x-cloak
-            @click.away="userOpen = false"
-            x-transition
-            class="absolute right-0 top-11 w-40 rounded-xl overflow-hidden shadow-lg z-50"
-            style="background-color: var(--bg-secondary); border: 0.667px solid var(--border-color-light);">
-            <!-- 未登录菜单 -->
-            <template x-if="!isLoggedIn">
-              <div>
-                <a :href="'/' + lang + '/login'" 
-                   class="block px-4 py-3 text-sm transition-colors hover:opacity-80"
-                   style="color: var(--text-primary);">
-                  <i class="fas fa-sign-in-alt mr-2" style="color: var(--accent-blue);"></i>
-                  <span x-text="t('auth.login')"></span>
-                </a>
-                <a :href="'/' + lang + '/register'" 
-                   class="block px-4 py-3 text-sm transition-colors hover:opacity-80"
-                   style="color: var(--text-primary);">
-                  <i class="fas fa-user-plus mr-2" style="color: var(--accent-blue);"></i>
-                  <span x-text="t('auth.register')"></span>
-                </a>
-              </div>
-            </template>
-            <!-- 已登录菜单 -->
-            <template x-if="isLoggedIn">
-              <div>
-                <a :href="'/' + lang + '/dashboard'" 
-                   class="block px-4 py-3 text-sm transition-colors hover:opacity-80"
-                   style="color: var(--text-primary);">
-                  <i class="fas fa-tachometer-alt mr-2" style="color: var(--accent-blue);"></i>
-                  <span x-text="t('dashboard.title')"></span>
-                </a>
-                <button @click="logout(); userOpen = false;" 
-                   class="w-full text-left px-4 py-3 text-sm transition-colors hover:opacity-80"
-                   style="color: var(--text-primary);">
-                  <i class="fas fa-sign-out-alt mr-2 text-red-500"></i>
-                  <span x-text="t('auth.logout')"></span>
-                </button>
-              </div>
-            </template>
-          </div>
-        </div>
-        
-        <!-- 主题切换按钮 -->
-        <button 
-          type="button"
-          @click="theme = theme === 'dark' ? 'light' : 'dark'"
-          class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105"
-          style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color-light);"
-          :title="theme === 'dark' ? t('common.theme.light') : t('common.theme.dark')">
-          <i x-show="theme === 'dark'" class="fas fa-sun text-yellow-500"></i>
-          <i x-show="theme === 'light'" class="fas fa-moon text-blue-500"></i>
-        </button>
-        
         <!-- 语言切换 -->
         <div class="relative" x-data="{ langOpen: false }">
           <button 
@@ -132,19 +56,44 @@ export default function Header() {
             x-transition
             class="absolute right-0 top-11 w-28 rounded-xl overflow-hidden shadow-lg z-50"
             style="background-color: var(--bg-secondary); border: 0.667px solid var(--border-color-light);">
-            <button @click="switchToLanguage('zh')" 
+            <button @click="switchToLanguage('zh'); langOpen = false" 
                     class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors"
                     style="color: var(--text-primary);">
               <img src="https://flagcdn.com/w40/cn.png" alt="zh" class="w-5 h-5 rounded-sm" />
               中文
             </button>
-            <button @click="switchToLanguage('en')" 
+            <button @click="switchToLanguage('en'); langOpen = false" 
                     class="w-full px-4 py-3 flex items-center gap-2 text-sm hover:opacity-80 transition-colors"
                     style="color: var(--text-primary);">
               <img src="https://flagcdn.com/w40/us.png" alt="en" class="w-5 h-5 rounded-sm" />
               English
             </button>
           </div>
+        </div>
+        
+        <!-- 主题切换按钮 -->
+        <button 
+          type="button"
+          @click="switchTheme()"
+          class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105"
+          style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color-light);"
+          :title="theme === 'dark' ? t('common.theme.light') : t('common.theme.dark')">
+          <i x-show="theme === 'dark'" class="fas fa-sun text-yellow-500" style="font-weight: 900;"></i>
+          <i x-show="theme === 'light'" class="fas fa-moon text-blue-500" style="font-weight: 900;"></i>
+        </button>
+        
+        <!-- 通知按钮 -->
+        <button 
+          class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105 relative"
+          style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color-light);"
+          :title="t('common.notifications')">
+          <i class="fas fa-bell text-sm" style="color: var(--text-primary); font-weight: 900;"></i>
+          <span class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full opacity-0 transition-opacity"></span>
+        </button>
+        
+        <!-- 用户下拉菜单 -->
+        <div x-data="userDropdown()" x-init="init()">
+          ${UserDropdown({})}
         </div>
         
         <!-- 移动端菜单按钮 -->
@@ -177,15 +126,52 @@ export default function Header() {
   </nav>
 
   <script>
+    // 用户下拉菜单 Alpine.js 组件
+    function userDropdown() {
+      return {
+        userOpen: false,
+        userInitial: 'U',
+        userEmail: '',
+        userRole: '',
+        
+        init() {
+          this.checkAuth()
+        },
+        
+        async checkAuth() {
+          try {
+            const response = await fetch('/api/user/profile')
+            const data = await response.json()
+            if (data.success && data.data) {
+              this.userEmail = data.data.email
+              this.userInitial = this.userEmail.charAt(0).toUpperCase()
+              this.userRole = data.data.role || 'User'
+            }
+          } catch (error) {
+            console.error('Auth check failed:', error)
+          }
+        }
+      }
+    }
+
+    // Header 认证状态管理
     function headerAuth() {
       return {
         isLoggedIn: false,
         userEmail: '',
         lang: localStorage.getItem('lang') || 'zh',
+        theme: localStorage.getItem('theme') || 'dark',
         userOpen: false,
         
         init() {
           this.checkAuth();
+          
+          // 监听主题变更事件
+          window.addEventListener('themechange', (e) => {
+            if (e.detail && e.detail.theme) {
+              this.theme = e.detail.theme;
+            }
+          });
         },
         
         t(key) {
@@ -231,6 +217,20 @@ export default function Header() {
             newPath = '/' + newLang + currentPath;
           }
           window.location.href = newPath;
+        },
+        
+        // 主题切换
+        switchTheme() {
+          const newTheme = this.theme === 'dark' ? 'light' : 'dark';
+          this.theme = newTheme;
+          localStorage.setItem('theme', newTheme);
+          document.documentElement.classList.toggle('dark', newTheme === 'dark');
+          document.documentElement.classList.toggle('light', newTheme === 'light');
+          
+          // 触发主题变更事件，通知其他组件
+          window.dispatchEvent(new CustomEvent('themechange', { 
+            detail: { theme: newTheme }
+          }));
         }
       }
     }
