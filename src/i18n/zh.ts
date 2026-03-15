@@ -35,7 +35,7 @@ export const zh: Translations = {
   },
   
   purchase: {
-    title: '部署虚拟终端',
+    title: '租用虚拟号码',
     subtitle: '系统协议 / 节点',
     search_placeholder: '搜索平台 (例如: Telegram)...',
     sort_default: '默认推荐排序',

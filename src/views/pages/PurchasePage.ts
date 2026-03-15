@@ -42,7 +42,12 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
             <span x-text="t('purchase.subtitle')"></span>
           </h2>
           <h1 class="text-4xl md:text-6xl font-black tracking-tighter uppercase leading-none" style="color: var(--text-primary);">
-            <span x-text="t('purchase.title').split('虚拟终端')[0]"></span><span style="color: var(--accent-blue);" x-text="t('purchase.title').includes('Virtual') ? 'Virtual Terminal' : '虚拟终端'"></span>
+            <template x-if="t('purchase.title').includes('Virtual')">
+              <span><span x-text="t('purchase.title').split('Virtual Number')[0]"></span><span style="color: var(--accent-blue);">Virtual Number</span></span>
+            </template>
+            <template x-if="!t('purchase.title').includes('Virtual')">
+              <span><span x-text="t('purchase.title').split('虚拟号码')[0]"></span><span style="color: var(--accent-blue);">虚拟号码</span></span>
+            </template>
           </h1>
         </div>
         

@@ -35,7 +35,7 @@ export const en: Translations = {
   },
   
   purchase: {
-    title: 'Deploy Virtual Terminal',
+    title: 'Rent Virtual Number',
     subtitle: 'System Protocol / Node',
     search_placeholder: 'Search platform (e.g., Telegram)...',
     sort_default: 'Default Sorting',
