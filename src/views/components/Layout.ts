@@ -59,6 +59,31 @@ export default function Layout({
   // 获取 HTML lang 属性
   const htmlLang = getHtmlLang(lang)
   
+  // 主题提供者脚本
+  const themeProviderScript = `
+  <script>
+    // 主题提供者初始化脚本
+    document.addEventListener('DOMContentLoaded', function() {
+      // 初始化主题
+      const savedTheme = localStorage.getItem('theme') || 'dark';
+      document.documentElement.classList.toggle('dark', savedTheme === 'dark');
+      document.documentElement.classList.toggle('light', savedTheme === 'light');
+      
+      // 初始化语言
+      const savedLang = localStorage.getItem('lang') || 'zh';
+      document.documentElement.lang = savedLang;
+      
+      // 监听主题变更事件，确保 DOM 状态同步
+      window.addEventListener('themechange', (e) => {
+        if (e.detail && e.detail.theme) {
+          const theme = e.detail.theme;
+          document.documentElement.classList.toggle('dark', theme === 'dark');
+          document.documentElement.classList.toggle('light', theme === 'light');
+        }
+      });
+    });
+  </script>`
+  
   // 构建 body 类名，支持侧边栏模式
   const bodyClasses = [
     'min-h-screen',
@@ -86,6 +111,7 @@ export default function Layout({
   <script>
 ${raw(i18nScript)}
   </script>
+  ${raw(themeProviderScript)}
   <style>
     [x-cloak] { display: none !important; }
     

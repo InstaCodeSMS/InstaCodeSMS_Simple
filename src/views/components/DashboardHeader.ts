@@ -12,8 +12,20 @@ export default function DashboardHeader() {
     style="background-color: var(--bg-nav); border-color: var(--border-color);"
     x-data="dashboardHeader()">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-      <!-- 左侧：用户信息和余额 -->
+      <!-- 左侧：品牌、用户信息和余额 -->
       <div class="flex items-center gap-4">
+        <!-- 品牌区域 -->
+        <div class="flex items-center gap-3">
+          <div class="w-8 h-8 flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
+            <i class="fas fa-bolt text-white text-sm" style="font-style: normal; font-weight: 900;"></i>
+          </div>
+          <span class="hidden sm:inline text-lg font-black tracking-tight" style="color: var(--accent-blue)">SIMPLE</span>
+          <span class="hidden sm:inline text-lg font-black tracking-tight text-purple-500">FAKA</span>
+        </div>
+
+        <!-- 分隔符 -->
+        <div class="w-px h-6" style="background-color: var(--border-color)"></div>
+
         <!-- 移动端菜单按钮 -->
         <button 
           @click="$dispatch('sidebar-toggle')"
@@ -29,7 +41,7 @@ export default function DashboardHeader() {
               <span class="text-white text-sm font-bold" x-text="userInitial"></span>
             </div>
             <div class="hidden sm:block">
-              <p class="text-sm font-medium" x-text="userEmail"></p>
+              <p class="text-sm font-medium" x-text="getDisplayName()"></p>
               <p class="text-xs text-muted" x-text="userRole"></p>
             </div>
           </div>
@@ -84,7 +96,7 @@ export default function DashboardHeader() {
         <!-- 主题切换按钮 -->
         <button 
           type="button"
-          @click="theme = theme === 'dark' ? 'light' : 'dark'"
+          @click="switchTheme()"
           class="w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-105"
           style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color-light);"
           :title="theme === 'dark' ? t('common.theme.light') : t('common.theme.dark')">
@@ -158,7 +170,16 @@ export default function DashboardHeader() {
     </div>
   </header>
 
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script>
+    // Lucide Icons 初始化
+    document.addEventListener('DOMContentLoaded', function() {
+      // 初始化 Lucide Icons
+      if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+      }
+    });
+
     function dashboardHeader() {
       return {
         isLoggedIn: false,
@@ -170,6 +191,13 @@ export default function DashboardHeader() {
         
         init() {
           this.checkAuth();
+          
+          // 监听主题变更事件
+          window.addEventListener('themechange', (e) => {
+            if (e.detail && e.detail.theme) {
+              this.theme = e.detail.theme;
+            }
+          });
         },
         
         t(key) {
@@ -178,6 +206,13 @@ export default function DashboardHeader() {
         
         get userInitial() {
           return this.userEmail ? this.userEmail.charAt(0).toUpperCase() : 'U';
+        },
+
+        getDisplayName() {
+          // 优先级：用户自定义名称 > 邮箱用户名部分
+          if (this.user?.name) return this.user.name;
+          if (this.userEmail) return this.userEmail.split('@')[0];
+          return 'User';
         },
         
         async checkAuth() {
@@ -226,6 +261,20 @@ export default function DashboardHeader() {
             newPath = '/' + newLang + currentPath;
           }
           window.location.href = newPath;
+        },
+        
+        // 主题切换
+        switchTheme() {
+          const newTheme = this.theme === 'dark' ? 'light' : 'dark';
+          this.theme = newTheme;
+          localStorage.setItem('theme', newTheme);
+          document.documentElement.classList.toggle('dark', newTheme === 'dark');
+          document.documentElement.classList.toggle('light', newTheme === 'light');
+          
+          // 触发主题变更事件，通知其他组件
+          window.dispatchEvent(new CustomEvent('themechange', { 
+            detail: { theme: newTheme }
+          }));
         }
       }
     }

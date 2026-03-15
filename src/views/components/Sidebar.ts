@@ -13,41 +13,18 @@ export default function Sidebar() {
     style="background-color: var(--bg-secondary); border-right: 0.667px solid var(--border-color);"
     @click.away="closeOnMobile()">
     
-    <!-- Logo 区域 -->
-    <div class="flex items-center justify-between px-4 py-4border-b border-[var(--border-color)]">
-      <div 
-        class="flex items-center gap-3 transition-all duration-300"
-        :class="{ 'justify-center': !sidebarOpen }">
-        <div class="w-8 h-8 flex-shrink-0 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20">
-          <i class="fas fa-bolt text-white text-sm" style="font-style: normal; font-weight: 900;"></i>
-        </div>
-        <span 
-          class="text-lg font-black tracking-tight transition-all duration-300"
-          :class="{ 'opacity-0 w-0': !sidebarOpen, 'opacity-100': sidebarOpen }">
-          <span style="color: var(--accent-blue)">SIMPLE</span><span class="text-purple-500">FAKA</span>
-        </span>
-      </div>
-      <button 
-        @click="toggleSidebar()"
-        class="w-8 h-8 flex-shrink-0 rounded-lg flex items-center justify-center transition-all duration-300 hover:scale-105"
-        style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color-light);">
-        <i class="fas fa-bars text-sm" style="color: var(--text-primary); font-weight: 900;"></i>
-      </button>
-    </div>
-
     <!-- 导航菜单 -->
     <nav class="p-2 space-y-1">
       <!-- 仪表盘 -->
       <a href="/dashboard" 
-         class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group"
+         class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group active:scale-95"
          style="color: var(--text-primary);"
          :class="{
            'bg-gradient-to-r from-blue-500/20 to-purple-600/20 border border-blue-500/30': isActive('/dashboard'),
            'hover:bg-[var(--bg-tertiary)]': !isActive('/dashboard')
-         }">
-        <div class="w-8 h-8 flex-shrink-0 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center group-hover:scale-105 transition-transform">
-          <i class="fas fa-tachometer-alt text-white text-sm" style="font-style: normal; font-weight: 900;"></i>
-        </div>
+         }"
+         @click="closeOnMobile()">
+        <i data-lucide="bar-chart-3" class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 transition-colors"></i>
         <span 
           class="font-medium transition-all duration-300"
           :class="{ 'opacity-0 w-0': !sidebarOpen, 'opacity-100': sidebarOpen }">
@@ -57,7 +34,7 @@ export default function Sidebar() {
 
       <!-- 订单管理 -->
       <a href="/orders" 
-         class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group"
+         class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group active:scale-95"
          style="color: var(--text-primary);"
          :class="{
            'bg-gradient-to-r from-green-500/20 to-blue-500/20 border border-green-500/30': isActive('/orders'),
@@ -65,9 +42,7 @@ export default function Sidebar() {
            'opacity-50 cursor-not-allowed': true
          }"
          disabled>
-        <div class="w-8 h-8 flex-shrink-0 rounded-lg bg-gradient-to-br from-green-500 to-blue-500 flex items-center justify-center group-hover:scale-105 transition-transform">
-          <i class="fas fa-box text-white text-sm" style="font-style: normal; font-weight: 900;"></i>
-        </div>
+        <i data-lucide="list" class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 transition-colors"></i>
         <span 
           class="font-medium transition-all duration-300"
           :class="{ 'opacity-0 w-0': !sidebarOpen, 'opacity-100': sidebarOpen }">
@@ -82,7 +57,7 @@ export default function Sidebar() {
 
       <!-- Billing -->
       <a href="/billing" 
-         class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group"
+         class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group active:scale-95"
          style="color: var(--text-primary);"
          :class="{
            'bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30': isActive('/billing'),
@@ -90,9 +65,7 @@ export default function Sidebar() {
            'opacity-50 cursor-not-allowed': true
          }"
          disabled>
-        <div class="w-8 h-8 flex-shrink-0 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center group-hover:scale-105 transition-transform">
-          <i class="fas fa-wallet text-white text-sm" style="font-style: normal; font-weight: 900;"></i>
-        </div>
+        <i data-lucide="credit-card" class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 transition-colors"></i>
         <span 
           class="font-medium transition-all duration-300"
           :class="{ 'opacity-0 w-0': !sidebarOpen, 'opacity-100': sidebarOpen }">
@@ -107,7 +80,7 @@ export default function Sidebar() {
 
       <!-- Security -->
       <a href="/security" 
-         class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group"
+         class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group active:scale-95"
          style="color: var(--text-primary);"
          :class="{
            'bg-gradient-to-r from-red-500/20 to-purple-500/20 border border-red-500/30': isActive('/security'),
@@ -115,9 +88,7 @@ export default function Sidebar() {
            'opacity-50 cursor-not-allowed': true
          }"
          disabled>
-        <div class="w-8 h-8 flex-shrink-0 rounded-lg bg-gradient-to-br from-red-500 to-purple-500 flex items-center justify-center group-hover:scale-105 transition-transform">
-          <i class="fas fa-shield-alt text-white text-sm" style="font-style: normal; font-weight: 900;"></i>
-        </div>
+        <i data-lucide="shield" class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 transition-colors"></i>
         <span 
           class="font-medium transition-all duration-300"
           :class="{ 'opacity-0 w-0': !sidebarOpen, 'opacity-100': sidebarOpen }">
@@ -132,7 +103,7 @@ export default function Sidebar() {
 
       <!--账户设置 -->
       <a href="/settings" 
-         class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group"
+         class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group active:scale-95"
          style="color: var(--text-primary);"
          :class="{
            'bg-gradient-to-r from-gray-500/20 to-blue-500/20 border border-gray-500/30': isActive('/settings'),
@@ -140,9 +111,7 @@ export default function Sidebar() {
            'opacity-50 cursor-not-allowed': true
          }"
          disabled>
-        <div class="w-8 h-8 flex-shrink-0 rounded-lg bg-gradient-to-br from-gray-500 to-blue-500 flex items-center justify-center group-hover:scale-105 transition-transform">
-          <i class="fas fa-cog text-white text-sm" style="font-style: normal; font-weight: 900;"></i>
-        </div>
+        <i data-lucide="settings" class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 transition-colors"></i>
         <span 
           class="font-medium transition-all duration-300"
           :class="{ 'opacity-0 w-0': !sidebarOpen, 'opacity-100': sidebarOpen }">
@@ -157,7 +126,7 @@ export default function Sidebar() {
 
       <!-- 帮助中心 -->
       <a href="/help" 
-         class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group"
+         class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group active:scale-95"
          style="color: var(--text-primary);"
          :class="{
            'bg-gradient-to-r from-blue-400/20 to-purple-400/20 border border-blue-400/30': isActive('/help'),
@@ -165,9 +134,7 @@ export default function Sidebar() {
            'opacity-50 cursor-not-allowed': true
          }"
          disabled>
-        <div class="w-8 h-8 flex-shrink-0 rounded-lg bg-gradient-to-br from-blue-400 to-purple-400 flex items-center justify-center group-hover:scale-105 transition-transform">
-          <i class="fas fa-question-circle text-white text-sm" style="font-style: normal; font-weight: 900;"></i>
-        </div>
+        <i data-lucide="life-buoy" class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 transition-colors"></i>
         <span 
           class="font-medium transition-all duration-300"
           :class="{ 'opacity-0 w-0': !sidebarOpen, 'opacity-100': sidebarOpen }">
@@ -202,6 +169,18 @@ export default function Sidebar() {
               this.lang = e.detail.lang;
             }
           });
+          
+          // 监听主题变更事件
+          window.addEventListener('themechange', (e) => {
+            if (e.detail && e.detail.theme) {
+              this.theme = e.detail.theme;
+            }
+          });
+          
+          // 初始化 Lucide Icons
+          if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+          }
         },
         
         t(key) {
@@ -230,6 +209,20 @@ export default function Sidebar() {
             localStorage.setItem('sidebar-open', false);
             document.body.style.overflow = 'auto';
           }
+        },
+        
+        // 主题切换
+        switchTheme() {
+          const newTheme = this.theme === 'dark' ? 'light' : 'dark';
+          this.theme = newTheme;
+          localStorage.setItem('theme', newTheme);
+          document.documentElement.classList.toggle('dark', newTheme === 'dark');
+          document.documentElement.classList.toggle('light', newTheme === 'light');
+          
+          // 触发主题变更事件，通知其他组件
+          window.dispatchEvent(new CustomEvent('themechange', { 
+            detail: { theme: newTheme }
+          }));
         }
       }
     }
