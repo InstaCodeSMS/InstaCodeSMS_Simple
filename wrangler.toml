@@ -16,7 +16,7 @@ fallthrough = true
 
 # 配置 ESBuild 路径别名
 [build]
-command = "npx tsc --build"
+command = ""
 
 [build.upload]
 format = "modules"
