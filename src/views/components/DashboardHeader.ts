@@ -12,7 +12,7 @@ export default function DashboardHeader() {
     style="background-color: var(--bg-nav); border-color: var(--border-color);"
     x-data="dashboardHeader()">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
-      <!-- 左侧：品牌、用户信息和余额 -->
+      <!-- 左侧：品牌区域 -->
       <div class="flex items-center gap-4">
         <!-- 品牌区域 -->
         <div class="flex items-center gap-3">
@@ -23,9 +23,6 @@ export default function DashboardHeader() {
           <span class="hidden sm:inline text-lg font-black tracking-tight text-purple-500">FAKA</span>
         </div>
 
-        <!-- 分隔符 -->
-        <div class="w-px h-6" style="background-color: var(--border-color)"></div>
-
         <!-- 移动端菜单按钮 -->
         <button 
           @click="$dispatch('sidebar-toggle')"
@@ -33,31 +30,6 @@ export default function DashboardHeader() {
           style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color-light);">
           <i class="fas fa-bars text-sm" style="color: var(--text-primary); font-weight: 900;"></i>
         </button>
-        
-        <!-- 用户信息 -->
-        <div class="flex items-center gap-3">
-          <div class="flex items-center gap-2">
-            <div class="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-blue-500/20">
-              <span class="text-white text-sm font-bold" x-text="userInitial"></span>
-            </div>
-            <div class="hidden sm:block">
-              <p class="text-sm font-medium" x-text="getDisplayName()"></p>
-              <p class="text-xs text-muted" x-text="userRole"></p>
-            </div>
-          </div>
-          
-          <!-- 分隔符 -->
-          <div class="w-px h-6" style="background-color: var(--border-color)"></div>
-          
-          <!-- 余额显示 -->
-          <div class="flex items-center gap-2">
-            <i class="fas fa-wallet text-sm" style="color: var(--text-muted); font-weight: 900;"></i>
-            <div>
-              <p class="text-sm font-semibold" x-text="'¥' + balance"></p>
-              <p class="text-xs text-muted" x-text="t('dashboard.current_balance')"></p>
-            </div>
-          </div>
-        </div>
       </div>
 
       <!-- 右侧：快速操作 -->
