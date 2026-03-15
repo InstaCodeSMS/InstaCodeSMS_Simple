@@ -247,22 +247,30 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
               <!-- 支付宝 -->
               <button @click="form.paymentMethod = 'alipay'"
                       :class="form.paymentMethod === 'alipay' ? 'border-blue-500 bg-blue-600/10 ring-1 ring-blue-500/30' : 'border-[rgba(200,210,240,0.08)]'"
-                      class="relative flex flex-col items-center p-5 rounded-[1.5rem] border transition-all text-left group"
+                      class="relative flex flex-col items-center p-4 rounded-xl border transition-all group"
                       :style="theme === 'light' && form.paymentMethod !== 'alipay' ? 'background-color: var(--bg-tertiary); border-color: var(--border-color-light);' : ''">
-                <span class="text-3xl mb-2">💳</span>
-                <span class="text-sm font-bold" style="color: var(--text-primary);" x-text="t('purchase.alipay')"></span>
-                <span class="text-[10px]" style="color: var(--text-muted);">CNY</span>
-                <i x-show="form.paymentMethod === 'alipay'" class="fas fa-check-circle text-blue-500 absolute top-3 right-3"></i>
+                <div class="flex items-center gap-4">
+                  <span class="text-3xl">💳</span>
+                  <div class="text-left">
+                    <div class="text-sm font-bold" style="color: var(--text-primary);" x-text="t('purchase.alipay')"></div>
+                    <div class="text-xs" style="color: var(--text-muted);">USD</div>
+                  </div>
+                </div>
+                <i x-show="form.paymentMethod === 'alipay'" class="fas fa-check-circle text-blue-500 absolute top-2 right-2"></i>
               </button>
               <!-- USDT TRC20 -->
               <button @click="form.paymentMethod = 'usdt'"
                       :class="form.paymentMethod === 'usdt' ? 'border-blue-500 bg-blue-600/10 ring-1 ring-blue-500/30' : 'border-[rgba(200,210,240,0.08)]'"
-                      class="relative flex flex-col items-center p-5 rounded-[1.5rem] border transition-all text-left group"
+                      class="relative flex flex-col items-center p-4 rounded-xl border transition-all group"
                       :style="theme === 'light' && form.paymentMethod !== 'usdt' ? 'background-color: var(--bg-tertiary); border-color: var(--border-color-light);' : ''">
-                <span class="text-3xl mb-2">₮</span>
-                <span class="text-sm font-bold" style="color: var(--text-primary);">USDT</span>
-                <span class="text-[10px]" style="color: var(--text-muted);">TRC20</span>
-                <i x-show="form.paymentMethod === 'usdt'" class="fas fa-check-circle text-blue-500 absolute top-3 right-3"></i>
+                <div class="flex items-center gap-4">
+                  <span class="text-3xl">₮</span>
+                  <div class="text-left">
+                    <div class="text-sm font-bold" style="color: var(--text-primary);">USDT</div>
+                    <div class="text-xs" style="color: var(--text-muted);">TRC20</div>
+                  </div>
+                </div>
+                <i x-show="form.paymentMethod === 'usdt'" class="fas fa-check-circle text-blue-500 absolute top-2 right-2"></i>
               </button>
             </div>
           </div>
