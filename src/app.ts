@@ -32,6 +32,7 @@ import smsRoutes from './routes/api/sms'
 import paymentRoutes from './routes/api/payment'
 import syncRoutes from './routes/api/sync'
 import telegramRoutes from './routes/api/telegram'
+import webhooksRoutes from './routes/api/webhooks'
 import rpcApp from './routes/rpc'
 
 // 创建主应用实例
@@ -167,6 +168,11 @@ app.route('/api/sms', smsRoutes)
 app.route('/api/payment', paymentRoutes)
 app.route('/api/sync', syncRoutes)
 app.route('/api/telegram', telegramRoutes)
+
+// ========== Webhook 路由 ==========
+// 新的统一 webhook 路径，建议迁移到此
+app.route('/api/webhooks', webhooksRoutes)
+
 app.route('/rpc', rpcApp)
 
 //健康检查

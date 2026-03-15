@@ -58,6 +58,7 @@ export interface Env {
   // Telegram Bot 配置
   TELEGRAM_BOT_TOKEN?: string
   TELEGRAM_WEBHOOK_URL?: string
+  TELEGRAM_WEBHOOK_SECRET?: string // Webhook Secret Token (用于验证请求来源)
   SHOP_URL?: string // 商城网页 URL
 
   // 管理员配置
