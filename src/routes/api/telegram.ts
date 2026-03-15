@@ -41,9 +41,9 @@ function ipToNumber(ip: string): number {
 }
 
 /**
- * 验证管理员权限
+ * 验证 Telegram 管理员权限
  */
-function verifyAdminSecret(token: string | undefined, adminSecret: string | undefined): boolean {
+function verifyTelegramAdminSecret(token: string | undefined, adminSecret: string | undefined): boolean {
   if (!adminSecret || !token) return false
   return token === adminSecret
 }
@@ -140,7 +140,7 @@ app.post('/webhook/set', async (c) => {
   try {
     // 验证管理员权限
     const adminToken = c.req.header('x-admin-token')
-    if (!verifyAdminSecret(adminToken, c.env.ADMIN_SECRET)) {
+    if (!verifyTelegramAdminSecret(adminToken, c.env.TELEGRAM_ADMIN_SECRET)) {
       return c.json({ success: false, message: 'Unauthorized' }, 401)
     }
 
@@ -207,7 +207,7 @@ app.post('/webhook/info', async (c) => {
   try {
     // 验证管理员权限
     const adminToken = c.req.header('x-admin-token')
-    if (!verifyAdminSecret(adminToken, c.env.ADMIN_SECRET)) {
+    if (!verifyTelegramAdminSecret(adminToken, c.env.TELEGRAM_ADMIN_SECRET)) {
       return c.json({ success: false, message: 'Unauthorized' }, 401)
     }
 
@@ -238,7 +238,7 @@ app.post('/menu/set', async (c) => {
   try {
     // 验证管理员权限
     const adminToken = c.req.header('x-admin-token')
-    if (!verifyAdminSecret(adminToken, c.env.ADMIN_SECRET)) {
+    if (!verifyTelegramAdminSecret(adminToken, c.env.TELEGRAM_ADMIN_SECRET)) {
       return c.json({ success: false, message: 'Unauthorized' }, 401)
     }
 

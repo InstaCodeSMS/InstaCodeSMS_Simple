@@ -62,7 +62,7 @@ export interface Env {
   SHOP_URL?: string // 商城网页 URL
 
   // 管理员配置
-  ADMIN_SECRET?: string // 管理员操作密钥
+  TELEGRAM_ADMIN_SECRET?: string // Telegram 管理员操作密钥
 
   // API 基础 URL
   API_BASE_URL: string
