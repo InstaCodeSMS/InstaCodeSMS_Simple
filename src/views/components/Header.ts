@@ -1,4 +1,5 @@
 import UserDropdown from '../../components/UserDropdown'
+import type { Language } from '@/i18n'
 
 /**
  * Header 组件
@@ -7,8 +8,11 @@ import UserDropdown from '../../components/UserDropdown'
  * 使用全局 t() 函数实现多语言支持
  */
 
+interface HeaderProps {
+  lang?: Language
+}
 
-export default function Header() {
+export default function Header({ lang = 'zh' }: HeaderProps = {}) {
   return `
   <nav class="fixed top-0 left-0 right-0 z-50 backdrop-blur-md border-b transition-colors duration-300"
        style="background-color: var(--bg-nav); border-color: var(--border-color);"
@@ -92,9 +96,7 @@ export default function Header() {
         </button>
         
         <!-- 用户下拉菜单 -->
-        <div x-data="userDropdown()" x-init="init()">
-          ${UserDropdown({})}
-        </div>
+        ${UserDropdown({ lang })}
         
         <!-- 移动端菜单按钮 -->
         <div class="sm:hidden relative" x-data="{ mobileOpen: false }">

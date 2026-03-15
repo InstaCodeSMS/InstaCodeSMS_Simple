@@ -47,7 +47,7 @@ export default function Layout({
     if (headerType === 'dashboard') {
       headerHtml = DashboardHeader()
     } else {
-      headerHtml = Header()
+      headerHtml = Header({ lang })
     }
   }
   
