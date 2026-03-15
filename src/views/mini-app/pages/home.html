@@ -1,0 +1,50 @@
+<!-- 首页 - 产品列表 -->
+<div x-data="{ products: [], loading: true }">
+  <!-- 搜索栏 -->
+  <div class="mb-6">
+    <input type="text" 
+           placeholder="搜索商品..." 
+           class="input input-bordered w-full"
+           hx-get="/mini-app/api/products/search"
+           hx-trigger="input changed delay:500ms"
+           hx-target="#product-list"
+           hx-indicator="#search-loading">
+    <div id="search-loading" class="htmx-indicator mt-2">
+      <span class="loading loading-spinner loading-sm"></span> 搜索中...
+    </div>
+  </div>
+  
+  <!-- 产品列表 -->
+  <div id="product-list" 
+       hx-get="/mini-app/api/products"
+       hx-trigger="load"
+       hx-swap="innerHTML">
+    <!-- HTMX 动态加载产品 --></div>
+</div>
+
+<!-- 产品卡片模板（由服务器渲染） -->
+<template id="product-card-template">
+  <div class="card bg-base-100 shadow-lg hover:shadow-xl transition-shadow">
+    <div class="card-body">
+      <h3 class="card-title text-lg"></h3>
+      <p class="text-sm opacity-70"></p>
+      <div class="flex justify-between items-center mt-4">
+        <div>
+          <span class="text-2xl font-bold text-primary"></span>
+          <span class="text-sm opacity-60 ml-2"></span>
+        </div>
+        <div class="flex gap-2">
+          <button class="btn btn-primary btn-sm">
+            加入购物车
+          </button>
+          <button class="btn btn-secondary btn-sm">
+            立即购买
+          </button>
+        </div>
+      <div class="text-xs opacity-60 mt-2">
+        <span>📊 库存：</span>
+        <span></span>
+      </div>
+    </div>
+  </div>
+</template>
