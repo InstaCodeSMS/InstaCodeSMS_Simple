@@ -16,7 +16,10 @@ fallthrough = true
 
 # 配置 ESBuild 路径别名
 [build]
-command = ""
+command = "npx tsc --build"
+
+[build.upload]
+format = "modules"
 
 # 环境变量配置
 # 注意：敏感信息（API tokens, keys等）应该通过环境变量或 wrangler secret 设置
