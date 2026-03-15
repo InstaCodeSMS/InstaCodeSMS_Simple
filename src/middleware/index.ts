@@ -15,3 +15,4 @@ export {
   relaxedRateLimit,
 } from './rate-limit'
 export type { RateLimitConfig } from './rate-limit'
+export { noCache, PRIVATE_API_PATHS, isPrivateApiPath } from './no-cache'

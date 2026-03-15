@@ -9,6 +9,7 @@ import { csrfProtection } from './middleware/csrf'
 import { paymentStrategyInitializer } from './middleware/payment-init'
 import { requestLogger } from './middleware/logger'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler'
+import { noCache } from './middleware/no-cache'
 
 // 导入页面视图
 import ReceivePage from './views/pages/ReceivePage'
@@ -34,6 +35,7 @@ import syncRoutes from './routes/api/sync'
 import telegramRoutes from './routes/api/telegram'
 import webhooksRoutes from './routes/api/webhooks'
 import rpcApp from './routes/rpc'
+import miniAppRoutes from './routes/web/mini-app'
 
 // 创建主应用实例
 const app = new Hono<{ Bindings: Env }>()
@@ -47,6 +49,19 @@ app.use('*', languageDetector({
   fallbackLanguage: 'en'
 }))
 app.use('*', csrfProtection)
+
+// ========== 私有 API 禁止缓存 ==========
+// Security: 防止 CDN 缓存用户数据，解决隐私模式下显示其他用户信息的问题
+app.use('/api/user/*', noCache)
+app.use('/api/auth/*', noCache)
+app.use('/api/orders/*', noCache)
+app.use('/api/payment/*', noCache)
+app.use('/api/sms/*', noCache)
+app.use('/api/telegram/*', noCache)
+
+// ========== Mini App 路由 ==========
+// 注意：必须放在 /:lang 路由之前，否则 mini-app 会被当作语言参数
+app.route('/mini-app', miniAppRoutes)
 
 // ========== 页面路由 ==========
 
