@@ -239,6 +239,39 @@ export interface Translations {
     save_success: string
     save_failed: string
   }
+  billing: {
+    title: string
+    subtitle: string
+    balance: string
+    frozen_balance: string
+    recharge: string
+    recharge_title: string
+    recharge_amount: string
+    recharge_method: string
+    recharge_min: string
+    recharge_max: string
+    recharge_success: string
+    recharge_failed: string
+    transactions: string
+    transaction_time: string
+    transaction_type: string
+    transaction_amount: string
+    transaction_balance: string
+    transaction_description: string
+    type_recharge: string
+    type_consume: string
+    type_refund: string
+    type_freeze: string
+    type_unfreeze: string
+    no_transactions: string
+    load_more: string
+    filter_all: string
+    filter_recharge: string
+    filter_consume: string
+    filter_refund: string
+    insufficient_balance: string
+    yuan: string
+  }
   privacy: {
     security_protocol: string
     title: string

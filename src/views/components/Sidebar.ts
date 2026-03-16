@@ -56,25 +56,18 @@ export default function Sidebar() {
       </a>
 
       <!-- Billing -->
-      <a href="/billing" 
+      <a :href="'/' + lang + '/billing'" 
          class="flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-300 group active:scale-95"
          style="color: var(--text-primary);"
          :class="{
            'bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30': isActive('/billing'),
-           'hover:bg-[var(--bg-tertiary)]': !isActive('/billing'),
-           'opacity-50 cursor-not-allowed': true
-         }"
-         disabled>
+           'hover:bg-[var(--bg-tertiary)]': !isActive('/billing')
+         }">
         <i data-lucide="credit-card" class="w-5 h-5 text-gray-600 dark:text-gray-300 group-hover:text-blue-500 transition-colors"></i>
         <span 
           class="font-medium transition-all duration-300"
           :class="{ 'opacity-0 w-0': !sidebarOpen, 'opacity-100': sidebarOpen }">
-          Billing
-        </span>
-        <span 
-          class="ml-auto px-2 py-1 text-xs rounded-full bg-yellow-500/20 text-yellow-500"
-          :class="{ 'opacity-0 w-0': !sidebarOpen, 'opacity-100': sidebarOpen }">
-          Coming Soon
+          <span x-text="t('billing.title')"></span>
         </span>
       </a>
 

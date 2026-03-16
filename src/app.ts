@@ -20,6 +20,7 @@ import { RegisterPage } from './views/pages/RegisterPage'
 import { LoginPage } from './views/pages/LoginPage'
 import { DashboardPage } from './views/pages/DashboardPage'
 import { ProfilePage } from './views/pages/ProfilePage'
+import { BillingPage } from './views/pages/BillingPage'
 
 // 导入页面路由
 import pagesRoutes from './routes/web/pages'
@@ -28,6 +29,7 @@ import pagesRoutes from './routes/web/pages'
 import { requireAuth } from './middleware/auth'
 import authRoutes from './routes/api/auth'
 import userRoutes from './routes/api/user'
+import walletRoutes from './routes/api/wallet'
 import ordersRoutes from './routes/api/orders'
 import servicesRoutes from './routes/api/services'
 import smsRoutes from './routes/api/sms'
@@ -55,6 +57,7 @@ app.use('*', csrfProtection)
 // Security: 防止 CDN 缓存用户数据，解决隐私模式下显示其他用户信息的问题
 app.use('/api/user/*', noCache)
 app.use('/api/auth/*', noCache)
+app.use('/api/wallet/*', noCache)
 app.use('/api/orders/*', noCache)
 app.use('/api/payment/*', noCache)
 app.use('/api/sms/*', noCache)
@@ -179,10 +182,23 @@ app.get('/:lang/profile', requireAuth, (c) => {
   return c.html(ProfilePage(csrfToken, lang))
 })
 
+// 账单中心页面（需要登录）
+app.get('/:lang/billing', requireAuth, (c) => {
+  const csrfToken = c.var.csrfToken || ''
+  const lang = c.req.param('lang') as Language
+  return c.html(BillingPage(csrfToken, lang))
+})
+
 // Profile 路由（无语言前缀）
 app.get('/profile', requireAuth, (c) => {
   const lang = c.get('language') as Language
   return c.redirect(`/${lang}/profile`, 302)
+})
+
+// Billing 路由（无语言前缀）
+app.get('/billing', requireAuth, (c) => {
+  const lang = c.get('language') as Language
+  return c.redirect(`/${lang}/billing`, 302)
 })
 
 // ========== 页面路由（隐私政策和服务条款）==========
@@ -191,6 +207,7 @@ app.route('/', pagesRoutes)
 // ========== API 路由 ==========
 app.route('/api/auth', authRoutes)
 app.route('/api/user', userRoutes)
+app.route('/api/wallet', walletRoutes)
 app.route('/api/orders', ordersRoutes)
 app.route('/api/services', servicesRoutes)
 app.route('/api/sms', smsRoutes)
