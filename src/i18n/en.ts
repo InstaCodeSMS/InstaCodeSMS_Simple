@@ -279,6 +279,36 @@ export const en: Translations = {
     yuan: 'CNY'
   },
 
+  orders: {
+    title: 'Orders',
+    subtitle: 'View your virtual number rental orders',
+    stats_total: 'Total Orders',
+    stats_active: 'Active',
+    stats_completed: 'Completed',
+    stats_spent: 'Total Spent',
+    filter_all: 'All',
+    filter_active: 'Active',
+    filter_completed: 'Completed',
+    filter_expired: 'Expired',
+    no_orders: 'No order records',
+    go_purchase: 'Purchase Now',
+    verification_code: 'Verification Code',
+    yuan: 'CNY',
+    minutes: 'min',
+    status_pending: 'Pending',
+    status_active: 'Active',
+    status_completed: 'Completed',
+    status_expired: 'Expired',
+    status_cancelled: 'Cancelled',
+    expired: 'Expired',
+    go_terminal: 'Go to Terminal',
+    refresh: 'Refresh',
+    view_detail: 'View Details',
+    continue_payment: 'Continue Payment',
+    cancel: 'Cancel Order',
+    load_more: 'Load More'
+  },
+
   privacy: {
     security_protocol: 'Security Protocol',
     title: 'Privacy Policy',

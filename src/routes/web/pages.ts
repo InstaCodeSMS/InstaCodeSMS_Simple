@@ -7,6 +7,7 @@ import { Hono } from 'hono'
 import { RegisterPage } from '../../views/pages/RegisterPage'
 import { LoginPage } from '../../views/pages/LoginPage'
 import { DashboardPage } from '../../views/pages/DashboardPage'
+import { OrdersPage } from '../../views/pages/OrdersPage'
 import PrivacyPolicyPage from '../../views/pages/PrivacyPolicyPage'
 import TermsPage from '../../views/pages/TermsPage'
 import { requireAuth } from '../../middleware/auth'
@@ -57,6 +58,19 @@ app.get('/login', (c) => {
 
 app.get('/dashboard', requireAuth, (c) => {
   return c.html(DashboardPage())
+})
+
+// Orders 页面 - 支持语言前缀
+app.get('/:lang/orders', requireAuth, (c) => {
+  const csrfToken = c.var.csrfToken || ''
+  const lang = c.req.param('lang') as 'zh' | 'en'
+  return c.html(OrdersPage(csrfToken, lang))
+})
+
+// 重定向：无语言前缀的 orders → 带语言前缀
+app.get('/orders', (c) => {
+  const lang = c.get('language') as 'zh' | 'en' || 'zh'
+  return c.redirect(`/${lang}/orders`, 302)
 })
 
 // 支持语言前缀的隐私政策页面

@@ -272,6 +272,35 @@ export interface Translations {
     insufficient_balance: string
     yuan: string
   }
+  orders: {
+    title: string
+    subtitle: string
+    stats_total: string
+    stats_active: string
+    stats_completed: string
+    stats_spent: string
+    filter_all: string
+    filter_active: string
+    filter_completed: string
+    filter_expired: string
+    no_orders: string
+    go_purchase: string
+    verification_code: string
+    yuan: string
+    minutes: string
+    status_pending: string
+    status_active: string
+    status_completed: string
+    status_expired: string
+    status_cancelled: string
+    expired: string
+    go_terminal: string
+    refresh: string
+    view_detail: string
+    continue_payment: string
+    cancel: string
+    load_more: string
+  }
   privacy: {
     security_protocol: string
     title: string

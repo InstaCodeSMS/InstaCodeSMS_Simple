@@ -21,6 +21,7 @@ import { LoginPage } from './views/pages/LoginPage'
 import { DashboardPage } from './views/pages/DashboardPage'
 import { ProfilePage } from './views/pages/ProfilePage'
 import { BillingPage } from './views/pages/BillingPage'
+import { OrdersPage } from './views/pages/OrdersPage'
 
 // 导入页面路由
 import pagesRoutes from './routes/web/pages'
@@ -66,6 +67,25 @@ app.use('/api/telegram/*', noCache)
 // ========== Mini App 路由 ==========
 // 注意：必须放在 /:lang 路由之前，否则 mini-app 会被当作语言参数
 app.route('/mini-app', miniAppRoutes)
+
+// ========== API 路由 ==========
+// 注意：必须在 /:lang 页面路由之前，否则 /api/* 会被当作语言参数匹配
+app.route('/api/auth', authRoutes)
+app.route('/api/user', userRoutes)
+app.route('/api/wallet', walletRoutes)
+app.route('/api/orders', ordersRoutes)
+app.route('/api/services', servicesRoutes)
+app.route('/api/sms', smsRoutes)
+app.route('/api/payment', paymentRoutes)
+app.route('/api/sync', syncRoutes)
+app.route('/api/telegram', telegramRoutes)
+app.route('/api/webhooks', webhooksRoutes)
+app.route('/rpc', rpcApp)
+
+// 健康检查
+app.get('/api/health', (c) => {
+  return c.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
 
 // ========== 页面路由 ==========
 
@@ -189,6 +209,19 @@ app.get('/:lang/billing', requireAuth, (c) => {
   return c.html(BillingPage(csrfToken, lang))
 })
 
+// 订单管理页面（需要登录）
+app.get('/:lang/orders', requireAuth, (c) => {
+  const csrfToken = c.var.csrfToken || ''
+  const lang = c.req.param('lang') as Language
+  return c.html(OrdersPage(csrfToken, lang))
+})
+
+// Orders 路由（无语言前缀）
+app.get('/orders', requireAuth, (c) => {
+  const lang = c.get('language') as Language
+  return c.redirect(`/${lang}/orders`, 302)
+})
+
 // Profile 路由（无语言前缀）
 app.get('/profile', requireAuth, (c) => {
   const lang = c.get('language') as Language
@@ -203,28 +236,6 @@ app.get('/billing', requireAuth, (c) => {
 
 // ========== 页面路由（隐私政策和服务条款）==========
 app.route('/', pagesRoutes)
-
-// ========== API 路由 ==========
-app.route('/api/auth', authRoutes)
-app.route('/api/user', userRoutes)
-app.route('/api/wallet', walletRoutes)
-app.route('/api/orders', ordersRoutes)
-app.route('/api/services', servicesRoutes)
-app.route('/api/sms', smsRoutes)
-app.route('/api/payment', paymentRoutes)
-app.route('/api/sync', syncRoutes)
-app.route('/api/telegram', telegramRoutes)
-
-// ========== Webhook 路由 ==========
-// 新的统一 webhook 路径，建议迁移到此
-app.route('/api/webhooks', webhooksRoutes)
-
-app.route('/rpc', rpcApp)
-
-//健康检查
-app.get('/api/health', (c) => {
-  return c.json({ status: 'ok', timestamp: new Date().toISOString() })
-})
 
 // ========== 错误处理 ==========
 app.notFound(notFoundHandler)

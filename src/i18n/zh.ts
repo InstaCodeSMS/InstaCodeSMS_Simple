@@ -279,6 +279,36 @@ export const zh: Translations = {
     yuan: '元'
   },
 
+  orders: {
+    title: '订单管理',
+    subtitle: '查看您的虚拟号码租用订单',
+    stats_total: '总订单',
+    stats_active: '进行中',
+    stats_completed: '已完成',
+    stats_spent: '总消费',
+    filter_all: '全部',
+    filter_active: '进行中',
+    filter_completed: '已完成',
+    filter_expired: '已过期',
+    no_orders: '暂无订单记录',
+    go_purchase: '去购买',
+    verification_code: '验证码',
+    yuan: '元',
+    minutes: '分钟',
+    status_pending: '待支付',
+    status_active: '进行中',
+    status_completed: '已完成',
+    status_expired: '已过期',
+    status_cancelled: '已取消',
+    expired: '已过期',
+    go_terminal: '前往接码',
+    refresh: '刷新',
+    view_detail: '查看详情',
+    continue_payment: '继续支付',
+    cancel: '取消订单',
+    load_more: '加载更多'
+  },
+
   privacy: {
     security_protocol: '安全协议',
     title: '隐私政策',
