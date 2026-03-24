@@ -1,0 +1,65 @@
+﻿/**
+ * Better Auth 閰嶇疆 - 淇鐗? * 浣跨敤 text 绫诲瀷 ID锛屽吋瀹?Better Auth 榛樿琛屼负
+ * 淇 Cloudflare Workers 鐜涓嬬殑 Cookie 璁剧疆闂
+ */
+
+import { betterAuth } from "better-auth";
+import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import type { Env } from "../../types/env";
+import * as schema from "./schema";
+
+/**
+ * 鍒涘缓 Better Auth 瀹炰緥
+ */
+export function createAuth(env: Env) {
+  const connectionString = env.HYPERDRIVE?.connectionString || env.DATABASE_URL;
+  
+  if (!connectionString) {
+    throw new Error("[Better Auth] No database connection string available");
+  }
+
+  const sql = postgres(connectionString, {
+    max: 1,
+    idle_timeout: 20,
+    connect_timeout: 10,
+  });
+  
+  const db = drizzle(sql, { schema });
+
+  // 鍒ゆ柇鏄惁涓虹敓浜х幆澧冿紙閫氳繃 BASE_URL 鏄惁涓?https 鍒ゆ柇锛?  const isProduction = env.BASE_URL?.startsWith('https') || false;
+  
+  return betterAuth({
+    database: drizzleAdapter(db, {
+      provider: "pg",
+      schema,
+      usePlural: true, // 浣跨敤澶嶆暟琛ㄥ悕锛坲sers, sessions, accounts锛?    }),
+    
+    emailAndPassword: {
+      enabled: true,
+      requireEmailVerification: false,
+    },
+    
+    baseURL: env.BASE_URL || env.SITE_URL || "http://localhost:3000",
+    basePath: "/api/better-auth",
+    
+    session: {
+      cookieCache: {
+        enabled: true,
+        maxAge: 60 * 60 * 24 * 7 // 7澶?      },
+      // 娣诲姞 session 閰嶇疆
+      expiresIn: 60 * 60 * 24 * 7, // 7澶?      updateAge: 60 * 60 * 24, // 姣忓ぉ鏇存柊涓€娆?    },
+    
+    advanced: {
+      cookiePrefix: "better-auth",
+      useSecureCookies: isProduction, // 鐢熶骇鐜浣跨敤 secure cookies
+      // 鍏抽敭锛氭坊鍔?cookie 閰嶇疆
+      cookieOptions: {
+        sameSite: isProduction ? 'lax' : 'lax', // 寮€鍙戝拰鐢熶骇閮戒娇鐢?lax
+        httpOnly: true,
+        path: '/', // 纭繚 cookie 鍦ㄦ墍鏈夎矾寰勫彲鐢?        maxAge: 60 * 60 * 24 * 7, // 7澶?        ...(isProduction ? { secure: true } : {})
+      }
+    }
+  });
+}

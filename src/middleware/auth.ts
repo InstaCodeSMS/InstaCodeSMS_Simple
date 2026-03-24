@@ -75,47 +75,68 @@ export async function sessionMiddleware(c: Context<{ Bindings: Env }>, next: Nex
         try {
           // 直接使用 postgres 连接查询（绕过 Supabase API key 问题）
           const connectionString = c.env.HYPERDRIVE?.connectionString || c.env.DATABASE_URL
+          console.log('[Auth] Using connection:', c.env.HYPERDRIVE ? 'Hyperdrive' : 'DATABASE_URL')
+          
           if (connectionString) {
             // 动态导入 postgres
             const { default: postgres } = await import('postgres')
-            const sql = postgres(connectionString, { max: 1 })
+            const sql = postgres(connectionString, { max: 1, connect_timeout: 10 })
             
             try {
-              // 查询 session 和 user
+              // 查询 session 和 user - 使用更简单的查询
+              console.log('[Auth] Executing query for token:', tokenValue.substring(0, 8) + '...')
+              
               const sessions = await sql`
-                SELECT s.id as session_id, s.user_id, s.expires_at, 
-                       u.id, u.email, u.name, u.created_at
+                SELECT s.id as session_id, s.user_id, s.expires_at, s.token,
+                       u.id as user_id, u.email, u.name, u.created_at
                 FROM sessions s
                 JOIN users u ON s.user_id = u.id
                 WHERE s.token = ${tokenValue}
-                AND s.expires_at > NOW()
                 LIMIT 1
               `
               
+              console.log('[Auth] Query result:', sessions ? sessions.length : 0, 'rows')
+              
               if (sessions && sessions.length > 0) {
                 const sessionData = sessions[0]
-                console.log('[Auth] Direct postgres query successful for user:', sessionData.email)
-                c.set('user', {
-                  id: sessionData.user_id,
-                  email: sessionData.email,
-                  role: 'user',
-                  telegramId: null,
-                  created_at: String(sessionData.created_at || new Date().toISOString())
-                })
-                c.set('sessionId', sessionData.session_id)
-                logUserId(c, sessionData.user_id)
-                await next()
-                return
+                
+                // 检查是否过期
+                const expiresAt = new Date(sessionData.expires_at)
+                const now = new Date()
+                
+                if (expiresAt > now) {
+                  console.log('[Auth] Direct postgres query successful for user:', sessionData.email)
+                  c.set('user', {
+                    id: sessionData.user_id,
+                    email: sessionData.email,
+                    role: 'user',
+                    telegramId: null,
+                    created_at: String(sessionData.created_at || new Date().toISOString())
+                  })
+                  c.set('sessionId', sessionData.session_id)
+                  logUserId(c, sessionData.user_id)
+                  await next()
+                  return
+                } else {
+                  console.log('[Auth] Session expired at:', expiresAt.toISOString())
+                }
               } else {
                 console.log('[Auth] No session found for token')
               }
             } finally {
               await sql.end()
             }
+          } else {
+            console.log('[Auth] No database connection string available')
           }
         } catch (dbError) {
-          console.error('[Auth] Direct postgres query error:', dbError)
+          console.error('[Auth] Direct postgres query error:', dbError instanceof Error ? dbError.message : String(dbError))
         }
+      } else {
+        console.log('[Auth] No session_token cookie found')
+        // 打印所有 cookie 用于调试
+        const allCookies = c.req.header('cookie')
+        console.log('[Auth] All cookies:', allCookies ? allCookies.substring(0, 200) + '...' : 'none')
       }
     } catch (error) {
       console.error('[Auth] Better Auth session error:', error)
