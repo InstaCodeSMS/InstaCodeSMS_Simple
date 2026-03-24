@@ -34,6 +34,7 @@ import pagesRoutes from './routes/web/pages'
 // 导入中间件
 import { requireAuth } from './middleware/auth'
 import authRoutes from './routes/api/auth'
+import authLightRoutes from './routes/api/auth-light'
 import userRoutes from './routes/api/user'
 import walletRoutes from './routes/api/wallet'
 import ordersRoutes from './routes/api/orders'
