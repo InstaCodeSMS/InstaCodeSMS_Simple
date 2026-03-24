@@ -32,6 +32,18 @@ export function createAuth(env: Env) {
   // 判断是否为生产环境（通过 BASE_URL 是否为 https 判断）
   const isProduction = env.BASE_URL?.startsWith('https') || false;
   
+  // 构建信任的 origins 列表
+  const trustedOrigins = [
+    "http://localhost:3000", // 本地开发
+    "http://127.0.0.1:3000", // 本地开发（IP 形式）
+    "https://instacode.cfd", // 生产域名
+  ];
+  
+  // 如果 BASE_URL 存在且不在列表中，添加进去
+  if (env.BASE_URL && !trustedOrigins.includes(env.BASE_URL)) {
+    trustedOrigins.push(env.BASE_URL);
+  }
+  
   return betterAuth({
     database: drizzleAdapter(db, {
       provider: "pg",
@@ -46,6 +58,7 @@ export function createAuth(env: Env) {
     
     baseURL: env.BASE_URL || env.SITE_URL || "http://localhost:3000",
     basePath: "/api/better-auth",
+    trustedOrigins,
     
     session: {
       cookieCache: {
