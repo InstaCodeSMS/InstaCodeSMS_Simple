@@ -1,8 +1,12 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
+import { setCookie } from 'hono/cookie'
 import { languageDetector } from 'hono/language'
 import type { Env } from './types/env'
 import type { Language } from './i18n'
+
+// Better Auth
+import { createAuth } from './adapters/auth'
 
 // 导入中间件
 import { csrfProtection } from './middleware/csrf'
@@ -10,6 +14,7 @@ import { paymentStrategyInitializer } from './middleware/payment-init'
 import { requestLogger } from './middleware/logger'
 import { errorHandler, notFoundHandler } from './middleware/errorHandler'
 import { noCache } from './middleware/no-cache'
+import { sessionMiddleware } from './middleware/auth'
 
 // 导入页面视图
 import ReceivePage from './views/pages/ReceivePage'
@@ -40,6 +45,7 @@ import telegramRoutes from './routes/api/telegram'
 import webhooksRoutes from './routes/api/webhooks'
 import rpcApp from './routes/rpc'
 import miniAppRoutes from './routes/web/mini-app'
+import checkSchemaRoutes from './routes/api/check-schema'
 
 // 创建主应用实例
 const app = new Hono<{ Bindings: Env }>()
@@ -47,12 +53,30 @@ const app = new Hono<{ Bindings: Env }>()
 // ========== 中间件 ==========
 app.use('*', paymentStrategyInitializer)
 app.use('*', requestLogger)
-app.use('*', cors())
+app.use('*', cors({
+  origin: (origin) => {
+    // 对于本地开发，允许任何 origin
+    // 但返回具体的 origin 而不是 *，以支持 credentials
+    return origin || '*'
+  },
+  credentials: true,
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowHeaders: ['Content-Type', 'Cookie', 'Authorization'],
+  exposeHeaders: ['Set-Cookie'],
+  maxAge: 86400
+}))
 app.use('*', languageDetector({
   supportedLanguages: ['zh', 'en'],
-  fallbackLanguage: 'en'
+  fallbackLanguage: 'en',
+  cookieOptions: {
+    sameSite: 'Lax',
+    secure: false, // 开发环境禁用 secure
+    httpOnly: true,
+    maxAge: 86400 * 365
+  }
 }))
 app.use('*', csrfProtection)
+app.use('*', sessionMiddleware)
 
 // ========== 私有 API 禁止缓存 ==========
 // Security: 防止 CDN 缓存用户数据，解决隐私模式下显示其他用户信息的问题
@@ -63,6 +87,218 @@ app.use('/api/orders/*', noCache)
 app.use('/api/payment/*', noCache)
 app.use('/api/sms/*', noCache)
 app.use('/api/telegram/*', noCache)
+
+// ========== Better Auth 路由 ==========
+app.all('/api/better-auth/*', async (c) => {
+  const auth = createAuth(c.env)
+  
+  // 处理 OPTIONS 预检请求
+  if (c.req.method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': c.req.header('origin') || '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Cookie',
+        'Access-Control-Allow-Credentials': 'true',
+        'Access-Control-Max-Age': '86400'
+      }
+    })
+  }
+  
+  const response = await auth.handler(c.req.raw)
+  
+  // 读取响应 body 获取 token
+  let responseBody: ReadableStream<Uint8Array> | null = null
+  let token: string | null = null
+  
+  // 对于注册和登录请求，需要从响应 body 中提取 token 并设置 cookie
+  const url = new URL(c.req.url)
+  const isAuthEndpoint = url.pathname.includes('/sign-up/') || url.pathname.includes('/sign-in/')
+  
+  if (isAuthEndpoint && response.body) {
+    const reader = response.body.getReader()
+    const chunks: Uint8Array[] = []
+    
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      if (value) chunks.push(value)
+    }
+    
+    // 合并所有 chunks
+    const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0)
+    const combinedArray = new Uint8Array(totalLength)
+    let offset = 0
+    for (const chunk of chunks) {
+      combinedArray.set(chunk, offset)
+      offset += chunk.length
+    }
+    
+    const bodyText = new TextDecoder().decode(combinedArray)
+    
+    try {
+      const json = JSON.parse(bodyText)
+      token = json.token || null
+      console.log('[Better-Auth] Got token from response:', token ? token.substring(0, 8) + '...' : 'null')
+    } catch (e) {
+      console.error('[Better-Auth] Failed to parse response:', e)
+    }
+    
+    // 重新创建 body
+    const encodedBody = new TextEncoder().encode(bodyText)
+    responseBody = new ReadableStream({
+      start(controller) {
+        controller.enqueue(encodedBody)
+        controller.close()
+      }
+    })
+  } else if (response.body) {
+    // 非 auth 端点，直接使用原始 body
+    responseBody = response.body
+  }
+  
+  // 获取 origin 和 localhost 检测
+  const origin = c.req.header('origin') || '*'
+  const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
+  
+  // 使用 Hono 的 setCookie 设置所有 cookies
+  // 1. 设置 session token（如果有）
+  if (token) {
+    console.log('[Better-Auth] Setting session token cookie via Hono setCookie')
+    setCookie(c, 'better-auth.session_token', token, {
+      path: '/',
+      httpOnly: true,
+      sameSite: 'Lax',
+      secure: !isLocalhost, // localhost 不需要 secure
+      maxAge: 60 * 60 * 24 * 7 // 7 天
+    })
+  }
+  
+  // 2. 设置原始响应中的其他 cookies
+  const originalCookies = response.headers.getSetCookie()
+  console.log('[Better-Auth] Original cookies from Better Auth:', originalCookies.length)
+  
+  for (const cookieStr of originalCookies) {
+    // 解析 cookie 字符串
+    const parts = cookieStr.split(';').map(p => p.trim())
+    const nameValue = parts[0].split('=')
+    if (nameValue.length >= 2) {
+      const name = nameValue[0]
+      const value = nameValue.slice(1).join('=')
+      
+      // 解析选项
+      const options: {
+        path?: string
+        secure?: boolean
+        httpOnly?: boolean
+        sameSite?: 'Strict' | 'Lax' | 'None'
+        maxAge?: number
+      } = {}
+      
+      for (const part of parts.slice(1)) {
+        const lowerPart = part.toLowerCase()
+        if (lowerPart === 'httponly') {
+          options.httpOnly = true
+        } else if (lowerPart === 'secure') {
+          options.secure = true
+        } else if (lowerPart.startsWith('path=')) {
+          options.path = part.substring(5)
+        } else if (lowerPart.startsWith('max-age=')) {
+          options.maxAge = parseInt(part.substring(8))
+        } else if (lowerPart.startsWith('samesite=')) {
+          const sameSite = part.substring(9)
+          if (sameSite === 'Strict' || sameSite === 'Lax' || sameSite === 'None') {
+            options.sameSite = sameSite
+          }
+        }
+      }
+      
+      console.log('[Better-Auth] Setting cookie via Hono setCookie:', name, options)
+      setCookie(c, name, value, options)
+    }
+  }
+  
+  // ========== 方案：在响应 body 中返回 cookies，前端手动设置 ==========
+  // 问题：wrangler dev 环境中 Set-Cookie header 格式有问题
+  // 解决：将 cookies 放入响应 body，前端通过 document.cookie 设置
+  
+  // 获取所有 Set-Cookie headers
+  const setCookies = response.headers.getSetCookie()
+  console.log('[Better-Auth] Set-Cookie headers count:', setCookies.length)
+  
+  // 对于注册/登录请求，在响应 body 中添加 cookies
+  if (isAuthEndpoint && responseBody) {
+    // 读取原始 body
+    const reader = responseBody.getReader()
+    const chunks: Uint8Array[] = []
+    
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      if (value) chunks.push(value)
+    }
+    
+    const totalLength = chunks.reduce((acc, chunk) => acc + chunk.length, 0)
+    const combinedArray = new Uint8Array(totalLength)
+    let offset = 0
+    for (const chunk of chunks) {
+      combinedArray.set(chunk, offset)
+      offset += chunk.length
+    }
+    
+    const bodyText = new TextDecoder().decode(combinedArray)
+    
+    try {
+      const json = JSON.parse(bodyText)
+      // 将 cookies 添加到响应 body 中
+      // 只保留 cookie 的名称和值部分（不包含属性，因为 document.cookie 不支持）
+      const cookieValues: string[] = []
+      for (const cookieStr of setCookies) {
+        // 提取 cookie 名称=值 部分（第一个分号之前）
+        const firstSemi = cookieStr.indexOf(';')
+        const cookieValue = firstSemi > 0 ? cookieStr.substring(0, firstSemi) : cookieStr
+        cookieValues.push(cookieValue)
+      }
+      json.cookies = cookieValues
+      console.log('[Better-Auth] Added cookies to response body:', cookieValues.length)
+      
+      const newBody = JSON.stringify(json)
+      const encodedBody = new TextEncoder().encode(newBody)
+      
+      const finalResponse = new Response(new ReadableStream({
+        start(controller) {
+          controller.enqueue(encodedBody)
+          controller.close()
+        }
+      }), {
+        status: response.status,
+        headers: response.headers
+      })
+      
+      finalResponse.headers.set('Access-Control-Allow-Origin', origin)
+      finalResponse.headers.set('Access-Control-Allow-Credentials', 'true')
+      finalResponse.headers.set('Content-Type', 'application/json')
+      
+      return finalResponse
+    } catch (e) {
+      console.error('[Better-Auth] Failed to modify response body:', e)
+    }
+  }
+  
+  // 非认证端点，直接返回原始响应
+  const finalResponse = new Response(responseBody || response.body, {
+    status: response.status,
+    headers: response.headers
+  })
+  
+  finalResponse.headers.set('Access-Control-Allow-Origin', origin)
+  finalResponse.headers.set('Access-Control-Allow-Credentials', 'true')
+  
+  console.log('[Better-Auth] Response status:', response.status)
+  
+  return finalResponse
+})
 
 // ========== Mini App 路由 ==========
 // 注意：必须放在 /:lang 路由之前，否则 mini-app 会被当作语言参数
@@ -80,6 +316,7 @@ app.route('/api/payment', paymentRoutes)
 app.route('/api/sync', syncRoutes)
 app.route('/api/telegram', telegramRoutes)
 app.route('/api/webhooks', webhooksRoutes)
+app.route('/api/check-schema', checkSchemaRoutes)
 app.route('/rpc', rpcApp)
 
 // 健康检查

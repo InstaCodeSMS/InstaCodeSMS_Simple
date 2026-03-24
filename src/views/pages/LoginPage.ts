@@ -77,28 +77,35 @@ export function LoginPage(csrfToken: string = '', lang: Language = 'zh'): string
         async submitLogin() {
           this.isLoading = true;
           this.message = '';
-          
+
           try {
-            const response = await fetch('/api/auth/login', {
+            const response = await fetch('/api/better-auth/sign-in/email', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
               },
-              body: JSON.stringify(this.form)
+              body: JSON.stringify(this.form),
+              credentials: 'include'
             });
-            
+
             const data = await response.json();
-            
-            if (data.success) {
+
+            if (response.ok) {
+              // 手动设置 cookies（因为 wrangler dev 的 Set-Cookie header 格式问题）
+              if (data.cookies && Array.isArray(data.cookies)) {
+                data.cookies.forEach(cookieStr => {
+                  document.cookie = cookieStr;
+                });
+              }
+              
               this.isSuccess = true;
-              this.message = data.message || this.t('auth.login_success');
-              // 跳转到 dashboard
+              this.message = this.t('auth.login_success');
               setTimeout(() => {
                 window.location.href = '/' + this.lang + '/dashboard';
               }, 500);
             } else {
               this.isSuccess = false;
-              this.message = data.message || this.t('auth.login_failed');
+              this.message = data.error?.message || this.t('auth.login_failed');
             }
           } catch (error) {
             this.isSuccess = false;

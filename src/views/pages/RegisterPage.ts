@@ -89,24 +89,23 @@ export function RegisterPage(csrfToken: string = '', lang: Language = 'zh'): str
         },
         
         async submitRegister() {
-          // 客户端验证
           if (this.form.password.length < 6) {
             this.message = this.t('auth.password_min_length');
             this.isSuccess = false;
             return;
           }
-          
+
           if (this.form.password !== this.form.confirmPassword) {
             this.message = this.t('auth.password_mismatch');
             this.isSuccess = false;
             return;
           }
-          
+
           this.isLoading = true;
           this.message = '';
-          
+
           try {
-            const response = await fetch('/api/auth/register', {
+            const response = await fetch('/api/better-auth/sign-up/email', {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -114,22 +113,29 @@ export function RegisterPage(csrfToken: string = '', lang: Language = 'zh'): str
               body: JSON.stringify({
                 email: this.form.email,
                 password: this.form.password,
-                confirmPassword: this.form.confirmPassword
-              })
+                name: this.form.email.split('@')[0]
+              }),
+              credentials: 'include'
             });
-            
+
             const data = await response.json();
-            
-            if (data.success) {
+
+            if (response.ok) {
+              // 手动设置 cookies（因为 wrangler dev 的 Set-Cookie header 格式问题）
+              if (data.cookies && Array.isArray(data.cookies)) {
+                data.cookies.forEach(cookieStr => {
+                  document.cookie = cookieStr;
+                });
+              }
+              
               this.isSuccess = true;
-              this.message = data.message || this.t('auth.register_success');
-              // 跳转到 dashboard
+              this.message = this.t('auth.register_success');
               setTimeout(() => {
                 window.location.href = '/' + this.lang + '/dashboard';
               }, 500);
             } else {
               this.isSuccess = false;
-              this.message = data.message || this.t('auth.register_failed');
+              this.message = data.error?.message || this.t('auth.register_failed');
             }
           } catch (error) {
             this.isSuccess = false;

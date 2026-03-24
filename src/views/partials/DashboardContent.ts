@@ -13,7 +13,7 @@ export function DashboardContent(csrfToken: string = ''): string {
         <h1 class="text-2xl font-bold" x-text="t('dashboard.title')"></h1>
         <button 
           hx-post="/api/auth/logout"
-          hx-on::after-request="window.location.href = '/' + lang + '/login'"
+          hx-on::after-request="if(event.detail.xhr.status === 200) { document.cookie = 'better-auth.session_token=; Max-Age=0; Path=/'; document.cookie = 'better-auth.session_data=; Max-Age=0; Path=/'; window.location.href = '/' + lang + '/login'; }"
           class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors"
           x-text="t('auth.logout')"
         ></button>

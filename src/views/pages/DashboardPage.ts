@@ -9,6 +9,7 @@ import Sidebar from '../components/Sidebar'
 import { raw } from 'hono/html'
 import type { Language } from '../../i18n'
 import { DashboardContent } from '../partials/DashboardContent'
+import DashboardHeader from '../components/DashboardHeader'
 
 export function DashboardPage(csrfToken: string = '', lang: Language = 'zh'): string {
   const content = `

@@ -183,10 +183,21 @@ export default function Header({ lang = 'zh' }: HeaderProps = {}) {
         async checkAuth() {
           try {
             const response = await fetch('/api/user/profile');
+            // 检查响应是否为 JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+              // 非 JSON 响应，说明未登录或被重定向
+              this.isLoggedIn = false;
+              this.userEmail = '';
+              return;
+            }
             const data = await response.json();
             if (data.success && data.data) {
               this.isLoggedIn = true;
               this.userEmail = data.data.email;
+            } else {
+              this.isLoggedIn = false;
+              this.userEmail = '';
             }
           } catch (error) {
             this.isLoggedIn = false;
