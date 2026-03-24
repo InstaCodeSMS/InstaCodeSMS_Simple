@@ -1,6 +1,8 @@
 /**
  * 认证中间件
  * 支持 Better Auth 会话和 Telegram Mini App 认证
+ * 
+ * 优化：使用 Supabase REST API 进行会话验证，避免 Worker 资源超限
  */
 
 import { Context, Next } from 'hono'
@@ -20,126 +22,165 @@ export interface AuthContext {
 }
 
 /**
+ * 使用 Supabase REST API 验证会话
+ * 避免 postgres 连接在 Workers 环境中的资源消耗
+ */
+async function validateSessionViaAPI(env: Env, sessionToken: string): Promise<{
+  valid: boolean
+  user?: {
+    id: string
+    email: string
+    name?: string
+  }
+  sessionId?: string
+}> {
+  // 从 cookie 中提取 token（格式可能为 token.signature）
+  // 处理可能的双重 URL 编码（%252F -> %2F -> /）
+  let decodedToken = sessionToken;
+  try {
+    // 尝试解码，最多解码两次（处理双重编码）
+    let decoded = decodedToken;
+    for (let i = 0; i < 2; i++) {
+      const temp = decodeURIComponent(decoded);
+      if (temp === decoded) break; // 没有变化，说明已经解码完毕
+      decoded = temp;
+    }
+    decodedToken = decoded;
+    console.log('[Auth] Decoded sessionToken:', sessionToken.substring(0, 20) + '... -> ' + decodedToken.substring(0, 20) + '...');
+  } catch (e) {
+    // 解码失败，使用原始值
+    console.log('[Auth] Failed to decode sessionToken, using original');
+  }
+  
+  const tokenValue = decodedToken.split('.')[0]
+  
+  // SUPABASE_PUBLISHABLE_KEY 即 anon key
+  const supabaseKey = env.SUPABASE_PUBLISHABLE_KEY
+  
+  if (!env.SUPABASE_URL || !supabaseKey) {
+    console.error('[Auth] Missing Supabase credentials')
+    return { valid: false }
+  }
+
+  try {
+    // 使用 Supabase REST API 查询 session
+    const response = await fetch(`${env.SUPABASE_URL}/rest/v1/sessions?select=id,user_id,expires_at,token,users(id,email,name,created_at)&token=eq.${tokenValue}&limit=1`, {
+      method: 'GET',
+      headers: {
+        'apikey': supabaseKey,
+        'Authorization': `Bearer ${supabaseKey}`,
+        'Content-Type': 'application/json'
+      }
+    })
+
+    if (!response.ok) {
+      console.error('[Auth] Supabase API error:', response.status, await response.text())
+      return { valid: false }
+    }
+
+    const sessions = await response.json() as Array<{
+      id: string
+      user_id: string
+      expires_at: string
+      token: string
+      users: {
+        id: string
+        email: string
+        name: string | null
+        created_at: string
+      }
+    }>
+
+    if (!sessions || sessions.length === 0) {
+      return { valid: false }
+    }
+
+    const session = sessions[0]
+    
+    // 检查过期
+    const expiresAt = new Date(session.expires_at)
+    if (expiresAt <= new Date()) {
+      return { valid: false }
+    }
+
+    return {
+      valid: true,
+      user: {
+        id: session.users.id,
+        email: session.users.email,
+        name: session.users.name || undefined
+      },
+      sessionId: session.id
+    }
+  } catch (error) {
+    console.error('[Auth] Session validation error:', error)
+    return { valid: false }
+  }
+}
+
+/**
  * Better Auth 会话中间件
  * 自动从请求中提取会话信息，支持 Web 和 Telegram 用户
  * 
- * Why: 修复手动设置 cookie 后 session_data 签名不匹配的问题
- * 通过 session_token 直接查询数据库验证会话
+ * Why: 使用 Supabase REST API 而非直接 SQL 连接
+ * 避免在 Cloudflare Workers 中超出资源限制
  */
 export async function sessionMiddleware(c: Context<{ Bindings: Env }>, next: Next) {
-  // 尝试 Better Auth 会话（Cookie）
-  if (c.env.DATABASE_URL) {
+  // 尝试 Better Auth 会话（通过 REST API）
+  const sessionToken = getCookie(c, 'better-auth.session_token')
+  
+  if (sessionToken) {
+    console.log('[Auth] Found session_token, validating via API')
+    
+    const result = await validateSessionViaAPI(c.env, sessionToken)
+    
+    if (result.valid && result.user) {
+      console.log('[Auth] Session valid for user:', result.user.email)
+      c.set('user', {
+        id: result.user.id,
+        email: result.user.email,
+        role: 'user',
+        telegramId: null,
+        created_at: new Date().toISOString()
+      })
+      c.set('sessionId', result.sessionId || '')
+      logUserId(c, result.user.id)
+      await next()
+      return
+    } else {
+      console.log('[Auth] Session validation failed')
+    }
+  }
+
+  // 尝试 Better Auth getSession（可能需要数据库连接，作为备选）
+  if (c.env.DATABASE_URL && !sessionToken) {
     try {
       const auth = createAuth(c.env)
-      // 构建包含 Cookie 的 headers
       const headers = new Headers(c.req.raw.headers)
       const cookieHeader = c.req.header('cookie')
       if (cookieHeader) {
         headers.set('cookie', cookieHeader)
       }
 
-      // 首先尝试 Better Auth 的 getSession
-      try {
-        const session = await auth.api.getSession({
-          headers: headers
-        })
+      const session = await auth.api.getSession({
+        headers: headers
+      })
 
-        if (session) {
-          c.set('user', {
-            id: session.user.id,
-            email: session.user.email,
-            role: 'user',
-            telegramId: null,
-            created_at: String(session.user.createdAt || new Date().toISOString())
-          })
-          c.set('sessionId', session.session.id)
-          logUserId(c, session.user.id)
-          await next()
-          return
-        }
-      } catch (getSessionError) {
-        // getSession 失败（可能是 session_data 签名不匹配），尝试直接用 token 验证
-        console.log('[Auth] getSession failed, trying direct token validation:', getSessionError instanceof Error ? getSessionError.message : String(getSessionError))
-      }
-      
-      // 备用方案：直接使用 postgres 查询数据库验证 token
-      let sessionToken = getCookie(c, 'better-auth.session_token')
-      if (sessionToken) {
-        console.log('[Auth] Found session_token in cookie, validating directly')
-        
-        // Cookie 中的 token 可能包含签名部分（格式: token.signature）
-        // 数据库中只存储 token 部分，需要提取
-        const tokenValue = sessionToken.split('.')[0]
-        console.log('[Auth] Token value for validation:', tokenValue ? tokenValue.substring(0, 8) + '...' : 'null')
-        
-        try {
-          // 直接使用 postgres 连接查询（绕过 Supabase API key 问题）
-          const connectionString = c.env.HYPERDRIVE?.connectionString || c.env.DATABASE_URL
-          console.log('[Auth] Using connection:', c.env.HYPERDRIVE ? 'Hyperdrive' : 'DATABASE_URL')
-          
-          if (connectionString) {
-            // 动态导入 postgres
-            const { default: postgres } = await import('postgres')
-            const sql = postgres(connectionString, { max: 1, connect_timeout: 10 })
-            
-            try {
-              // 查询 session 和 user - 使用更简单的查询
-              console.log('[Auth] Executing query for token:', tokenValue.substring(0, 8) + '...')
-              
-              const sessions = await sql`
-                SELECT s.id as session_id, s.user_id, s.expires_at, s.token,
-                       u.id as user_id, u.email, u.name, u.created_at
-                FROM sessions s
-                JOIN users u ON s.user_id = u.id
-                WHERE s.token = ${tokenValue}
-                LIMIT 1
-              `
-              
-              console.log('[Auth] Query result:', sessions ? sessions.length : 0, 'rows')
-              
-              if (sessions && sessions.length > 0) {
-                const sessionData = sessions[0]
-                
-                // 检查是否过期
-                const expiresAt = new Date(sessionData.expires_at)
-                const now = new Date()
-                
-                if (expiresAt > now) {
-                  console.log('[Auth] Direct postgres query successful for user:', sessionData.email)
-                  c.set('user', {
-                    id: sessionData.user_id,
-                    email: sessionData.email,
-                    role: 'user',
-                    telegramId: null,
-                    created_at: String(sessionData.created_at || new Date().toISOString())
-                  })
-                  c.set('sessionId', sessionData.session_id)
-                  logUserId(c, sessionData.user_id)
-                  await next()
-                  return
-                } else {
-                  console.log('[Auth] Session expired at:', expiresAt.toISOString())
-                }
-              } else {
-                console.log('[Auth] No session found for token')
-              }
-            } finally {
-              await sql.end()
-            }
-          } else {
-            console.log('[Auth] No database connection string available')
-          }
-        } catch (dbError) {
-          console.error('[Auth] Direct postgres query error:', dbError instanceof Error ? dbError.message : String(dbError))
-        }
-      } else {
-        console.log('[Auth] No session_token cookie found')
-        // 打印所有 cookie 用于调试
-        const allCookies = c.req.header('cookie')
-        console.log('[Auth] All cookies:', allCookies ? allCookies.substring(0, 200) + '...' : 'none')
+      if (session) {
+        c.set('user', {
+          id: session.user.id,
+          email: session.user.email,
+          role: 'user',
+          telegramId: null,
+          created_at: String(session.user.createdAt || new Date().toISOString())
+        })
+        c.set('sessionId', session.session.id)
+        logUserId(c, session.user.id)
+        await next()
+        return
       }
     } catch (error) {
-      console.error('[Auth] Better Auth session error:', error)
+      console.error('[Auth] Better Auth session error:', error instanceof Error ? error.message : String(error))
     }
   }
   
