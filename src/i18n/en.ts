@@ -198,15 +198,21 @@ export const en: Translations = {
     register_failed: 'Registration failed',
     login_success: 'Login successful',
     login_failed: 'Login failed',
-    email_required: 'Email address is required',
+    email_required: 'Email is required',
     password_required: 'Password is required',
-    email_placeholder: 'Enter your email address',
+    email_placeholder: 'Enter your email',
     password_placeholder: 'Enter your password',
     confirm_password_placeholder: 'Confirm your password',
     have_account: 'Already have an account?',
-    no_account: 'Don\'t have an account?',
+    no_account: "Don't have an account?",
     login_now: 'Login now',
-    register_now: 'Register now'
+    register_now: 'Register now',
+    forgot_password: 'Forgot password?',
+    back_home: 'Back to Home',
+    terms_hint: 'By signing in, you agree to our',
+    terms_link: 'Terms of Service',
+    and: 'and',
+    privacy_link: 'Privacy Policy'
   },
 
   dashboard: {

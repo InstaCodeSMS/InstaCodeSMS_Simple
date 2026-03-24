@@ -206,7 +206,13 @@ export const zh: Translations = {
     have_account: '已有账号？',
     no_account: '没有账号？',
     login_now: '立即登录',
-    register_now: '立即注册'
+    register_now: '立即注册',
+    forgot_password: '忘记密码？',
+    back_home: '返回首页',
+    terms_hint: '登录即表示同意',
+    terms_link: '服务条款',
+    and: '和',
+    privacy_link: '隐私政策'
   },
 
   dashboard: {

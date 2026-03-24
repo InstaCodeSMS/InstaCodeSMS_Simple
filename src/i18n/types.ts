@@ -204,6 +204,12 @@ export interface Translations {
     no_account: string
     login_now: string
     register_now: string
+    forgot_password: string
+    back_home: string
+    terms_hint: string
+    terms_link: string
+    and: string
+    privacy_link: string
   }
   dashboard: {
     title: string
