@@ -17,20 +17,26 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@better-auth/kysely-adapter": "^1.5.5",
     "@grammyjs/hydrate": "^1.6.0",
     "@grammyjs/router": "^2.0.0",
     "@supabase/supabase-js": "^2.97.0",
     "@types/bcryptjs": "^2.4.6",
     "alpinejs": "^3.15.8",
     "bcryptjs": "^3.0.3",
+    "better-auth": "^1.5.5",
+    "better-auth-cloudflare": "^0.2.9",
     "blueimp-md5": "^2.19.0",
     "daisyui": "^4.12.14",
     "dotenv": "^17.3.1",
+    "drizzle-orm": "^0.45.1",
     "grammy": "^1.40.1",
     "hono": "^4.12.0",
     "htmx.org": "^2.0.8",
-    "lucia": "^3.2.2",
+    "kysely": "^0.28.12",
     "nanoid": "^5.1.6",
+    "pg": "^8.20.0",
+    "postgres": "^3.4.8",
     "qrcode": "^1.5.3",
     "tailwindcss": "^4.2.0",
     "zod": "^4.3.6"
@@ -43,5 +49,13 @@
     "typescript": "^5.9.3",
     "vitest": "^2.1.8",
     "wrangler": "^4.66.0"
+  },
+  "directories": {
+    "doc": "docs",
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github-instacodesms:InstaCodeSMS/InstaCodeSMS_Simple.git"
   }
 }

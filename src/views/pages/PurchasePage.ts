@@ -248,18 +248,45 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
             <p class="text-[9px] font-black uppercase tracking-widest" style="color: var(--text-muted);">
               Step 4 / <span x-text="t('purchase.step_payment')"></span>
             </p>
-            <div class="grid grid-cols-2 gap-4">
+            
+            <!-- 余额显示 -->
+            <div x-show="userBalance !== null" class="mb-3 p-3 rounded-xl flex items-center justify-between"
+                 style="background-color: var(--bg-tertiary); border: 0.667px solid var(--border-color);">
+              <div class="flex items-center gap-2">
+                <svg class="w-5 h-5" style="color: var(--accent-blue);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                </svg>
+                <span class="text-sm" style="color: var(--text-secondary);" x-text="t('purchase.current_balance')"></span>
+              </div>
+              <span class="text-lg font-bold" style="color: var(--text-primary);">
+                ¥<span x-text="(userBalance / 1000).toFixed(3)"></span>
+              </span>
+            </div>
+            
+            <div class="grid grid-cols-3 gap-3">
+              <!-- 余额支付 -->
+              <button @click="form.paymentMethod = 'balance'"
+                      :class="form.paymentMethod === 'balance' ? 'border-blue-500 bg-blue-600/10 ring-1 ring-blue-500/30' : 'border-[rgba(200,210,240,0.08)]'"
+                      class="relative flex flex-col items-center p-4 rounded-xl border transition-all group"
+                      :style="theme === 'light' && form.paymentMethod !== 'balance' ? 'background-color: var(--bg-tertiary); border-color: var(--border-color-light);' : ''">
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-2xl">💰</span>
+                  <div class="text-xs font-bold text-center" style="color: var(--text-primary);" x-text="t('purchase.balance_pay')"></div>
+                </div>
+                <i x-show="form.paymentMethod === 'balance'" class="fas fa-check-circle text-blue-500 absolute top-2 right-2"></i>
+                <!-- 余额不足提示 -->
+                <div x-show="form.paymentMethod === 'balance' && !hasEnoughBalance" class="absolute -bottom-1 left-1/2 -translate-x-1/2 translate-y-full mt-1">
+                  <span class="text-[10px] text-red-500 whitespace-nowrap" x-text="t('purchase.insufficient_balance')"></span>
+                </div>
+              </button>
               <!-- 支付宝 -->
               <button @click="form.paymentMethod = 'alipay'"
                       :class="form.paymentMethod === 'alipay' ? 'border-blue-500 bg-blue-600/10 ring-1 ring-blue-500/30' : 'border-[rgba(200,210,240,0.08)]'"
                       class="relative flex flex-col items-center p-4 rounded-xl border transition-all group"
                       :style="theme === 'light' && form.paymentMethod !== 'alipay' ? 'background-color: var(--bg-tertiary); border-color: var(--border-color-light);' : ''">
-                <div class="flex items-center gap-4">
-                  <span class="text-3xl">💳</span>
-                  <div class="text-left">
-                    <div class="text-sm font-bold" style="color: var(--text-primary);" x-text="t('purchase.alipay')"></div>
-                    <div class="text-xs" style="color: var(--text-muted);">USD</div>
-                  </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-2xl">💳</span>
+                  <div class="text-xs font-bold" style="color: var(--text-primary);" x-text="t('purchase.alipay')"></div>
                 </div>
                 <i x-show="form.paymentMethod === 'alipay'" class="fas fa-check-circle text-blue-500 absolute top-2 right-2"></i>
               </button>
@@ -268,12 +295,9 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
                       :class="form.paymentMethod === 'usdt' ? 'border-blue-500 bg-blue-600/10 ring-1 ring-blue-500/30' : 'border-[rgba(200,210,240,0.08)]'"
                       class="relative flex flex-col items-center p-4 rounded-xl border transition-all group"
                       :style="theme === 'light' && form.paymentMethod !== 'usdt' ? 'background-color: var(--bg-tertiary); border-color: var(--border-color-light);' : ''">
-                <div class="flex items-center gap-4">
-                  <span class="text-3xl">₮</span>
-                  <div class="text-left">
-                    <div class="text-sm font-bold" style="color: var(--text-primary);">USDT</div>
-                    <div class="text-xs" style="color: var(--text-muted);">TRC20</div>
-                  </div>
+                <div class="flex flex-col items-center gap-1">
+                  <span class="text-2xl">₮</span>
+                  <div class="text-xs font-bold" style="color: var(--text-primary);">USDT</div>
                 </div>
                 <i x-show="form.paymentMethod === 'usdt'" class="fas fa-check-circle text-blue-500 absolute top-2 right-2"></i>
               </button>
@@ -351,6 +375,7 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
         },
         orderResult: null,
         errorMessage: null,
+        userBalance: null, // 用户余额（毫单位）
         expiryOptions: [
           { value: 1, days: '5-30', multiplier: 0.9, discount: 10 },
           { value: 2, days: '10-30', multiplier: 1, discount: 0 },
@@ -362,6 +387,13 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
         hideTestNotice: localStorage.getItem('hideTestNotice') === 'true',
         t(key) {
           return window.t ? window.t(key) : key;
+        },
+        
+        // 计算是否有足够余额
+        get hasEnoughBalance() {
+          if (this.userBalance === null) return false;
+          const totalMilli = parseFloat(this.calculateTotal()) * 1000;
+          return this.userBalance >= totalMilli;
         },
         
         get filteredServices() {
@@ -404,6 +436,21 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
               this.loading = false;
             })
             .catch(() => this.loading = false);
+          // 加载用户余额
+          this.loadUserBalance();
+        },
+        
+        async loadUserBalance() {
+          try {
+            const response = await fetch('/api/wallet');
+            const data = await response.json();
+            if (data.success && data.data) {
+              this.userBalance = data.data.balance || 0;
+            }
+          } catch (error) {
+            // 未登录或其他错误，忽略
+            console.log('Failed to load balance:', error);
+          }
         },
         
         getServiceIcon(id) {
@@ -461,6 +508,60 @@ export default function PurchasePage(csrfToken: string = '', lang: Language = 'z
           this.isProcessing = true;
           this.errorMessage = null;
           
+          // 余额支付检查
+          if (this.form.paymentMethod === 'balance') {
+            if (!this.hasEnoughBalance) {
+              this.errorMessage = this.t('purchase.insufficient_balance');
+              this.isProcessing = false;
+              return;
+            }
+            
+            try {
+              const totalAmount = parseFloat(this.calculateTotal());
+              const selectedOption = this.currentExpiryOptions.find(o => o.expiry === this.form.selectedExpiry);
+              
+              // 调用余额支付 API
+              const response = await fetch('/api/wallet/consume', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  amount: totalAmount,
+                  product_info: {
+                    service_id: this.activeService.id,
+                    title: this.activeService.title,
+                    quantity: this.form.quantity,
+                    expiry: this.form.selectedExpiry,
+                    expiry_days: selectedOption?.label || '未知',
+                  }
+                })
+              });
+              
+              const data = await response.json();
+              
+              if (data.success) {
+                // 余额支付成功，显示结果
+                this.orderResult = {
+                  ordernum: data.data?.ordernum || '',
+                  tel: data.data?.tel || '',
+                  token: data.data?.token || '',
+                };
+                this.isModalOpen = false;
+                // 刷新余额
+                this.loadUserBalance();
+              } else {
+                this.errorMessage = data.message || (this.lang === 'zh' ? '支付失败' : 'Payment failed');
+              }
+            } catch (error) {
+              this.errorMessage = this.lang === 'zh' ? '网络错误，请重试' : 'Network error, please try again';
+            } finally {
+              this.isProcessing = false;
+            }
+            return;
+          }
+          
+          // 其他支付方式
           try {
             const selectedOption = this.currentExpiryOptions.find(o => o.expiry === this.form.selectedExpiry);
             const totalAmount = parseFloat(this.calculateTotal());

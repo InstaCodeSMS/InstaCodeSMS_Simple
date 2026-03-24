@@ -1,5 +1,6 @@
 /**
  * Mini App API 路由
+ * 使用 Better Auth 会话中间件 + Telegram initData 验证
  */
 
 import { Hono } from 'hono'
@@ -7,21 +8,47 @@ import type { Env } from '../../types/env'
 import { ProductService } from '../../domains/product/product.service'
 import { OrderService } from '../../domains/order/order.service'
 import { TelegramUserService } from '../../domains/telegram/user.service'
+import { sessionMiddleware, getCurrentUser } from '../../middleware/auth'
+import { validateTelegramInitData, extractTelegramUserId } from '../../adapters/auth/telegram'
 
 const app = new Hono<{ Bindings: Env }>()
 
-// 中间件：验证 Telegram 用户
-app.use('*', async (c, next) => {
-  const userId = c.req.header('X-Telegram-User-Id')
+/**
+ * Telegram 用户认证中间件
+ * 支持 initData 签名验证
+ */
+async function telegramAuthMiddleware(c: any, next: any) {
   const initData = c.req.header('X-Telegram-Init-Data')
   
-  if (!userId) {
-    return c.json({ error: 'Unauthorized' }, 401)
+  if (!initData) {
+    return c.json({ error: 'Missing Telegram initData' }, 401)
   }
   
-  c.set('userId', parseInt(userId))
+  // 快速提取用户 ID
+  const telegramId = extractTelegramUserId(initData)
+  if (!telegramId) {
+    return c.json({ error: 'Invalid initData format' }, 401)
+  }
+  
+  // 验证签名（如果配置了 Bot Token）
+  if (c.env.TELEGRAM_BOT_TOKEN) {
+    const validation = await validateTelegramInitData(initData, c.env.TELEGRAM_BOT_TOKEN)
+    if (!validation.valid) {
+      return c.json({ error: 'Invalid initData signature', details: validation.error }, 401)
+    }
+  }
+  
+  // 将 telegramId 存储为局部变量（通过 context）
+  c.set('telegramId', telegramId)
   await next()
-})
+}
+
+app.use('*', telegramAuthMiddleware)
+
+// 辅助函数：获取 Telegram 用户 ID
+function getTelegramId(c: any): number {
+  return c.get('telegramId') as number
+}
 
 // ==================== 产品 API ====================
 
@@ -84,7 +111,7 @@ app.get('/products/search', async (c) => {
 // 获取购物车
 app.get('/cart', async (c) => {
   try {
-    const userId = c.get('userId')
+    const userId = getTelegramId(c)
     const service = new TelegramUserService(c.env)
     const items = await service.getCart(userId)
     
@@ -101,7 +128,7 @@ app.get('/cart', async (c) => {
 // 添加到购物车
 app.post('/cart/add', async (c) => {
   try {
-    const userId = c.get('userId')
+    const userId = getTelegramId(c)
     const { product_id, quantity = 1 } = await c.req.json()
     
     if (!product_id) {
@@ -124,7 +151,7 @@ app.post('/cart/add', async (c) => {
 // 更新购物车数量
 app.put('/cart/update', async (c) => {
   try {
-    const userId = c.get('userId')
+    const userId = getTelegramId(c)
     const { product_id, quantity } = await c.req.json()
     
     if (!product_id || !quantity) {
@@ -147,7 +174,7 @@ app.put('/cart/update', async (c) => {
 // 从购物车移除
 app.delete('/cart/remove', async (c) => {
   try {
-    const userId = c.get('userId')
+    const userId = getTelegramId(c)
     const { product_id } = await c.req.json()
     
     if (!product_id) {
@@ -169,7 +196,7 @@ app.delete('/cart/remove', async (c) => {
 //清空购物车
 app.delete('/cart/clear', async (c) => {
   try {
-    const userId = c.get('userId')
+    const userId = getTelegramId(c)
     const service = new TelegramUserService(c.env)
     await service.clearCart(userId)
     
@@ -187,7 +214,7 @@ app.delete('/cart/clear', async (c) => {
 // 获取订单列表
 app.get('/orders', async (c) => {
   try {
-    const userId = c.get('userId')
+    const userId = getTelegramId(c)
     const service = new OrderService(c.env)
     const orders = await service.getUserOrders(userId.toString())
     
@@ -204,7 +231,7 @@ app.get('/orders', async (c) => {
 // 获取订单详情
 app.get('/orders/:ordernum', async (c) => {
   try {
-    const userId = c.get('userId')
+    const userId = getTelegramId(c)
     const ordernum = c.req.param('ordernum')
     const service = new OrderService(c.env)
     const order = await service.getOrderByOrdernum(ordernum)
@@ -233,7 +260,7 @@ app.get('/orders/:ordernum', async (c) => {
 // 创建订单
 app.post('/checkout', async (c) => {
   try {
-    const userId = c.get('userId')
+    const userId = getTelegramId(c)
     const { items } = await c.req.json()
     
     if (!items || items.length === 0) {

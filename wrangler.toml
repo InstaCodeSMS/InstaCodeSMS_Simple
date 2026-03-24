@@ -3,6 +3,13 @@ main = "src/index.ts"
 compatibility_date = "2024-01-01"
 compatibility_flags = ["nodejs_compat"]
 
+# Hyperdrive 数据库连接（用于 Better Auth）
+[[hyperdrive]]
+binding = "HYPERDRIVE"
+id = "6c9d47e6c53441f4accdb6b006702448"
+# 本地开发使用的连接串（密码已更新）
+localConnectionString = "postgresql://postgres:Qwer235678jkl@db.nyiozcmzdehybowlnyvh.supabase.co:5432/postgres"
+
 [dev]
 port = 3000
 local_protocol = "http"

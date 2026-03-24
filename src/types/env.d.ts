@@ -16,6 +16,11 @@ export interface Env {
   SUPABASE_PUBLISHABLE_KEY: string
   SUPABASE_SERVICE_KEY: string
 
+  // Better Auth 配置
+  DATABASE_URL?: string // Supabase 直连 URL（用于 Better Auth）
+  BASE_URL?: string // 应用基础 URL
+  SITE_URL?: string // 站点 URL（备用）
+
   // BEpusdt 支付配置
   BEPUSDT_API_URL: string
   BEPUSDT_API_TOKEN: string
@@ -66,6 +71,20 @@ export interface Env {
 
   // API 基础 URL
   API_BASE_URL: string
+
+  // Cloudflare Hyperdrive（用于 Better Auth 数据库连接）
+  HYPERDRIVE?: {
+    connectionString: string
+  }
+}
+
+// 用户类型定义
+export interface User {
+  id: string
+  email: string
+  role: string
+  telegramId?: number
+  created_at: string
 }
 
 // 扩展 Hono 的环境类型
@@ -73,5 +92,7 @@ declare module 'hono' {
   interface ContextVariableMap {
     env: Env
     csrfToken: string  // CSRF Token，由 CSRF 中间件自动注入
+    user: User         // 用户信息，由认证中间件注入
+    sessionId: string  // 会话 ID，由认证中间件注入
   }
 }

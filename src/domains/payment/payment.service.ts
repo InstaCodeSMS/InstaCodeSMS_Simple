@@ -105,4 +105,49 @@ export class PaymentService {
   async markAsTimeout(tradeId: string): Promise<void> {
     await this.orderRepo.markAsTimeout(tradeId)
   }
+
+  /**
+   * 验证支付回调
+   */
+  async verifyCallback(params: Record<string, any>): Promise<boolean> {
+    try {
+      const epayClient = createEpayClient({
+        apiUrl: this.env.EPAY_API_URL!,
+        pid: this.env.EPAY_PID!,
+        key: this.env.EPAY_KEY!,
+        signType: (this.env.EPAY_SIGN_TYPE as 'MD5' | 'RSA') || 'MD5',
+      })
+      
+      return await epayClient.verifyCallback(params)
+    } catch (error) {
+      console.error('[PaymentService] Verify callback error:', error)
+      return false
+    }
+  }
+
+  /**
+   * 查询支付状态
+   */
+  async queryStatus(paymentId: string): Promise<any> {
+    try {
+      const order = await this.orderRepo.findByTradeId(paymentId)
+      if (!order) {
+        return null
+      }
+
+      return {
+        trade_id: order.trade_id,
+        order_id: order.order_id,
+        status: order.status,
+        amount: order.amount,
+        actual_amount: order.actual_amount,
+        payment_method: order.payment_method,
+        paid_at: order.paid_at,
+        created_at: order.created_at
+      }
+    } catch (error) {
+      console.error('[PaymentService] Query status error:', error)
+      return null
+    }
+  }
 }

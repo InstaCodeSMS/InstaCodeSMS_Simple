@@ -48,16 +48,38 @@ app.get('/', (c) => {
   return c.html(html)
 })
 
+// 注册页面 - 带语言前缀
+app.get('/:lang/register', (c) => {
+  const lang = c.req.param('lang') as 'zh' | 'en'
+  const csrfToken = c.var.csrfToken || ''
+  return c.html(RegisterPage(csrfToken, lang))
+})
+
 app.get('/register', (c) => {
-  return c.html(RegisterPage())
+  const lang = (c.get('language') as 'zh' | 'en') || 'zh'
+  return c.redirect(`/${lang}/register`, 302)
+})
+
+// 登录页面 - 带语言前缀
+app.get('/:lang/login', (c) => {
+  const lang = c.req.param('lang') as 'zh' | 'en'
+  const csrfToken = c.var.csrfToken || ''
+  return c.html(LoginPage(csrfToken, lang))
 })
 
 app.get('/login', (c) => {
-  return c.html(LoginPage())
+  const lang = (c.get('language') as 'zh' | 'en') || 'zh'
+  return c.redirect(`/${lang}/login`, 302)
+})
+
+// Dashboard - 带语言前缀
+app.get('/:lang/dashboard', requireAuth, (c) => {
+  return c.html(DashboardPage())
 })
 
 app.get('/dashboard', requireAuth, (c) => {
-  return c.html(DashboardPage())
+  const lang = (c.get('language') as 'zh' | 'en') || 'zh'
+  return c.redirect(`/${lang}/dashboard`, 302)
 })
 
 // Orders 页面 - 支持语言前缀
