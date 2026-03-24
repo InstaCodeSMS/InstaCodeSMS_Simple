@@ -92,9 +92,14 @@ export function LoginPage(csrfToken: string = '', lang: Language = 'zh'): string
 
             if (response.ok) {
               // 手动设置 cookies（因为 wrangler dev 的 Set-Cookie header 格式问题）
+              // 关键：必须添加 Path=/ 否则 cookie 只在当前路径有效，跳转后丢失
               if (data.cookies && Array.isArray(data.cookies)) {
                 data.cookies.forEach(cookieStr => {
-                  document.cookie = cookieStr;
+                  // 确保包含 Path=/ 属性
+                  const cookieWithPath = cookieStr.includes('Path=') 
+                    ? cookieStr 
+                    : cookieStr + '; Path=/';
+                  document.cookie = cookieWithPath;
                 });
               }
               
