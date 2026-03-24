@@ -45,7 +45,6 @@ import telegramRoutes from './routes/api/telegram'
 import webhooksRoutes from './routes/api/webhooks'
 import rpcApp from './routes/rpc'
 import miniAppRoutes from './routes/web/mini-app'
-import checkSchemaRoutes from './routes/api/check-schema'
 
 // 创建主应用实例
 const app = new Hono<{ Bindings: Env }>()
@@ -316,7 +315,6 @@ app.route('/api/payment', paymentRoutes)
 app.route('/api/sync', syncRoutes)
 app.route('/api/telegram', telegramRoutes)
 app.route('/api/webhooks', webhooksRoutes)
-app.route('/api/check-schema', checkSchemaRoutes)
 app.route('/rpc', rpcApp)
 
 // 健康检查
