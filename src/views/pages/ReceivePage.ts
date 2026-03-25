@@ -310,6 +310,29 @@ export default function ReceivePage(csrfToken: string = '', lang: Language = 'zh
   </div>
 
   <script>
+    // ===== AudioContext 单例管理 =====
+    // Why: 浏览器限制 AudioContext 数量，且需要用户交互解锁
+    let audioContextInstance = null;
+    
+    function getAudioContext() {
+      if (!audioContextInstance) {
+        audioContextInstance = new (window.AudioContext || window.webkitAudioContext)();
+        console.log('[Audio] AudioContext created, state:', audioContextInstance.state);
+      }
+      return audioContextInstance;
+    }
+    
+    function unlockAudioContext() {
+      const ctx = getAudioContext();
+      if (ctx.state === 'suspended') {
+        ctx.resume().then(() => {
+          console.log('[Audio] AudioContext unlocked successfully');
+        }).catch(err => {
+          console.error('[Audio] Failed to unlock AudioContext:', err);
+        });
+      }
+    }
+    
     // ===== Alpine.js 应用 =====
     function receiveApp() {
       return {t(key) {
@@ -358,6 +381,24 @@ export default function ReceivePage(csrfToken: string = '', lang: Language = 'zh
           if ('Notification' in window && Notification.permission === 'default') {
             Notification.requestPermission();
           }
+          
+          // 用户交互解锁音频 - 解决浏览器自动播放限制
+          // Why: 现代浏览器要求音频播放必须有用户交互前置
+          const unlockHandler = () => {
+            unlockAudioContext();
+            console.log('[Audio] Unlocked by user interaction');
+          };
+          
+          // 监听首次点击和触摸事件
+          document.addEventListener('click', unlockHandler, { once: true });
+          document.addEventListener('touchstart', unlockHandler, { once: true });
+          
+          // 预加载音频文件
+          const preloadAudio = document.createElement('link');
+          preloadAudio.rel = 'preload';
+          preloadAudio.href = this.lang === 'zh' ? '/audio/zh_notify.mp3' : '/audio/en_notify.mp3';
+          preloadAudio.as = 'audio';
+          document.head.appendChild(preloadAudio);
         },
         
         sanitizeToken(e) {
@@ -371,6 +412,10 @@ export default function ReceivePage(csrfToken: string = '', lang: Language = 'zh
         },
         
         toggleRadar() {
+          // 用户点击按钮时解锁音频 - 解决浏览器自动播放限制
+          // Why: 用户点击"开始"按钮是有效的用户交互，此时解锁音频上下文
+          unlockAudioContext();
+          
           if (this.isPolling) {
             this.stopRadar();
           } else {
@@ -714,7 +759,13 @@ export default function ReceivePage(csrfToken: string = '', lang: Language = 'zh
         playFallbackAudio(reason = 'unknown') {
           console.log('[Audio] Fallback triggered, reason:', reason);
           try {
-            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            // 使用全局 AudioContext 单例，确保使用已解锁的上下文
+            const audioContext = getAudioContext();
+            
+            // 如果 AudioContext 仍处于 suspended 状态，尝试解锁
+            if (audioContext.state === 'suspended') {
+              unlockAudioContext();
+            }
             
             // 根据不同情况生成不同的音效
             let baseFreq = 700;
