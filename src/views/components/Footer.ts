@@ -71,7 +71,7 @@ export default function Footer() {
           <span class="opacity-40">|</span>
           <a href="/terms" class="hover:opacity-100 transition-opacity" x-text="t('footer.terms')" onclick="event.preventDefault(); window.location.href = (window.location.pathname.startsWith('/en') ? '/en/terms' : '/zh/terms')"></a>
           <span class="opacity-40">|</span>
-          <iframe src="https://status.instacodesms.com/badge?theme=dark" width="250" height="30" frameborder="0" scrolling="no" style="color-scheme: normal;"></iframe>
+          <iframe src="https://status.instacode.cfd/badge?theme=dark" width="250" height="30" frameborder="0" scrolling="no" style="color-scheme: normal;"></iframe>
         </div>
       </div>
     </div>
